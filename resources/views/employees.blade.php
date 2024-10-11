@@ -523,7 +523,6 @@
             if (!validateField('.department', 'Department')) isValid = false;
             if (!validateField('.designation', 'Designation')) isValid = false;
             if (!validateBrand(selectedBrands)) isValid = false;
-            if (!validateImage('.img', 'Select Image')) isValid = false;
 
             // If all fields are valid, proceed with form submission
             if (isValid) {
@@ -633,22 +632,6 @@
                 return true;
             }
         }
-
-        // Function to validate image selection
-        function validateImage(selector, errorMessage) {
-            let parent = $(selector).closest('.input-block');
-            parent.find('.text-danger').remove();
-
-            if (!$(selector).val()) {
-                $(selector).addClass('is-invalid');
-                parent.append(`<span class="text-danger">${errorMessage}</span>`);
-                return false;
-            } else {
-                $(selector).removeClass('is-invalid').addClass('is-valid');
-                return true;
-            }
-        }
-
     });
 
 
