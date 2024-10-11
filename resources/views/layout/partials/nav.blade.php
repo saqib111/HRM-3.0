@@ -36,6 +36,13 @@
                     </ul>
                 </li>
                 <li class="menu-title">
+                    <span>Departments</span>
+                </li>
+                <li>
+                <a href="{{ route('company.index')}}" {{ Request::is('company', 'company.store') ? 'active' : '' }}><i
+                    class="la la-building"></i><span>Company</span></a>
+                </li>
+                <li class="menu-title">
                     <span>Schedule</span>
                 </li>
                 <li class="submenu ">

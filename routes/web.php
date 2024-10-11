@@ -15,7 +15,7 @@ use App\Http\Controllers\{
 Route::get('/', function () {
     return view('index');
 });
-Route::get('login', function () {
+Route::get('/login', function () {
     return view('index');
 });
 Route::post('loginto', [AuthenticatedSessionController::class, 'store'])->name('loginto');
@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/delete-employee/{id}', [AdminController::class, 'deleteEmployee'])->name('delete.employee');
     Route::get('/check-designation/{id}', [AdminController::class, 'checkDesignation'])->name('check.designation');
     //schedule start
-    Route::get('schedule-list',[ScheduleController::class,'index'])->name('schedule');
+    Route::get('schedule-list', [ScheduleController::class, 'index'])->name('schedule');
     //schedule end
 
     // Route to Active/Deactive Users by Admin 
@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('user-profile', UserProfileController::class);
 
     Route::resource('company', CompanyController::class);
+    Route::post('/company', [CompanyController::class, 'store'])->name('company.store');
+    Route::delete('/company/{company}', [CompanyController::class, 'destroy'])->name('company.destroy');
 
 });
 
