@@ -17,6 +17,26 @@
     .select2-selection--multiple.is-invalid {
         border-color: red !important;
     }
+
+    /* Buttons Styling for Company */
+    .company-btn {
+        transition: background-color 0.3s, color 0.3s;
+        border-color: #00C5FB !important;
+        color: #00C5FB !important;
+    }
+
+    .company-btn.active {
+        background-color: #00C5FB !important;
+        border-color: #00C5FB !important;
+        /* Primary color */
+        color: white !important;
+    }
+
+    .company-btn:hover {
+        background-color: #009DC8 !important;
+        /* Darker shade on hover */
+        color: white !important;
+    }
 </style>
 <div class="col-auto ms-auto mb-3">
     <ul class="split-head">
@@ -26,6 +46,20 @@
         </li>
     </ul>
 </div>
+<div class="text-right mb-3">
+    @if(auth()->user()->role === "1")
+        <div class="d-flex justify-content-end">
+            @foreach($company as $index => $item)
+                <button class="btn btn-outline-primary mx-1 company-btn {{ $index === 0 ? 'active' : '' }}"
+                    onclick="filterByCompany('{{ $item['name'] }}')">
+                    {{ $item['name'] }}
+                </button>
+            @endforeach
+        </div>
+    @endif
+</div>
+
+
 
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="row">
@@ -43,6 +77,7 @@
                         <th>Department</th>
                         <th>Designation</th>
                         <th>Status</th>
+                        <th>Image</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -341,91 +376,91 @@
 
 @section('script-z')
 <script>
+
+    let table;
+
+    // Function to initialize the DataTable
+    function initializeDataTable(companyName) {
+        table = $('#users_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('list.employee') }}",
+                type: 'GET',
+                data: { company: companyName } // Pass the selected company name
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'employee_id', name: 'employee_id', orderable: false },
+                { data: 'username', name: 'username', orderable: false },
+                { data: 'email', name: 'email', orderable: false },
+                { data: 'joining_date', name: 'joining_date', orderable: false },
+                { data: 'company_name', name: 'company_name', orderable: false },
+                { data: 'department_name', name: 'department_name', orderable: false },
+                { data: 'designation_name', name: 'designation_name', orderable: false },
+                {
+                    data: 'status',
+                    name: 'status',
+                    orderable: false,
+                    render: function (data, type, row) {
+                        let checked = (data === '1') ? 'checked' : '';
+                        return `
+                        <div class="status-toggle-container" style="display:flex;">
+                            <div class="status-toggle">
+                                <input type="checkbox" id="staff_module_${row.id}" class="check" ${checked} onchange="toggleStatus(${row.id}, this)">
+                                <label for="staff_module_${row.id}" class="checktoggle">checkbox</label>
+                            </div>
+                        </div>
+                    `;
+                    }
+                },
+                {
+                    data: 'image',
+                    name: 'image',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `<img width="50px" height="50px" src="uploads/${data}" onclick="showProfileImageModal('${data}')" alt="Profile Picture">`;
+                    }
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `<button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
+                            <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button>`;
+                    }
+                }
+            ],
+            order: []
+        });
+    }
+
+    // Function to filter data by company
+    function filterByCompany(companyName) {
+        // Clear existing data and destroy the DataTable
+        if (table) {
+            table.destroy();
+        }
+
+        // Re-initialize the DataTable with the selected company
+        initializeDataTable(companyName);
+
+        // Remove active class from all buttons and add to the clicked button
+        $('.company-btn').removeClass('active');
+        $('.company-btn:contains("' + companyName + '")').addClass('active');
+    }
+
     $(document).ready(function () {
         $('.tagging').select2({
             tags: true
         });
 
-        let table = $('#users_table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ route('list.employee') }}",
-                type: 'GET'
-            },
-            columns: [{
-                data: 'DT_RowIndex',
-                name: 'DT_RowIndex',
-                orderable: false,
-                searchable: false
-            },
-            {
-                data: 'employee_id',
-                name: 'employee_id',
-                orderable: false,
-            },
-            {
-                data: 'username',
-                name: 'username',
-                orderable: false,
-            },
-            {
-                data: 'email',
-                name: 'email',
-                orderable: false,
-            },
-            {
-                data: 'joining_date',
-                name: 'joining_date',
-                orderable: false,
-            },
-            {
-                data: 'company_name',
-                name: 'company_name',
-                orderable: false,
-            },
-            {
-                data: 'department_name',
-                name: 'department_name',
-                orderable: false
-            },  // Department Name
-            {
-                data: 'designation_name',
-                name: 'designation_name',
-                orderable: false
-            },  // Designation Name
-            {
-                data: 'status',
-                name: 'status',
-                orderable: false, // Disable sorting
-                render: function (data, type, row) {
-                    let checked = (data === '1') ? 'checked' : '';
-                    return `
-                        <div class="status-toggle-container" style="display:flex;">
-                <div class="status-toggle">
-                    <input type="checkbox" id="staff_module_${row.id}" class="check" ${checked} onchange="toggleStatus(${row.id}, this)">
-                    <label for="staff_module_${row.id}" class="checktoggle">checkbox</label>
-                </div>
-            </div>
-                    `;
-                }
-            },
-            {
-                data: 'action',
-                name: 'action',
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    return `<button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
-                                <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button>
-                                `;
-                }
-            }
-            ],
-            order: [
-                []
-            ]
-        });
+        // Get the first company's name
+        const defaultCompanyName = $('.company-btn:first').text().trim();
+        initializeDataTable(defaultCompanyName);
 
         $('.department').change(function () {
             var id = $(this).val();
@@ -624,6 +659,10 @@
     function showDeleteModal(id) {
         userIdToDelete = id; // Store the ID of the user to delete
         $('#deleteConfirmationModal').modal('show'); // Show the modal
+    }
+
+    function showProfileImageModal(data) {
+        console.log(data);
     }
 
     function toggleStatus(id, checkbox) {

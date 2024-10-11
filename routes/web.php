@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees', [AdminController::class, 'showEmployee'])->name('employees');
     Route::get('/employees-list', [AdminController::class, 'showEmployeeList'])->name('employees-list');
     Route::post('/add-employee', [AdminController::class, 'addEmployee'])->name('add.employee');
-    Route::get('/get-employees', [AdminController::class, 'getEmployee'])->name('list.employee');
+    Route::get('/manage-employees', [AdminController::class, 'getEmployee'])->name('list.employee');
     Route::get('/get-employee/{id}', [AdminController::class, 'editEmployee'])->name('edit.employee');
     Route::post('/update-employee', [AdminController::class, 'updateEmployee'])->name('update.employee');
     Route::delete('/delete-employee/{id}', [AdminController::class, 'deleteEmployee'])->name('delete.employee');

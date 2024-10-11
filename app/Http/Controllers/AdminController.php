@@ -30,7 +30,6 @@ class AdminController extends Controller
     {
 
         if (auth()->user()) {
-
             return view('dashboard');
         }
 
@@ -113,8 +112,14 @@ class AdminController extends Controller
                     'companies.name as company_name',  // Selecting company name
                     'departments.name as department_name',  // Department Name
                     'designations.name as designation_name',  // Designation Name
-                    'users.status'
+                    'users.status',
+                    'users.image'
                 ]);
+
+            // Filter by company if specified
+            if ($request->has('company')) {
+                $employees->where('companies.name', $request->input('company'));
+            }
 
             return DataTables::of($employees)
                 ->addIndexColumn()
