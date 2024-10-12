@@ -10,6 +10,9 @@ use App\Http\Controllers\{
     UserProfileController,
     CompanyController,
     ScheduleController,
+    BrandController,
+    DepartmentController,
+    DesignationController,
 };
 
 Route::get('/', function () {
@@ -45,8 +48,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('user-profile', UserProfileController::class);
 
     Route::resource('company', CompanyController::class);
-    Route::post('/company', [CompanyController::class, 'store'])->name('company.store');
-    Route::delete('/company/{company}', [CompanyController::class, 'destroy'])->name('company.destroy');
+    Route::resource('brand', BrandController::class);
+    Route::resource('department', DepartmentController::class);
+    Route::resource('designation', DesignationController::class);
 
 });
 

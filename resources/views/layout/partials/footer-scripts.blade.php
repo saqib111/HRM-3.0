@@ -67,7 +67,5 @@
 <!-- Owl Carousel JS -->
 <script src="{{ asset('assets/js/owl.carousel.min.js') }}"></script>
 
-<!-- Toaster CDN -->
-<script src="{{ asset('assets/js/customToaster.js') }}"></script>
-<!-- Preloader JS -->
-<script src="{{ asset('assets/js/preLoader.js') }}"></script>
+<!-- All Custom Script Files (Preloader, customToaster) -->
+<script src="{{ asset('assets/js/myAllCustomScript.js') }}"></script>

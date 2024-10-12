@@ -30,6 +30,12 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
+        // Check if the company name already exists
+        $exists = Company::where('name', $request->name)->exists();
+        if ($exists) {
+            return response()->json(['error' => 'This company name already exists. Please choose another name.']);
+        }
+
         // Create the company
         Company::create(['name' => $request->name]);
 

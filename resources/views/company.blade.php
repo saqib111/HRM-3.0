@@ -13,7 +13,7 @@
         </div>
         <div class="col-md-8 float-end ms-auto">
             <div class="d-flex title-head">
-                <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_company"><i
+                <a href="#" class="btn_added" data-bs-toggle="modal" data-bs-target="#add_company"><i
                         class="la la-plus-circle"></i> Add Company</a>
             </div>
         </div>
@@ -64,7 +64,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Company</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="company-form">
@@ -75,7 +75,7 @@
                                 <label class="col-form-label" for="company_name">Company Name <span
                                         class="text-danger">*</span></label>
                                 <input class="form-control" type="text" name="name" id="company_name">
-                                <div class="val_error"></div>
+                                <div class="val_error text-danger"></div>
                             </div>
                         </div>
                         <div class="submit-section">
@@ -94,7 +94,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Company</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="edit_company-form">
@@ -104,7 +104,8 @@
                             <div class="input-block mb-3">
                                 <label class="col-form-label" for="edit_company_name">Edit Company Name <span
                                         class="text-danger">*</span></label>
-                                <input class="form-control" type="text" name="name" id="edit_company_name" required>
+                                <input class="form-control" type="text" name="name" id="edit_company_name">
+                                <div class="val_error text-danger"></div>
                             </div>
                         </div>
                         <div class="submit-section">
@@ -156,49 +157,91 @@
                 orderable: false,
                 searchable: false
             }
-            ]
+            ],
         });
+
 
         $('#company-form').on('submit', function (e) {
             e.preventDefault();
-            const name = $('#company_name').val();
+            var isValid = true;
 
-            $.ajax({
-                url: "{{ route('company.store') }}",
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    name: name
-                },
-                success: function (response) {
-                    $('#add_company').modal('hide');
-                    table.ajax.reload();
-                    createToast('success', 'fa-solid fa-circle-check', 'Success', 'Company Added Successfully.');
-                },
-                error: function (xhr) {
-                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error Adding Company.');
-                }
-            });
+            // Clear previous error messages
+            $('.val_error').text('');
+
+            const name = $('#company_name').val().trim();
+
+            // Validate the company name
+            if (name === '') {
+                $('.val_error').text('Please provide a company name.');
+                isValid = false;
+                return;
+            }
+
+            if (isValid) {
+                showLoader();
+                $.ajax({
+                    url: "{{ route('company.store') }}",
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        name: name
+                    },
+                    success: function (response) {
+                        hideLoader(); // Hide loader on success
+                        if (response.error) {
+                            // Show the error message if the company already exists
+                            $('.val_error').text(response.error);
+                        } else {
+                            $('#add_company').modal('hide');
+                            $('#company_name').val(''); // Clear the input field
+                            table.ajax.reload();
+                            createToast('info', 'fa-solid fa-circle-check', 'Success', 'Company Added Successfully.');
+                        }
+                    },
+                    error: function () {
+                        hideLoader();
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error Adding Company.');
+                    }
+                });
+            }
         });
 
         // Handle the edit company form submission
         $('#edit_company-form').on('submit', function (e) {
             e.preventDefault();
+            var isValid = true;
+            // Clear previous error messages
+            $('.val_error').text('');
+
+            const name = $('#edit_company_name').val().trim();
+
+            // Validate the company name
+            if (name === '') {
+                $('.val_error').text('Please provide a company name.');
+                isValid = false;
+                return;
+            }
             const id = $(this).data('id'); // Get ID for updating
 
-            $.ajax({
-                url: '{{ route("company.update", ":id") }}'.replace(':id', id),
-                type: 'PUT',
-                data: $(this).serialize(),
-                success: function (response) {
-                    $('#edit_company').modal('hide');
-                    table.ajax.reload(); // Reload the DataTable
-                    createToast('success', 'fa-solid fa-circle-check', 'Success', 'Company Updated Successfully.');
-                },
-                error: function (xhr) {
-                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error Updating Company.');
-                }
-            });
+            if (isValid) {
+                showLoader(); // Show loader before AJAX request
+                $.ajax({
+                    url: '{{ route("company.update", ":id") }}'.replace(':id', id),
+                    type: 'PUT',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        hideLoader(); // Hide loader on success
+                        $('#edit_company').modal('hide');
+                        $('#edit_company_name').val(''); // Clear the input field
+                        table.ajax.reload(); // Reload the DataTable
+                        createToast('info', 'fa-solid fa-circle-check', 'Success', 'Company Updated Successfully.');
+                    },
+                    error: function (xhr) {
+                        hideLoader(); // Hide loader on success
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error Updating Company.');
+                    }
+                });
+            }
         });
     });
 
@@ -225,6 +268,8 @@
     }
 
     $('#confirmDelete').on('click', function () {
+
+        showLoader(); // Show loader before AJAX request
         $.ajax({
             url: "{{ route('company.destroy', '') }}/" + companyIdToDelete,
             type: 'DELETE',
@@ -232,11 +277,13 @@
                 _token: '{{ csrf_token() }}'
             },
             success: function (response) {
+                hideLoader(); // Hide loader on success
                 $('#company_table').DataTable().ajax.reload();
                 $('#deleteConfirmationModal').modal('hide');
-                createToast('success', 'fa-solid fa-circle-check', 'Success', 'Company Deleted Successfully.');
+                createToast('info', 'fa-solid fa-circle-check', 'Success', 'Company Deleted Successfully.');
             },
             error: function (xhr) {
+                hideLoader(); // Hide loader on success
                 $('#deleteConfirmationModal').modal('hide');
                 createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error deleting Company.');
             }

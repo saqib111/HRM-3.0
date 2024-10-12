@@ -53,14 +53,15 @@
 
                             <div class="input-block mb-4">
                                 <label class="col-form-label">Email Address</label>
-                                <input class="form-control" type="text" name="email" id="email" autocomplete="off">
+                                <input class="form-control" type="text" name="email" id="email"
+                                    value="affan.ahmed@auroramy.com" autocomplete="off">
                                 <span id="email-error" class="text-danger"></span> <!-- For displaying errors -->
                             </div>
                             <div class="input-block mb-4">
                                 <label class="col-form-label">Password</label>
                                 <div class="position-relative">
-                                    <input class="form-control" type="password" name="password" id="password"
-                                        autocomplete="off">
+                                    <input class="form-control" type="password" name="password" value="12345678"
+                                        id="password" autocomplete="off">
                                     <!-- <span class="fa-solid fa-eye-slash" id="toggle-password"></span> -->
                                 </div>
                                 <span id="password-error" class="text-danger"></span> <!-- For displaying errors -->

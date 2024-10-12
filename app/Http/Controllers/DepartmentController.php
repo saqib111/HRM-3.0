@@ -2,64 +2,72 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\department;
+use App\Models\Department;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class DepartmentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if ($request->ajax()) {
+            $data = Department::select(['id', 'name']); // Select relevant fields
+            return DataTables::of($data)->make(true); // Return DataTables response
+        }
+        return view('department'); // Return the main view
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        // Not used for this setup
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        // Validate incoming request
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        // Check if the Department name already exists
+        $exists = Department::where('name', $request->name)->exists();
+        if ($exists) {
+            return response()->json(['error' => 'This department name already exists. Please choose another name.']);
+        }
+
+        // Create the Department
+        Department::create(['name' => $request->name]);
+
+        return response()->json(['success' => 'Department added successfully.']);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(department $department)
+    public function show(Department $department)
     {
-        //
+        return response()->json($department);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(department $department)
+    public function edit(Department $department)
     {
-        //
+        return response()->json($department);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, department $department)
+    public function update(Request $request, Department $department)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $department->update(['name' => $request->name]);
+
+        return response()->json(['success' => 'Department updated successfully.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(department $department)
+    public function destroy(Department $department)
     {
-        //
+        $department->delete();
+        return response()->json(['success' => 'Department deleted successfully.']);
     }
 }

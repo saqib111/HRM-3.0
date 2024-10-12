@@ -1,43 +1,5 @@
 @extends('layout.mainlayout')
 @section('content')
-<style>
-    .select2-search__field {
-        display: none;
-    }
-
-    .select2-selection__choice__remove {
-        border: none;
-        background-color: #E4E4E4;
-    }
-
-    .select2-selection__choice {
-        margin-top: 0;
-    }
-
-    .select2-selection--multiple.is-invalid {
-        border-color: red !important;
-    }
-
-    /* Buttons Styling for Company */
-    .company-btn {
-        transition: background-color 0.3s, color 0.3s;
-        border-color: #00C5FB !important;
-        color: #00C5FB !important;
-    }
-
-    .company-btn.active {
-        background-color: #00C5FB !important;
-        border-color: #00C5FB !important;
-        /* Primary color */
-        color: white !important;
-    }
-
-    .company-btn:hover {
-        background-color: #009DC8 !important;
-        /* Darker shade on hover */
-        color: white !important;
-    }
-</style>
 <div class="col-auto ms-auto mb-3">
     <ul class="split-head">
         <li>
