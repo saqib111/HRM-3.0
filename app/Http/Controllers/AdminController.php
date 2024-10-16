@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Validator;
 use App\Models\{
 
     User,
@@ -263,5 +264,38 @@ class AdminController extends Controller
             ->get();
 
         return response()->json($designation);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'employee_id' => 'required|exists:users,id', // Ensure user exists in the users table
+            'password' => 'required|string|min:8|confirmed', // Validate password and confirmation
+        ]);
+
+        // If validation fails, return the errors
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Fetch the user using the provided employee_id
+        $user = User::findOrFail($request->employee_id);
+
+        // Update the user's password
+        $user->password = Hash::make($request->password); // Hash the new password
+        $user->save();
+
+        // Return a success response
+        return response()->json(['message' => 'Password updated successfully.'], 200);
+    }
+
+    public function getEmployeeId($id)
+    {
+        $employee = User::find($id); // Assuming you're fetching from the User model
+        if ($employee) {
+            return response()->json(['employee_id' => $employee->id]); // Ensure you return employee_id
+        }
+        return response()->json(['message' => 'Employee not found'], 404);
     }
 }

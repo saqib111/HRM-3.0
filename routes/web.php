@@ -13,6 +13,7 @@ use App\Http\Controllers\{
     BrandController,
     DepartmentController,
     DesignationController,
+    LeaveController
 };
 
 Route::get('/', function () {
@@ -44,13 +45,19 @@ Route::middleware('auth')->group(function () {
     // Route to Active/Deactive Users by Admin 
     Route::post('/update-employee-status', [AdminController::class, 'updateStatus'])->name('update.employee.status');
 
+    //Route Update Employee Password
+    Route::get('/get-employee-id/{id}', [AdminController::class, 'getEmployeeId'])->name('get.employee.id');
+    Route::post('/update-employee-password', [AdminController::class, 'updatePassword'])->name('update.employee.password');
 
     Route::resource('user-profile', UserProfileController::class);
-
+    // Dynamic Department Routes
     Route::resource('company', CompanyController::class);
     Route::resource('brand', BrandController::class);
     Route::resource('department', DepartmentController::class);
     Route::resource('designation', DesignationController::class);
+
+    // Leave Application Frontend Route
+    Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');
 
 });
 

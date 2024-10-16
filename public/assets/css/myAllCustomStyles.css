@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+
 .select2-search__field {
     display: none;
 }
@@ -36,16 +38,27 @@
 }
 
 /* Pagination Custom Style */
-div.dt-container .dt-paging .dt-paging-button.current,
 div.dt-container .dt-paging .dt-paging-button.current {
     background-color: #00c5fb !important;
     color: white !important;
     border-radius: 10px !important;
     border: none !important;
+    z-index: 999;
 }
 div.dt-container .dt-paging .dt-paging-button.current:hover {
     color: white !important;
     background-color: #009dc8 !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover {
+    color: white !important;
+    border: 1px solid #009dc8 !important;
+    background: linear-gradient(to bottom, #009dc8 0%, #009dc8 100%) !important;
+    border-radius: 10px !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled:hover {
+    color: white !important;
 }
 
 /* Custom Button Styles */
@@ -151,8 +164,6 @@ a.btn_added:hover {
 }
 
 /* CustomToaster Styles */
-/** @format */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
 
 #notification {
     position: fixed;
@@ -235,4 +246,32 @@ a.btn_added:hover {
 .toast.info {
     --color: #3498db;
     background-image: linear-gradient(to right, #3498db55, #22242f 30%);
+}
+
+/* // CSS EMP & COM BTN //*/
+.c_Employee {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+a.btn_employee {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 5px;
+    background-color: #00c5fb;
+    border: 1px solid #00c5fb;
+    padding: 9px 9px 9px 8px;
+}
+a.btn_employee:hover {
+    background-color: #009dc8;
+    border-color: #009dc8;
+    color: #fff;
+}
+
+/* //Checkbox CSS */
+.custom_check input:checked ~ .checkmark {
+    background-color: #00c5fb !important;
+    border-color: #00c5fb !important;
 }

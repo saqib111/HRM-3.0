@@ -60,7 +60,6 @@
 <link rel="stylesheet" href="{{ asset('/assets/plugins/scrollbar/scroll.min.css') }}">
 
 <!-- Toatr CSS -->
-<link rel="stylesheet" href="{{ asset('/assets/css/customToaster.css') }}">
 <link rel="stylesheet" href="{{ asset('/assets/plugins//toastr/toatr.css') }}">
 <link rel="stylesheet" href="{{ asset('/assets/plugins/c3-chart/c3.min.css') }}">
 
@@ -114,5 +113,5 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
 <!-- Main CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
-<link rel="stylesheet" href="{{ asset('/assets/css/preloader.css') }}">
+<!-- All CustomStyles (Preloader, CustomToaseer) -->
 <link rel="stylesheet" href="{{ asset('/assets/css/myAllCustomStyles.css') }}">

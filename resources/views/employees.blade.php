@@ -1,24 +1,25 @@
 @extends('layout.mainlayout')
 @section('content')
 <div class="col-auto ms-auto mb-3">
-    <ul class="split-head">
+    <ul class="c_Employee">
         <li>
-            <a href="#" class="btn add-btn text-white" data-bs-toggle="modal" data-bs-target="#add_employee">
+            <a href="#" class="btn_employee" data-bs-toggle="modal" data-bs-target="#add_employee">
                 <i class="fa fa-plus"></i> Add Employee</a>
         </li>
+
+        <li>
+            @if(auth()->user()->role === "1")
+                <div class="d-flex justify-content-end">
+                    @foreach($company as $index => $item)
+                        <button class="btn btn-outline-primary mx-1 company-btn {{ $index === 0 ? 'active' : '' }}"
+                            onclick="filterByCompany('{{ $item['name'] }}')">
+                            {{ $item['name'] }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+        </li>
     </ul>
-</div>
-<div class="text-right mb-3">
-    @if(auth()->user()->role === "1")
-        <div class="d-flex justify-content-end">
-            @foreach($company as $index => $item)
-                <button class="btn btn-outline-primary mx-1 company-btn {{ $index === 0 ? 'active' : '' }}"
-                    onclick="filterByCompany('{{ $item['name'] }}')">
-                    {{ $item['name'] }}
-                </button>
-            @endforeach
-        </div>
-    @endif
 </div>
 
 
@@ -40,7 +41,7 @@
                         <th>Designation</th>
                         <th>Status</th>
                         <th>Image</th>
-                        <th>Action</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody id="employee-list">
@@ -77,7 +78,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -221,7 +222,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -328,7 +329,49 @@
     </div>
 </div>
 <!-- End Edit Modal -->
-<!--nothing -->
+
+<!-- Edit Password Modal -->
+<div id="edit_password_modal" class="modal custom-modal fade" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Password</h5>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit_password_form">
+                    @csrf
+                    <div class="row">
+                        <input type="hidden" id="password_employee_id" name="employee_id">
+
+                        <div class="col-sm-12">
+                            <div class="input-block mb-3">
+                                <label class="col-form-label" for="edit_password">Password <span
+                                        class="text-danger">*</span></label>
+                                <input class="form-control password-control" type="password" name="password"
+                                    id="edit_password">
+                                <div class="val_error text-danger"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="input-block mb-3">
+                                <label class="col-form-label" for="edit_confirm_password">Confirm Password <span
+                                        class="text-danger">*</span></label>
+                                <input class="form-control password-control" type="password" name="confirm_password"
+                                    id="edit_confirm_password">
+                                <div class="val_error text-danger"></div>
+                            </div>
+                        </div>
+                        <div class="submit-section">
+                            <button type="submit" class="btn btn-primary submit-btn">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Password Modal -->
 
 <!-- PreLoader -->
 <div id="loader" class="loader" style="display: none;">
@@ -391,8 +434,10 @@
                     orderable: false,
                     searchable: false,
                     render: function (data, type, row) {
-                        return `<button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
-                            <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button>`;
+                        return `<div class="text-center">
+                            <button class="btn btn-success" onclick="PasswordEditModal(${row.id})"><i class="fa-solid fa-key fa-1x"></i></button>
+                            <button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
+                            <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button></div>`;
                     }
                 }
             ],
@@ -596,7 +641,126 @@
         }
     });
 
+    // Function to open the password edit modal
+    function PasswordEditModal(id) {
+        clearPasswordValidationStates();
+        $.ajax({
+            url: "{{ route('get.employee.id', '') }}" + '/' + id, // Ensure this is correct
+            type: 'GET',
+            success: function (response) {
+                // console.log('Response from employee details:', response);
+                $('#password_employee_id').val(response.employee_id); // Set employee ID
+                $('#edit_password_modal').modal('show'); // Show the modal
+            },
+            error: function (error) {
+                alert('Error fetching employee details: ' + error.responseJSON.message);
+            }
+        });
+    }
 
+    // Handle password form submission with AJAX
+    $('#edit_password_form').on('submit', function (event) {
+        event.preventDefault();
+
+        var formData = new FormData();
+        var employeeId = $('#password_employee_id').val(); // Get the employee ID from the input
+        formData.append('employee_id', employeeId); // Use the actual employee ID
+
+        formData.append('password', $('#edit_password').val());
+        formData.append('password_confirmation', $('#edit_confirm_password').val()); // Use the correct key
+
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+        // Validate password fields
+        var isValid = validatePassword('#edit_password', '#edit_confirm_password');
+
+        if (isValid) {
+            showLoader();
+            $.ajax({
+                url: "{{ route('update.employee.password') }}",
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    hideLoader();
+                    // console.log('Response from server:', response);
+                    $('#edit_password_modal').modal('hide'); // Hide the modal after success
+                    createToast('info', 'fa-solid fa-circle-check', 'Success', response.message);
+                },
+                error: function (data) {
+                    hideLoader();
+                    console.log(data.responseJSON.errors); // This will give you details on the errors
+                    if (data.responseJSON.errors.employee_id) {
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', data.responseJSON.errors
+                            .employee_id[0]);
+                    } else {
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error updating password.');
+                    }
+                }
+            });
+        }
+    });
+
+
+    // Function to clear validation states for password fields
+    function clearPasswordValidationStates() {
+        $('.password-control').removeClass('is-invalid is-valid');
+        $('.text-danger').remove();
+    }
+
+    // Function to validate password and confirm password
+    function validatePassword(passwordSelector, confirmPasswordSelector) {
+        let password = $(passwordSelector).val();
+        let confirmPassword = $(confirmPasswordSelector).val();
+        let parentPass = $(passwordSelector).closest('.input-block');
+        let parentConfirm = $(confirmPasswordSelector).closest('.input-block');
+
+        // Clear previous error messages
+        parentPass.find('.text-danger').remove();
+        parentConfirm.find('.text-danger').remove();
+
+        // Check if password is empty
+        if (!password) {
+            $(passwordSelector).addClass('is-invalid');
+            parentPass.append(`<span class="text-danger">Password field cannot be empty.</span>`);
+        }
+
+        // Check if confirm password is empty
+        if (!confirmPassword) {
+            $(confirmPasswordSelector).addClass('is-invalid');
+            parentConfirm.append(`<span class="text-danger">Confirm Password field cannot be empty.</span>`);
+        }
+
+        // If password is empty, no need to check matching
+        if (!password) {
+            return false; // Prevent further checks if password is empty
+        }
+
+        // If confirm password is empty, do not check for match
+        if (!confirmPassword) {
+            return false; // Prevent further checks if confirm password is empty
+        }
+
+        // Check if password is less than 8 characters
+        if (password.length < 8) {
+            $(passwordSelector).addClass('is-invalid');
+            parentPass.append(`<span class="text-danger">Password must be at least 8 characters long.</span>`);
+            return false;
+        }
+
+        // Check if passwords match
+        if (password !== confirmPassword) {
+            $(confirmPasswordSelector).addClass('is-invalid');
+            parentConfirm.append(`<span class="text-danger">Passwords do not match.</span>`);
+            return false;
+        }
+
+        // If all checks pass, mark as valid
+        $(passwordSelector).removeClass('is-invalid').addClass('is-valid');
+        $(confirmPasswordSelector).removeClass('is-invalid').addClass('is-valid');
+        return true;
+    }
 </script>
 <script>
 
@@ -654,7 +818,7 @@
                     $('#users_table').DataTable().ajax.reload();
                     $('#deleteConfirmationModal').modal('hide'); // Hide the modal
                     // Trigger custom success toaster
-                    createToast('success', 'fa-solid fa-circle-check', 'Success', 'Employee deleted successfully.');
+                    createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee deleted successfully.');
                 },
                 error: function (err) {
                     createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error deleting employee.');
@@ -775,7 +939,7 @@
 
                     $('#edit_employee').modal('hide');
                     hideLoader();
-                    createToast('success', 'fa-solid fa-circle-check', 'Success', 'Employee Updated successfully.');
+                    createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee Updated successfully.');
                     $('#users_table').DataTable().ajax.reload();
                 },
                 error: function (error) {
