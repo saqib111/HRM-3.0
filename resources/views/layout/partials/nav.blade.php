@@ -68,7 +68,7 @@
                     <span>Schedule</span>
                 </li>
                 <li class="submenu ">
-                    <a href="#" class="noti-dot"><i class="fa fa-calendar fa-1x"></i> <span> Schedule</span> <span
+                    <a href="#"><i class="fa fa-calendar fa-1x"></i> <span> Schedule</span> <span
                             class="menu-arrow"></span></a>
                     <ul>
                         <li><a class="{{ request()->routeIs('schedule') ? 'active' : '' }}"

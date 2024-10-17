@@ -275,3 +275,26 @@ a.btn_employee:hover {
     background-color: #00c5fb !important;
     border-color: #00c5fb !important;
 }
+
+/* ScrollBar NEW CSS */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure the body takes the full height */
+    overflow: hidden; /* Prevent scrollbars on the body */
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    height: 100vh; /* Full height of the viewport */
+}
+
+.page-wrapper {
+    position: relative; /* Position context for child elements */
+    overflow-y: auto; /* Show vertical scrollbar only when necessary */
+    overflow-x: hidden; /* Hide horizontal scrollbar */
+}
+
+/* /// ScrollBar CSS  END ////*/
