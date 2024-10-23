@@ -90,61 +90,60 @@
                     <span aria-hidden="true">x</span>
                 </button>
             </div>
-            <div class="card shadow-lg rounded border-0" style="max-width: 800px; margin: auto;">
-                <div class="card-body p-4">
-                    <div class="row">
-                        <div class="col-12 ml-2">
-                            <div class="personal-info">
-                                <!-- Employee Information -->
-                                <div class="px-2 d-flex flex-column">
-                                    <div class="py-2 d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Employee ID:</span>
-                                        <span id="modal-employee-id" class="text-dark fs-6 ms-2">EMP12345</span>
-                                    </div>
-                                    <div class="py-2 d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Username:</span>
-                                        <span id="modal-username" class="text-dark fs-6">Rohan1</span>
-                                    </div>
-                                </div>
-
-                                <!-- Title and Description -->
-                                <hr class="my-2">
-                                <div class="py-2 d-flex justify-content-center align-items-center">
-                                    <span id="modal-title" class="text-dark fs-6">Senior Developer</span>
-                                </div>
-                                <hr class="my-2">
-                                <div
-                                    class="py-2 d-flex flex-column flex-md-row justify-content-between align-items-start p-0 p-md-1">
-                                    <span class="fw-semibold">Description:</span>
-                                    <span id="modal-description" class="text-dark fs-6 ms-3">Responsible for designing,
-                                        developing, and maintaining software applications.</span>
-                                </div>
-
-                                <!-- Placeholder for Dynamic Leave Sections -->
-                                <hr class="my-2">
-                                <div class="leave-sections"></div>
-
-                                <!-- Total Days Information -->
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-12 ml-2">
+                        <div class="personal-info">
+                            <!-- Employee Information -->
+                            <div class="px-2 d-flex flex-column">
                                 <div class="py-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Total Leave Days:</span>
-                                    <span class="text-dark fs-6">34 days</span>
+                                    <span class="fw-semibold">Employee ID:</span>
+                                    <span id="modal-employee-id" class="text-dark fs-6 ms-2">EMP12345</span>
                                 </div>
                                 <div class="py-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Annual Off Days:</span>
-                                    <span class="text-dark fs-6">28 days</span>
+                                    <span class="fw-semibold">Username:</span>
+                                    <span id="modal-username" class="text-dark fs-6">Rohan1</span>
                                 </div>
-                                <div class="py-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Off Days:</span>
-                                    <span class="text-dark fs-6">6 days</span>
-                                </div>
+                            </div>
 
-                                <hr class="my-2">
+                            <!-- Title and Description -->
+                            <hr class="my-2">
+                            <div class="py-2 d-flex justify-content-center align-items-center">
+                                <span id="modal-title" class="text-dark fs-6">Senior Developer</span>
+                            </div>
+                            <hr class="my-2">
+                            <div
+                                class="py-2 d-flex flex-column flex-md-row justify-content-between align-items-start p-0 p-md-1">
+                                <span class="fw-semibold">Description:</span>
+                                <span id="modal-description" class="text-dark fs-6 ms-3">Responsible for designing,
+                                    developing, and maintaining software applications.</span>
+                            </div>
 
-                                <!-- Action Buttons -->
-                                <div class="d-flex flex-column flex-sm-row justify-content-center mt-4">
-                                    <button class="btn btn-success mb-2 mb-sm-0">Approved</button>
-                                    <button class="btn btn-danger ms-0 ms-sm-2">Decline</button>
-                                </div>
+                            <!-- Placeholder for Dynamic Leave Sections -->
+                            <hr class="my-2">
+                            <div class="leave-sections"></div>
+
+                            <!-- Total Days Information -->
+                            <hr class="my-2">
+                            <div class="py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Total Leave Days:</span>
+                                <span class="text-dark fs-6">34 days</span>
+                            </div>
+                            <div class="py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Annual Off Days:</span>
+                                <span class="text-dark fs-6">28 days</span>
+                            </div>
+                            <div class="py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Off Days:</span>
+                                <span class="text-dark fs-6">6 days</span>
+                            </div>
+
+                            <hr class="my-2">
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex flex-column flex-sm-row justify-content-center mt-4">
+                                <button class="btn btn-success mb-2 mb-sm-0">Approved</button>
+                                <button class="btn btn-danger ms-0 ms-sm-2">Decline</button>
                             </div>
                         </div>
                     </div>
@@ -228,10 +227,12 @@
             });
         });
 
-        // Function to populate leave sections dynamically based on leave types and off-days
         function populateLeaveSection(leaveDetails, offDays) {
             const leaveSections = document.querySelector('.leave-sections');
             leaveSections.innerHTML = ''; // Clear previous content
+
+            // Object to hold grouped leaves by month
+            const groupedLeavesByMonth = {};
 
             leaveDetails.forEach(leave => {
                 // Parse leave_type_id as an integer to avoid type mismatch
@@ -263,112 +264,127 @@
                         leaveType = 'Other Leave'; // Default type
                 }
 
-                // Create section for this leave type
+                // Process full-day leaves, skip half-day here
+                if (leave.type === 'half_day') {
+                    return; // Skip to handle separately
+                }
+
+                const startDate = new Date(leave.start_date);
+                const endDate = new Date(leave.end_date);
+
+                let currentDate = new Date(startDate);
+                while (currentDate <= endDate) {
+                    const formattedDate = currentDate.toISOString().split('T')[0];
+                    const monthName = currentDate.toLocaleString('default', { month: 'long' });
+
+                    // Initialize month grouping if it doesn't exist
+                    if (!groupedLeavesByMonth[monthName]) {
+                        groupedLeavesByMonth[monthName] = [];
+                    }
+
+                    // Push the leave details into the corresponding month
+                    groupedLeavesByMonth[monthName].push({
+                        date: currentDate.getDate(),
+                        fullDate: formattedDate,
+                        bgColorClass: isOffDay(formattedDate, offDays) ? 'bg-light-gray' : bgColorClass,
+                        leaveType: leaveType, // Pass the leaveType into the grouping
+                    });
+
+                    // Move to the next day
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            });
+
+            // Render the grouped full-day leaves by month
+            for (let month in groupedLeavesByMonth) {
                 const section = document.createElement('div');
                 section.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
 
-                // Section header with date range or half-day time
-                let sectionContent = '';
+                const firstLeaveDay = groupedLeavesByMonth[month][0].fullDate;
+                const lastLeaveDay = groupedLeavesByMonth[month][groupedLeavesByMonth[month].length - 1].fullDate;
 
-                if (leave.type === 'full_day') {
-                    sectionContent = `
-                    <span class="fw-semibold">${leaveType}:</span>
-                    <div class="d-flex flex-column flex-sm-row ms-2">
-                        <div class="me-3">
-                            <span class="text-muted">From:</span>
-                            <span class="text-dark fs-6 ms-2">${formatDate(leave.start_date)}</span>
-                        </div>
-                        <div>
-                            <span class="text-muted">To:</span>
-                            <span class="text-dark fs-6 ms-2">${formatDate(leave.end_date || leave.date)}</span>
-                        </div>
-                    </div>
-                `;
-                } else if (leave.type === 'half_day') {
-                    sectionContent = `
-                    <span class="fw-semibold">${leaveType}:</span>
-                    <div class="d-flex flex-column flex-sm-row ms-2">
-                        <div class="me-3">
-                            <span class="text-muted">Date:</span>
-                            <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
-                        </div>
-                        <div class="me-3">
-                            <span class="text-muted">Start Time:</span>
-                            <span class="text-dark fs-6 ms-2">${leave.start_time}</span>
-                        </div>
-                        <div>
-                            <span class="text-muted">End Time:</span>
-                            <span class="text-dark fs-6 ms-2">${leave.end_time}</span>
-                        </div>
-                    </div>
-                `;
-                }
+                // Display the date range for the full-day leaves
+                section.innerHTML = `
+            <span class="fw-semibold">${groupedLeavesByMonth[month][0].leaveType}:</span>
+            <div>
+                <span class="text-muted">From:</span>
+                <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
+            </div>
+            <div>
+                <span class="text-muted">To:</span>
+                <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
+            </div>
+            <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
+        `;
 
-                section.innerHTML = sectionContent;
+                const dateRow = section.querySelector('.d-flex.flex-wrap');
 
-                // Create a row for date circles for full-day or half-day leave
-                const dateRow = document.createElement('div');
-                dateRow.classList.add('d-flex', 'flex-wrap', 'customFullWidth');
-
-                if (leave.type === 'full_day') {
-                    // Loop through the date range and create date circles
-                    const startDate = new Date(leave.start_date);
-                    const endDate = leave.end_date ? new Date(leave.end_date) : new Date(leave.date); // Handle half-day leave as well
-
-                    let currentDate = new Date(startDate);
-                    while (currentDate <= endDate) {
-                        const formattedDate = currentDate.toISOString().split('T')[0];
-
-                        // Create the date circle
-                        const dateCircle = document.createElement('div');
-                        dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
-
-                        // If it's an off-day, make it gray
-                        if (isOffDay(formattedDate, offDays)) {
-                            dateCircle.classList.add('bg-light-gray');
-                        } else {
-                            dateCircle.classList.add(bgColorClass); // Use the color based on the leave type
-                        }
-
-                        // Set the inner text of the circle to the day of the month
-                        dateCircle.innerText = currentDate.getDate();
-
-                        // Append the date circle to the row
-                        dateRow.appendChild(dateCircle);
-
-                        // Move to the next day
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
-                } else if (leave.type === 'half_day') {
-                    // For half-day leave, show the single date with time
-                    const halfDayDate = new Date(leave.date);
-
+                // Add the dates for this month
+                groupedLeavesByMonth[month].forEach(leave => {
                     const dateCircle = document.createElement('div');
                     dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
-                    dateCircle.classList.add(bgColorClass); // Use the leave type color
 
-                    // Set the inner text of the circle to the day of the month
-                    dateCircle.innerText = halfDayDate.getDate();
+                    if (leave.bgColorClass && leave.bgColorClass.trim() !== '') {
+                        dateCircle.classList.add(leave.bgColorClass);
+                    } else {
+                        console.error(`Error: Empty bgColorClass for leave on ${leave.fullDate}`);
+                    }
 
-                    // Append the date circle to the row
+                    dateCircle.innerText = leave.date;
                     dateRow.appendChild(dateCircle);
+                });
 
-                    // Add a time label below the date
-                    const timeLabel = document.createElement('div');
-                    timeLabel.classList.add('ms-2', 'text-muted');
-                    timeLabel.innerHTML = `<small>${leave.start_time} - ${leave.end_time}</small>`;
-
-                    // Append the time label to the row
-                    dateRow.appendChild(timeLabel);
-                }
-
-                // Append the date row to the section
-                section.appendChild(dateRow);
-
-                // Add the section to the leaveSections container
+                // Append each month row to the section
                 leaveSections.appendChild(section);
+            }
+
+            // Handle half-day leaves separately after full-day processing
+            leaveDetails.forEach(leave => {
+                if (leave.type === 'half_day') {
+                    displayHalfDayLeave(leave);
+                }
             });
         }
+
+        // Separate function for handling half-day leave display
+        function displayHalfDayLeave(leave) {
+            const leaveSections = document.querySelector('.leave-sections');
+
+            // Add the <hr> before half-day leave section
+            const hrElement = document.createElement('hr');
+            hrElement.classList.add('my-2');
+            leaveSections.appendChild(hrElement);
+
+            const halfDaySection = document.createElement('div');
+            halfDaySection.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
+
+            halfDaySection.innerHTML = `
+        <span class="fw-semibold">Annual Leave (Half Day):</span>
+        <div class="d-flex gap-3 ms-2">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Date:</span>
+                <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Start Time:</span>
+                <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">End Time:</span>
+                <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
+            </div>
+        </div>`;
+
+            // Append the half-day leave section
+            leaveSections.appendChild(halfDaySection);
+
+            // Display the half-day leave date as a circle
+            const halfDayCircle = document.createElement('div');
+            halfDayCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1', 'bg-light-blue');
+            halfDayCircle.innerText = new Date(leave.date).getDate();
+            leaveSections.appendChild(halfDayCircle);
+        }
+
 
         // Helper function to format date in a readable way
         function formatDate(date) {
