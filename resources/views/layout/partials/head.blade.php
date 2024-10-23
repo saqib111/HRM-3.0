@@ -7,9 +7,7 @@
 
 
 <!-- Feathericon CSS -->
-<link rel="stylesheet" href="{{asset('/assets/css/feather.css')}}">
-
-
+<link rel="stylesheet" href="{{ asset('/assets/css/feather.css')}}">
 
 <link rel="stylesheet" href="{{ asset('/assets/css/line-awesome.min.css')}}">
 
@@ -24,39 +22,27 @@
 <!-- Daterangepikcer CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/plugins/daterangepicker/daterangepicker.css') }}">
 
-
 <!-- Chart CSS -->
-<link rel="stylesheet" href="{{asset('/assets/plugins/morris/morris.css') }}">
+<link rel="stylesheet" href="{{ asset('/assets/plugins/morris/morris.css') }}">
 
 <!-- Owl carousel CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/css/owl.carousel.min.css')}}">
 
-
-
 <!-- Datetimepicker CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/css/bootstrap-datetimepicker.min.css') }}">
-
-
 
 <!-- Daterangepikcer CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/plugins/daterangepicker/daterangepicker.css') }}">
 
-
-
 <!-- Calendar CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/css/fullcalendar.min.css') }}">
 
-
-
 <!-- Ck Editor -->
 <link rel="stylesheet" href="{{ asset('/assets/css/ckeditor.css') }}">
-
-
 <link rel="stylesheet" href="{{ asset('/assets/plugins/alertify/alertify.min.css') }}">
 
 <!-- Sticky CSS -->
 <link rel="stylesheet" href="{{ asset('/assets/plugins/stickynote/sticky.css') }}">
-
 <link rel="stylesheet" href="{{ asset('/assets/plugins/scrollbar/scroll.min.css') }}">
 
 <!-- Toatr CSS -->

@@ -550,7 +550,7 @@
                         hideLoader();
                         $('#add_employee').modal('hide');
                         $('#users_table').DataTable().ajax.reload();
-                        createToast('success', 'fa-solid fa-circle-check', 'Success', 'Employee added successfully.');
+                        createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee added successfully.');
                     },
                     error: function (data) {
                         hideLoader();

@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
+        Schema::create('leader_employees', function (Blueprint $table) {
             $table->id();
-            $table->date('start_to');
-            $table->date('start_end');
-            $table->time('start_time');
-            $table->date('end_to');
-            $table->date('end_end');
-            $table->time('end_time');
-            $table->string('name');
+            $table->integer('Leader_id');
+            $table->integer('employee_id');
+            $table->string('off_day')->nullable();
+            
             $table->enum('status', ['0', '1'])->default('0');
-            $table->integer('user_id');
             $table->timestamps();
         });
     }
@@ -31,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('schedules');
+        Schema::dropIfExists('leader_employees');
     }
 };

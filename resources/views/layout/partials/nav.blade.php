@@ -71,15 +71,39 @@
                     <a href="#"><i class="fa fa-calendar fa-1x"></i> <span> Schedule</span> <span
                             class="menu-arrow"></span></a>
                     <ul>
-                        <li><a class="{{ request()->routeIs('schedule') ? 'active' : '' }}"
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
                                 href="{{ route('schedule')}}">Create Schedule</a></li>
+                        <li><a class="{{ Request::is('groups', 'group-show') ? 'active' : '' }}"
+                                href="{{ route('group.index')}}">Create Group</a></li>
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
+                                href="{{ route('group.change')}}">Change Group Members</a></li>
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
+                                href="{{ route('assign.employee')}}">Assign Group</a></li>
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
+                                href="{{route('add.holiday')}}">Assign Holiday</a></li>
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
+                                href="{{route('schedule.manage')}}">Manage Schedule</a></li>
                     </ul>
                 </li>
+                <!-- Roles & Permissions -->
+                <li class="menu-title">
+                    <span>Roles and Permissions</span>
+                </li>
+                <li class="{{ request()->routeIs('roles-permissions.index') ? 'active' : '' }}">
+                    <a href="{{route('roles-permissions.index')}}"><i class="la la-key"></i> <span>Roles and
+                            Permissions</span>
+                    </a>
+                </li>
+                <!-- Leave Application -->
                 <li class="menu-title">
                     <span>Leave Application</span>
                 </li>
                 <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
                     <a href="{{route('leave.form.show')}}"><i class="fa fa-home"></i> <span> Leave Apply</span> </a>
+                </li>
+                <li class="{{ request()->routeIs('leave_application.data') ? 'active' : '' }}">
+                    <a href="{{route('leave_application.data')}}"><i class="fa fa-home"></i> <span> Pending
+                            Leaves</span> </a>
                 </li>
             </ul>
 

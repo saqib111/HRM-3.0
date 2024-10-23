@@ -1,0 +1,213 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Group;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+
+use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\{
+    DB,
+    Session,
+    Http
+};
+use App\Models\{
+
+    User,
+    LeaderEmployee,
+    AttendanceRecord,
+};
+
+class GroupController extends Controller
+{
+    /** 
+     * Display a listing of the resource. 
+     */
+    public function index()
+    {
+
+
+
+        return view('schedule.group');
+    }
+
+    /** 
+     * Show the form for creating a new resource. 
+     */
+    public function create()
+    {
+        // 
+    }
+
+    /** 
+     * Store a newly created resource in storage. 
+     */
+    public function store(Request $request)
+    {
+        try {
+            $id = auth()->user()->id;
+            $request->validate([
+                'group_name' => 'required',
+                'employee_id' => 'required',
+
+            ]);
+
+            $group = new Group();
+            $group->name = $request->group_name;
+            $group->user_id = implode(' , ', $request->employee_id);
+            $group->leader_id = $id;
+            $group->status = "0";
+            $group->save();
+
+            return response()->json([
+                'message' => 'Group created successfully!'
+            ], 200);
+
+
+
+        } catch (\Exception $e) {
+
+            $e->getMessage();
+
+        }
+
+    }
+
+    /** 
+     * Display the specified resource. 
+     */
+    public function show(Group $group)
+    {
+        // 
+    }
+
+    /** 
+     * Show the form for editing the specified resource. 
+     */
+    public function edit(Group $group)
+    {
+        // 
+    }
+
+    /** 
+     * Update the specified resource in storage. 
+     */
+    public function update(Request $request, Group $group)
+    {
+        // 
+    }
+
+    /** 
+     * Remove the specified resource from storage. 
+     */
+    public function destroy($id)
+    {
+        $group = Group::find($id);
+        $group->delete();
+        return response()->json([
+            'message' => 'Group delted successfully!'
+        ], 200);
+    }
+    public function groupData(Request $request)
+    {
+        $id = auth()->user()->id;
+        // $employee=DB::table('users as u') 
+        //       ->join('leader_employees as lu','u.id','=','lu.employee_id') 
+        //       ->where('lu.Leader_id',$id) 
+        //       ->where('lu.status','0') 
+        //       ->select('u.id as id','u.username as name') 
+        //       ->get(); 
+
+        $group = Group::where('leader_id', $id)->where('status', '0');
+
+
+        if ($request->has('name')) {
+            $group->where('name', $request->input('group_name'));
+        }
+
+        return DataTables::of($group)
+            ->addIndexColumn()
+            // Make company_name searchable using the "whereHas" filter for joined fields 
+
+
+            ->filterColumn('Group Name', function ($query, $keyword) {
+                $query->where('name', 'LIKE', "%{$keyword}%");
+
+            })
+
+            ->addColumn('action', function ($row) {
+                $btn = '<button class="btn btn-danger" onclick="deleSchedule(' . $row->id . ')"><i class="fa fa-trash"></i></button>';
+                $btn = '<button class="btn btn-danger" onclick="editSchedule(' . $row->id . ')"><i class="fa fa-trash"></i></button>';
+                return $btn;
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+
+    }
+
+    public function groupEmployee()
+    {
+        $id = auth()->user()->id;
+        $employee = DB::table('users as u')
+            ->join('leader_employees as lu', 'u.id', '=', 'lu.employee_id')
+            ->where('lu.Leader_id', $id)
+            ->where('lu.status', '0')
+            ->select('u.id as id', 'u.username as name')
+            ->get();
+        return response()->json([
+            'employee' => $employee,
+        ]);
+    }
+
+    public function groupChange()
+    {
+        $id = auth()->user()->id;
+
+        $groups = DB::table('groups')
+            ->select('*')
+            ->where('leader_id', $id)
+            ->where('status', '0')
+            ->get();
+
+
+        return view('schedule.group-change', compact('groups'));
+    }
+    public function changeGroupData(Request $request)
+    {
+        $old_id = $request->old_group_id;
+        $employee_id = $request->employee_id;
+        $group_id = $request->group_id;
+
+        $old = DB::table('groups')
+            ->select('user_id')
+            ->where('id', $old_id)
+            ->first();
+        $oldEmployee = explode(',', $old->user_id);
+        $pos = array_search($employee_id, $oldEmployee);
+        if ($pos !== false) {
+            unset($oldEmployee[$pos]);
+        }
+        $old_update = Group::find($old_id);
+        $old_update->update([
+            $old_update->user_id = implode(',', $oldEmployee),
+        ]);
+
+        $new = DB::table('groups')
+            ->select('user_id')
+            ->where('id', $group_id)
+            ->first();
+        $newEmployee = explode(',', $new->user_id);
+        $check = array_search($employee_id, $newEmployee);
+        if ($check == false) {
+            array_push($newEmployee, $employee_id);
+        }
+        $newUpdate = Group::find($group_id);
+        $newUpdate->update([
+            $newUpdate->user_id = implode(',', $newEmployee),
+
+        ]);
+        return redirect()->back()->with('success', 'Employe group has been changed Successfully');
+    }
+}

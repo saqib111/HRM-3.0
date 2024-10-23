@@ -10,10 +10,12 @@ use App\Http\Controllers\{
     UserProfileController,
     CompanyController,
     ScheduleController,
+    GroupController,
     BrandController,
     DepartmentController,
     DesignationController,
-    LeaveController
+    LeaveController,
+    RolesPermissionsController,
 };
 
 Route::get('/', function () {
@@ -40,6 +42,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/check-designation/{id}', [AdminController::class, 'checkDesignation'])->name('check.designation');
     //schedule start
     Route::get('schedule-list', [ScheduleController::class, 'index'])->name('schedule');
+    Route::resource('schedule', ScheduleController::class);
+    Route::get('/schedule-data', [ScheduleController::class, 'dataTable'])->name('schedule.data');
+    Route::get('/schedule-data-search/{id}', [ScheduleController::class, 'findData'])->name('schedule.get');
+    Route::get('/assign-employee', [ScheduleController::class, 'assignEmployee'])->name('assign.employee');
+    Route::post('/attendance-record', [ScheduleController::class, 'attendanceRecord'])->name('attendancerecord.store');
+    Route::get('/manage-schedule', [ScheduleController::class, 'manageSchedule'])->name('schedule.manage');
+    Route::get('/manage-schedule-data', [ScheduleController::class, 'manageScheduleData'])->name('manage.scheduledata');
+    Route::post('/manage-schedule-data', [ScheduleController::class, 'updateSchedule'])->name('schedule.update');
+    Route::get('/delete-schedule/{id}', [ScheduleController::class, 'deleteSchedule'])->name('schedule.delete');
+    Route::get('/add-holiday', [ScheduleController::class, 'addHoliday'])->name('add.holiday');
+    Route::resource('group', GroupController::class);
+    Route::get('group-data', [GroupController::class, 'groupData'])->name('group.data');
+    Route::get('group-employee', [GroupController::class, 'groupEmployee'])->name('group.employee');
+    Route::get('change-employee-group', [GroupController::class, 'groupChange'])->name('group.change');
+    Route::post('change-group', [GroupController::class, 'changeGroupData'])->name('changegroup.data');
+    Route::get('group-member/{id}', [GroupController::class, 'groupMember'])->name('group.member');
     //schedule end
 
     // Route to Active/Deactive Users by Admin 
@@ -58,6 +76,13 @@ Route::middleware('auth')->group(function () {
 
     // Leave Application Frontend Route
     Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');
+    Route::post('/leave_application_store', [LeaveController::class, 'store_leave'])->name('leave.form.store');
+    Route::get('/leave_application/data', [LeaveController::class, 'display_leave'])->name('leave_application.data');
+    // Route to fetch the data for Modal
+    Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
+
+
+    Route::resource('roles-permissions', RolesPermissionsController::class);
 
 });
 

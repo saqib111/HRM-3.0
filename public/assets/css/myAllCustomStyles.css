@@ -298,3 +298,32 @@ body {
 }
 
 /* /// ScrollBar CSS  END ////*/
+
+/* Roles & Permissions Styles */
+.check-role {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+}
+.roles-container {
+    display: flex;
+    gap: 90px;
+    flex-wrap: wrap;
+    justify-content: start;
+}
+
+.column-container {
+    background: #eeee;
+    padding: 40px 20px 40px 20px;
+    border-radius: 5px;
+}
+.card-role {
+    background: #ffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+        /* Slight shadow below the element */ 0 1px 3px rgba(0, 0, 0, 0.08); /* Softer, more subtle shadow closer */
+}
+
+.custom_check .checkmark {
+    border: 1px solid #c5c5c5 !important;
+    background-color: #eeee !important;
+}

@@ -50,6 +50,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(visaInfo::class);
     }
+
+    // Relationship with leave management (one user can have many leaves)
+    public function leaveApplications()
+    {
+        return $this->hasMany(LeaveManagement::class);
+    }
     /**
      * Get the attributes that should be cast.
      *

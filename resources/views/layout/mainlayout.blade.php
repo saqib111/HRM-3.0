@@ -15,6 +15,7 @@
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/asseys/img/favicon.png') }}">
     @include('layout.partials.head')
+    @yield('head')
     @yield('css')
 </head>
 
@@ -37,8 +38,6 @@
 
     @include('layout.partials.footer-scripts')
     @yield('script-z')
-
-
 </body>
 
 </html>
