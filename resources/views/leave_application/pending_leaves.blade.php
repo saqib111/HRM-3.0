@@ -231,11 +231,10 @@
             const leaveSections = document.querySelector('.leave-sections');
             leaveSections.innerHTML = ''; // Clear previous content
 
-            // Object to hold grouped leaves by month
-            const groupedLeavesByMonth = {};
+            // Group leaves by type and month
+            const groupedLeaves = {};
 
             leaveDetails.forEach(leave => {
-                // Parse leave_type_id as an integer to avoid type mismatch
                 const leaveTypeId = parseInt(leave.leave_type_id, 10);
 
                 // Define leave type and corresponding color
@@ -264,78 +263,79 @@
                         leaveType = 'Other Leave'; // Default type
                 }
 
-                // Process full-day leaves, skip half-day here
-                if (leave.type === 'half_day') {
-                    return; // Skip to handle separately
-                }
-
+                // Process leaves by grouping them by type and then by month
                 const startDate = new Date(leave.start_date);
                 const endDate = new Date(leave.end_date);
-
                 let currentDate = new Date(startDate);
+
                 while (currentDate <= endDate) {
                     const formattedDate = currentDate.toISOString().split('T')[0];
                     const monthName = currentDate.toLocaleString('default', { month: 'long' });
 
-                    // Initialize month grouping if it doesn't exist
-                    if (!groupedLeavesByMonth[monthName]) {
-                        groupedLeavesByMonth[monthName] = [];
+                    // Initialize groupings if they don't exist
+                    if (!groupedLeaves[leaveType]) {
+                        groupedLeaves[leaveType] = {};
                     }
 
-                    // Push the leave details into the corresponding month
-                    groupedLeavesByMonth[monthName].push({
+                    if (!groupedLeaves[leaveType][monthName]) {
+                        groupedLeaves[leaveType][monthName] = [];
+                    }
+
+                    // Add date to the corresponding type and month
+                    groupedLeaves[leaveType][monthName].push({
                         date: currentDate.getDate(),
                         fullDate: formattedDate,
                         bgColorClass: isOffDay(formattedDate, offDays) ? 'bg-light-gray' : bgColorClass,
                         leaveType: leaveType, // Pass the leaveType into the grouping
                     });
 
-                    // Move to the next day
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
             });
 
-            // Render the grouped full-day leaves by month
-            for (let month in groupedLeavesByMonth) {
-                const section = document.createElement('div');
-                section.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
+            // Now render each type and its respective months
+            for (let leaveType in groupedLeaves) {
+                for (let month in groupedLeaves[leaveType]) {
+                    const section = document.createElement('div');
+                    section.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
 
-                const firstLeaveDay = groupedLeavesByMonth[month][0].fullDate;
-                const lastLeaveDay = groupedLeavesByMonth[month][groupedLeavesByMonth[month].length - 1].fullDate;
+                    const firstLeaveDay = groupedLeaves[leaveType][month][0].fullDate;
+                    const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
 
-                // Display the date range for the full-day leaves
-                section.innerHTML = `
-            <span class="fw-semibold">${groupedLeavesByMonth[month][0].leaveType}:</span>
-            <div>
-                <span class="text-muted">From:</span>
-                <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
-            </div>
-            <div>
-                <span class="text-muted">To:</span>
-                <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
-            </div>
-            <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-        `;
+                    // Display the date range for the leave type
+                    section.innerHTML = `
+                <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span>
+                <div>
+                    <span class="text-muted">From:</span>
+                    <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
+                </div>
+                <div>
+                    <span class="text-muted">To:</span>
+                    <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
+                </div>
+                <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
+            `;
 
-                const dateRow = section.querySelector('.d-flex.flex-wrap');
+                    const dateRow = section.querySelector('.d-flex.flex-wrap');
 
-                // Add the dates for this month
-                groupedLeavesByMonth[month].forEach(leave => {
-                    const dateCircle = document.createElement('div');
-                    dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
+                    // Add the dates for this month
+                    groupedLeaves[leaveType][month].forEach(leave => {
+                        const dateCircle = document.createElement('div');
+                        dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
 
-                    if (leave.bgColorClass && leave.bgColorClass.trim() !== '') {
-                        dateCircle.classList.add(leave.bgColorClass);
-                    } else {
-                        console.error(`Error: Empty bgColorClass for leave on ${leave.fullDate}`);
-                    }
+                        if (leave.bgColorClass && leave.bgColorClass.trim() !== '') {
+                            dateCircle.classList.add(leave.bgColorClass);
+                        } else {
+                            console.error(`Error: Empty bgColorClass for leave on ${leave.fullDate}`);
+                        }
 
-                    dateCircle.innerText = leave.date;
-                    dateRow.appendChild(dateCircle);
-                });
+                        dateCircle.innerText = leave.date;
+                        dateRow.appendChild(dateCircle);
+                    });
 
-                // Append each month row to the section
-                leaveSections.appendChild(section);
+                    // Append each month row to the section
+                    leaveSections.appendChild(section);
+                }
             }
 
             // Handle half-day leaves separately after full-day processing
