@@ -11,23 +11,13 @@ class UserProfile extends Model
     use HasFactory;
 
     protected $fillable = [
-
-        'first_name',
-        'last_name',
-        'email',
-
-        'employee_id',
+        'real_name',
+        'accomodation',
+        'gender',
         'phone',
-        'joining_date',
-        'company',
-        'department',
-        'position',
-        'passport_no',
-        'role',
-        'visa_issue',
-        'visa_expire',
-        'img',
-
+        'nationality',
+        'religion',
+        'telegram',
     ];
 
 

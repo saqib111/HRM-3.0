@@ -1,5 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
 
+.hidden {
+    display: none !important;
+}
+.yellowText {
+    color: #ead727;
+}
+
+.greenText {
+    color: #36e20a;
+}
+
+.redText {
+    color: #fc0909;
+}
 .select2-search__field {
     display: none;
 }

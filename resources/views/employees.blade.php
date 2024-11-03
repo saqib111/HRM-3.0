@@ -206,6 +206,14 @@
                             </div>
                         </div>
 
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label class="col-form-label" for="leave_type">Annual Leaves</label>
+                                <input type="number" class="form-control leave_type" name="leave_type" id="leave_type">
+                                <div id="leaves"></div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="submit-section">
@@ -441,7 +449,9 @@
                     }
                 }
             ],
-            order: []
+            order: [],
+            pageLength: 14, // Set the default number of records to show
+            lengthMenu: [10, 14, 25, 50, 100] // Options for records per page
         });
     }
 
@@ -515,6 +525,7 @@
 
             formData.append('image', $('.img')[0].files[0]);
 
+            formData.append('leave_type', $('#leave_type').val());
             var isValid = true;
 
             // Reset validation state before running new validation
@@ -530,6 +541,9 @@
             if (!validateField('.department', 'Department')) isValid = false;
             if (!validateField('.designation', 'Designation')) isValid = false;
             if (!validateBrand(selectedBrands)) isValid = false;
+
+            // Validate leave_type
+            if (!validateField('#leave_type', 'Leave Type')) isValid = false;
 
             // If all fields are valid, proceed with form submission
             if (isValid) {

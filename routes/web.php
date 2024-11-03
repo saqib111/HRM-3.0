@@ -16,6 +16,10 @@ use App\Http\Controllers\{
     DesignationController,
     LeaveController,
     RolesPermissionsController,
+    AllEmployeesController,
+    AssignedLeaveApprovalsController,
+    AnnualLeavesController,
+    ExpiredVisaInfoController,
 };
 
 Route::get('/', function () {
@@ -67,7 +71,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/get-employee-id/{id}', [AdminController::class, 'getEmployeeId'])->name('get.employee.id');
     Route::post('/update-employee-password', [AdminController::class, 'updatePassword'])->name('update.employee.password');
 
+    // User Profile Routes
     Route::resource('user-profile', UserProfileController::class);
+    Route::get('all-employees', [UserProfileController::class, 'allEmployee'])->name('all.employees');
+    Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails');
+    Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo');
+    Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update');
+    Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update');
+
+
     // Dynamic Department Routes
     Route::resource('company', CompanyController::class);
     Route::resource('brand', BrandController::class);
@@ -80,9 +92,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/leave_application/data', [LeaveController::class, 'display_leave'])->name('leave_application.data');
     // Route to fetch the data for Modal
     Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
+    Route::post('/leave_action', [LeaveController::class, 'leave_action'])->name('leave.form.action');
 
 
     Route::resource('roles-permissions', RolesPermissionsController::class);
+
+    Route::resource('leave-approvals', AssignedLeaveApprovalsController::class);
+    Route::resource('annual-leaves', AnnualLeavesController::class);
+    Route::resource('expired-visa-information', ExpiredVisaInfoController::class);
 
 });
 

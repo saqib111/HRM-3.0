@@ -23,9 +23,9 @@ return new class extends Migration {
 
             // Approval details
             $table->enum('status_1', ['pending', 'approved', 'rejected'])->default('pending'); // Team leader approval status
-            $table->json('team_leader_ids'); // JSON to store the list of team leader IDs for approval
+            $table->json('team_leader_ids')->nullable(); // JSON to store the list of team leader IDs for approval
             $table->enum('status_2', ['pending', 'approved', 'rejected'])->default('pending'); // Manager approval status
-            $table->json('manager_ids'); // JSON to store the list of manager IDs for approval
+            $table->json('manager_ids')->nullable(); // JSON to store the list of manager IDs for approval
 
             // Approval timestamps and approver IDs
             $table->foreignId('first_approval_id')->nullable()->constrained('users'); // ID of the first approver (Team Leader)

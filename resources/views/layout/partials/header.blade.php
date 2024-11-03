@@ -270,7 +270,7 @@
         <span>Admin</span>
       </a>
       <div class="dropdown-menu">
-        <a class="dropdown-item" href="{{ url('user-profile') }}">My Profile</a>
+        <a class="dropdown-item" href="{{ route('user-profile.customDetails', Auth::id()) }}">My Profile</a>
         <a class="dropdown-item" href="{{ url('settings') }}">Settings</a>
         <form method="post" action="{{url('logout')}}">
           @csrf
@@ -286,7 +286,7 @@
     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i
         class="fa-solid fa-ellipsis-vertical"></i></a>
     <div class="dropdown-menu dropdown-menu-right">
-      <a class="dropdown-item" href="{{ url('user-profile') }}">My Profile</a>
+      <a class="dropdown-item" href="{{ route('user-profile.customDetails', Auth::id()) }}">My Profile</a>
       <a class="dropdown-item" href="{{ url('settings') }}">Settings</a>
       <form method="post" action="{{url('logout')}}">
         @csrf

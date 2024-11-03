@@ -18,18 +18,20 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'employee_id',
         'username',
         'email',
         'password',
-        'employee_id',
-        'company',
-        'department',
-        'position',
-        'employee_status',
+        'joining_date',
+        'confirmation_status',
+        'image',
+        'company_id',
+        'department_id',
+        'designation_id',
+        'brand',
+        'is-allowed_8_offdays',
         'status',
-        'role',
-        'brand'
-
+        'role'
     ];
 
     /**
@@ -46,9 +48,34 @@ class User extends Authenticatable
     {
         return $this->hasOne(userProfile::class);
     }
-    public function visainfo(): HasOne
+
+    public function assignedLeaveApproval(): HasOne
     {
-        return $this->hasOne(visaInfo::class);
+        return $this->hasOne(AssignedLeaveApprovals::class);
+    }
+
+    public function annualleave(): HasOne
+    {
+        return $this->hasOne(AnnualLeaves::class);
+    }
+    public function visaInfo()
+    {
+        return $this->hasOne(VisaInfo::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function emergencyUser()
+    {
+        return $this->hasOne(Emergency::class, 'user_id');
+    }
+
+    public function dependantUser()
+    {
+        return $this->hasOne(Dependant::class, 'user_id');
     }
 
     // Relationship with leave management (one user can have many leaves)

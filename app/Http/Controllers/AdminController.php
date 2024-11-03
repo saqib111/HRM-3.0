@@ -16,6 +16,7 @@ use App\Models\{
     Designation,
     Brand,
     VisaInfo,
+    AnnualLeaves,
 
 };
 use Illuminate\Support\Facades\{
@@ -47,6 +48,7 @@ class AdminController extends Controller
             'designation' => 'required',
             'brand' => 'required|array|min:1',
             'joining_date' => 'required|date',
+            'leave_type' => 'required', // Ensure leave type is provided and valid
         ];
 
         // Add image validation only if the file is present
@@ -88,6 +90,37 @@ class AdminController extends Controller
         $visa = new VisaInfo();
         $visa->user_id = $user_id;
         $visa->save();
+
+        // Calculate Annual Leaves
+        $leave_type_days = (int) $request->leave_type; // Fetch the leave type (14 or 28)
+        $joining_date = date_create($request->joining_date);
+        $end_of_year = date_create(date("Y") . "-12-31");
+        $remaining_days = date_diff($joining_date, $end_of_year)->days;
+        $total_days_in_year = 365;
+
+        // Calculate the annual leave balance
+        $calculated_leaves = ($remaining_days / $total_days_in_year) * $leave_type_days;
+
+        // Apply rounding logic
+        $decimal_part = $calculated_leaves - floor($calculated_leaves);
+        // Round the decimal part to two decimal places
+        $decimal_part = round($decimal_part, 4);
+
+        if ($decimal_part >= 0.76) {
+            $calculated_leaves = ceil($calculated_leaves);
+        } elseif ($decimal_part >= 0.26 && $decimal_part <= 0.75) {
+            $calculated_leaves = floor($calculated_leaves) + 0.5;
+        } else {
+            $calculated_leaves = floor($calculated_leaves);
+        }
+
+        // Create a new AnnualLeaves instance and save it
+        $annualLeave = new AnnualLeaves();
+        $annualLeave->user_id = $user_id; // Link the annual leave information to the user
+        $annualLeave->leave_type = $leave_type_days; // Total annual leave based on employee type (14 or 28)
+        $annualLeave->leave_balance = $calculated_leaves; // Set calculated leave balance
+        $annualLeave->last_year_balance = 0; // Set default value for last year's balance
+        $annualLeave->save(); // Save the annual leave information
 
         return response()->json([
             'success' => true,

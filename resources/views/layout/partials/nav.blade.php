@@ -105,6 +105,42 @@
                     <a href="{{route('leave_application.data')}}"><i class="fa fa-home"></i> <span> Pending
                             Leaves</span> </a>
                 </li>
+
+                <!-- Wasif Created -->
+                <li class="menu-title">
+                    <span>All Employees Profile</span>
+                </li>
+                <li class="{{ request()->routeIs('all.employees') ? 'active' : '' }}">
+                    <a href="{{route('all.employees')}}"><i class="la la-key"></i> <span>All Employees</span>
+                    </a>
+                </li>
+
+                <li class="menu-title">
+                    <span>Leave Approvals</span>
+                </li>
+                <li class="{{ request()->routeIs('leave-approvals.index') ? 'active' : '' }}">
+                    <a href="{{route('leave-approvals.index')}}"><i class="la la-key"></i> <span>Leave Approvals</span>
+                    </a>
+                </li>
+
+
+                <li class="menu-title">
+                    <span>Leave Balance</span>
+                </li>
+                <li class="{{ request()->routeIs('annual-leaves.index') ? 'active' : '' }}">
+                    <a href="{{route('annual-leaves.index')}}"><i class="la la-key"></i> <span>Leave Balance</span>
+                    </a>
+                </li>
+
+
+                <li class="menu-title">
+                    <span>Visa Documents</span>
+                </li>
+                <li class="{{ request()->routeIs('expired-visa-information.index') ? 'active' : '' }}">
+                    <a href="{{route('expired-visa-information.index')}}"><i class="la la-key"></i> <span>Expired
+                            Visa</span>
+                    </a>
+                </li>
             </ul>
 
         </div>

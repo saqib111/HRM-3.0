@@ -124,14 +124,18 @@ function uploadImage($image, $upath = '', $prefix = '')
 function getImageUrl($image, $prefix = null)
 {
     if ($image != null) {
-        
+
         return Storage::disk('public')->url($image);
     }
 
     return null;
 }
 
-function getUser()
+function getUser($id)
 {
+    // Find the user by ID
+    $user = User::find($id);
 
+    // Check if user exists and return the username
+    return $user ? $user->username : null; // Return null if not found
 }

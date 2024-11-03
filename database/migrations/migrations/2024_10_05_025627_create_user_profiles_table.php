@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -20,8 +21,8 @@ return new class extends Migration {
             $table->string('nationality')->nullable();
             $table->string('religion')->nullable();
             $table->string('telegram')->nullable();
-            $table->enum('allowed_url', ['0', '1'])->default(0);
-            $table->string('gender')->nullable();
+            $table->enum('allowed_url',['0','1'])->default(0);
+            $table->enum('gender',['M','F','O'])->nullable();
             $table->string('remarks')->nullable();
             $table->string('leave_assign_user_id')->nullable();
             $table->string('second_leave_assign_user_id')->nullable();

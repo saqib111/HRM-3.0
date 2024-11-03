@@ -20,7 +20,7 @@
         justify-content: center;
         align-items: center;
         background-color: rgb(194, 191, 191);
-
+        color: #FFF;
     }
 
     .bg-light-blue {
@@ -41,6 +41,35 @@
 
     .customFullWidth {
         width: 100%;
+    }
+
+
+    .modal-body {
+        max-height: 80vh;
+        /* Max height for the modal body */
+        overflow-y: auto;
+        /* Allow scrolling for the body */
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        /* Set a max height for the modal itself */
+        margin: auto;
+        /* Center the modal */
+    }
+
+    @media (max-width: 768px) {
+        .modal-body {
+            max-height: 70vh;
+            /* Adjust height for smaller screens */
+        }
+    }
+
+    @media (max-width: 576px) {
+        .modal-body {
+            max-height: 60vh;
+            /* Further adjustment for extra small screens */
+        }
     }
 </style>
 <div class="page-header">
@@ -66,6 +95,7 @@
                         <th>Username</th>
                         <th>Title</th>
                         <th>Description</th>
+                        <th>Balance Leave</th>
                         <th>Day</th>
                         <th>From</th>
                         <th>To</th>
@@ -82,72 +112,107 @@
 <!-- Dynamic Modal Start -->
 <!-- Leave Detail Modal Start -->
 <div class="modal custom-modal fade mt-4" role="dialog" id="leaveDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Leave Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            <div class="modal-header p-2 align-items-center shadow-sm">
+                <h5 class="modal-title">Leave Application Details</h5>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">x</span>
                 </button>
             </div>
-            <div class="card-body p-4">
-                <div class="row">
-                    <div class="col-12 ml-2">
-                        <div class="personal-info">
-                            <!-- Employee Information -->
-                            <div class="px-2 d-flex flex-column">
+            <div class="modal-body p-2">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-12 ml-2">
+                            <div class="personal-info">
+                                <!-- Employee Information -->
+                                <div
+                                    class="d-flex flex-column align-items-start align-md-items-center flex-md-row justify-content-between flex-wrap">
+                                    <div class="py-2  ">
+                                        <span class="fw-semibold">Employee ID:</span>
+                                        <span id="modal-employee-id" class="text-dark fs-6 ms-2">AV12345</span>
+                                    </div>
+                                    <div class="py-2 ms-2 text-center  ">
+                                        <span class="fw-semibold">Username:</span>
+                                        <span id="modal-username" class="text-dark fs-6 ms-2">Remy</span>
+                                    </div>
+                                    <div class="py-2 greenText text-center  ">
+                                        <span class="fw-semibold">AL Balance:</span>
+                                        <span id="modal-alblance" class="                         fs-6 ms-2">30</span>
+                                    </div>
+                                </div>
+
+                                <!-- Title and Description -->
+                                <hr class="my-2">
+                                <div class="py-2 d-flex justify-content-center align-items-center">
+                                    <span id="modal-title" class="text-dark fs-6">Senior Developer</span>
+                                </div>
+                                <hr class="my-2">
+                                <div
+                                    class="py-2 d-flex flex-column flex-md-row justify-content-between align-items-start p-0 p-md-1">
+                                    <span class="fw-semibold">Description:</span>
+                                    <span id="modal-description" class="text-dark fs-6 ms-3">Responsible for designing,
+                                        developing, and maintaining software applications.</span>
+                                </div>
+
+                                <!-- Placeholder for Dynamic Leave Sections -->
+                                <hr class="my-2">
                                 <div class="py-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Employee ID:</span>
-                                    <span id="modal-employee-id" class="text-dark fs-6 ms-2">EMP12345</span>
+                                    <span class="fw-semibold">Total Leave Days:</span>
+                                    <span class="text-dark fs-6" id="total_leave_days">34 days</span>
                                 </div>
                                 <div class="py-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Username:</span>
-                                    <span id="modal-username" class="text-dark fs-6">Rohan1</span>
+                                    <span class="fw-semibold">Total AL Days:</span>
+                                    <span class="text-dark fs-6" id="total_al_days">28 days</span>
                                 </div>
-                            </div>
+                                <div class="py-2 d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold">Total Off Days:</span>
+                                    <span class="text-dark fs-6" id="total_off_days">6 days</span>
+                                </div>
+                                <hr class="my-2">
+                                <div class="leave-sections"></div>
 
-                            <!-- Title and Description -->
-                            <hr class="my-2">
-                            <div class="py-2 d-flex justify-content-center align-items-center">
-                                <span id="modal-title" class="text-dark fs-6">Senior Developer</span>
-                            </div>
-                            <hr class="my-2">
-                            <div
-                                class="py-2 d-flex flex-column flex-md-row justify-content-between align-items-start p-0 p-md-1">
-                                <span class="fw-semibold">Description:</span>
-                                <span id="modal-description" class="text-dark fs-6 ms-3">Responsible for designing,
-                                    developing, and maintaining software applications.</span>
-                            </div>
-
-                            <!-- Placeholder for Dynamic Leave Sections -->
-                            <hr class="my-2">
-                            <div class="leave-sections"></div>
-
-                            <!-- Total Days Information -->
-                            <hr class="my-2">
-                            <div class="py-2 d-flex justify-content-between align-items-center">
-                                <span class="fw-semibold">Total Leave Days:</span>
-                                <span class="text-dark fs-6">34 days</span>
-                            </div>
-                            <div class="py-2 d-flex justify-content-between align-items-center">
-                                <span class="fw-semibold">Annual Off Days:</span>
-                                <span class="text-dark fs-6">28 days</span>
-                            </div>
-                            <div class="py-2 d-flex justify-content-between align-items-center">
-                                <span class="fw-semibold">Off Days:</span>
-                                <span class="text-dark fs-6">6 days</span>
-                            </div>
-
-                            <hr class="my-2">
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex flex-column flex-sm-row justify-content-center mt-4">
-                                <button class="btn btn-success mb-2 mb-sm-0">Approved</button>
-                                <button class="btn btn-danger ms-0 ms-sm-2">Decline</button>
+                                <!-- Total Days Information -->
+                                <hr class="my-2">
+                                <div class="leave-sections">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center py-2">
+                                                <span class="fw-semibold">First Status: <span
+                                                        id="first_status">Approved</span></span>
+                                                <span class="fw-semibold">Approval Name: <span
+                                                        id="first_approval_name">Test</span></span>
+                                                <span class="fw-semibold">Date & Time: <span
+                                                        id="first_created_time">12/02/2024
+                                                        08:00:00</span></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2">
+                                                <span class="fw-semibold">Second Status: <span
+                                                        id="second_status">Approved</span></span>
+                                                <span class="fw-semibold">Approval Name: <span
+                                                        id="second_approval_name">Test</span></span>
+                                                <span class="fw-semibold">Date & Time: <span
+                                                        id="second_created_time">12/02/2024
+                                                        08:00:00</span></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2">
+                                                <span class="fw-semibold">HR Status: <span>Pending</span></span>
+                                                <span class="fw-semibold">Approval Name: <span>Test</span></span>
+                                                <span class="fw-semibold">Date & Time: <span>12/02/2024
+                                                        08:00:00</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column flex-sm-row justify-content-center mt-4 mb-4 p-2" id="action_buttons">
+                <button class="btn btn-success mb-2 mb-sm-0" id="approval_btn">Approved</button>
+                <button class="btn btn-danger ms-0 ms-sm-2" id="rejection_btn">Decline</button>
             </div>
         </div>
     </div>
@@ -165,6 +230,62 @@
 @section('script-z')
 <script>
     $(document).ready(function () {
+        $('#approval_btn').click(function () {
+            const id = $(this).data('id');
+            const step = $(this).data('action');
+            showLoader(); // Start loader
+
+            // Fetch leave details using AJAX
+            $.ajax({
+                url: `/leave_action`, // Route for fetching leave application by ID
+                method: 'POST',
+                data: {
+                    leave_id: id,
+                    leave_action: 'approval_request',
+                    leave_step: step,
+                    _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
+                },
+                success: function (response) {
+                    console.log(response);
+                    hideLoader(); // Hide loader
+                    $('#leaveDetailsModal').modal('hide');
+                    $('#leave_table').DataTable().ajax.reload();
+                },
+                error: function (xhr) {
+                    console.error('Error fetching leave application:', xhr);
+                    hideLoader(); // Hide loader even if there's an error
+                }
+            });
+        });
+
+        $('#rejection_btn').click(function () {
+            const id = $(this).data('id');
+            const step = $(this).data('action');
+            showLoader(); // Start loader
+
+            // Fetch leave details using AJAX
+            $.ajax({
+                url: `/leave_action`, // Route for fetching leave application by ID
+                method: 'POST',
+                data: {
+                    leave_id: id,
+                    leave_action: 'reject_request',
+                    leave_step: step,
+                    _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
+                },
+                success: function (response) {
+                    console.log(response);
+                    hideLoader(); // Hide loader
+                    $('#leaveDetailsModal').modal('hide');
+                    $('#leave_table').DataTable().ajax.reload();
+                },
+                error: function (xhr) {
+                    console.error('Error fetching leave application:', xhr);
+                    hideLoader(); // Hide loader even if there's an error
+                }
+            });
+        });
+
         // Initialize DataTables
         $('#leave_table').DataTable({
             processing: true,
@@ -172,10 +293,40 @@
             ajax: "{{ route('leave_application.data') }}",
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'employee_id', name: 'employee_id' },
-                { data: 'username', name: 'username' },
-                { data: 'title', name: 'title' },
-                { data: 'description', name: 'description' },
+                { data: 'employee_id', name: 'employee_id', orderable: false, searchable: false },
+                { data: 'username', name: 'username', orderable: false, searchable: false },
+                // { data: 'title', name: 'title' },
+                // { data: 'description', name: 'description' },
+                {
+                    data: 'title',
+                    render: function (data) {
+                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'description',
+                    render: function (data) {
+                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                // { data: 'leave_balance', name: 'leave_balance', orderable: false, searchable: false },
+                {
+                    data: 'leave_balance',
+                    render: function (data) {
+                        // Check if data is a number
+                        if (typeof data === 'number') {
+                            return (data >= 2) ? data + ' Days' : data + ' Day';
+                        }
+                        // Handle case where data is null or not a number
+                        return 'N/A'; // or any appropriate default value
+                    },
+                    orderable: false,
+                    searchable: false
+                },
                 { data: 'day', name: 'day', orderable: false, searchable: false },
                 { data: 'from', name: 'from', orderable: false, searchable: false },
                 { data: 'to', name: 'to', orderable: false, searchable: false },
@@ -183,7 +334,10 @@
                 {
                     data: 'id',
                     render: function (data) {
-                        return '<button class="btn btn-info toggle-modal" data-id="' + data + '">👁️</button>';
+                        return '<div class="ms-3 toggle-modal" data-id="' + data +
+                            '" style="cursor: pointer;">' +
+                            '<i class="fas fa-eye"></i>' +
+                            '</div>';
                     },
                     orderable: false,
                     searchable: false
@@ -209,6 +363,69 @@
                     $('#modal-title').text(data.title);
                     $('#modal-description').text(data.description);
 
+                    // 1st Step Information
+                    if (data.status_1 === 'pending') {
+                        $('#first_status').text("Pending");
+                        $('#first_status').addClass("yellowText");
+                        $('#first_approval_name').text(data.first_approval_id);
+                        $('#first_approval_name').addClass("yellowText");
+                        $('#first_created_time').text(data.first_approval_created_time);
+                        $('#first_created_time').addClass("yellowText");
+
+                    } else if (data.status_1 === 'approved') {
+                        $('#first_status').text("Approved");
+                        $('#first_status').addClass("greenText");
+                        $('#first_approval_name').text(data.first_approval_id);
+                        $('#first_approval_name').addClass("greenText");
+                        $('#first_created_time').text(data.first_approval_created_time);
+                        $('#first_created_time').addClass("greenText");
+
+                    } else if (data.status_1 === 'rejected') {
+                        $('#first_status').text("Rejected");
+                        $('#first_status').addClass("redText");
+                        $('#first_approval_name').text(data.first_approval_id);
+                        $('#first_approval_name').addClass("redText");
+                        $('#first_created_time').text(data.first_approval_created_time);
+                        $('#first_created_time').addClass("redText");
+                    }
+
+                    // 2nd Step Information
+                    if (data.status_2 === 'pending') {
+                        $('#second_status').text("Pending");
+                        $('#second_status').addClass("yellowText");
+                        $('#second_approval_name').text(data.second_approval_id);
+                        $('#second_approval_name').addClass("yellowText");
+                        $('#second_created_time').text(data.first_approval_created_time);
+                        $('#second_created_time').addClass("yellowText");
+
+                    } else if (data.status_2 === 'approved') {
+                        $('#second_status').text("Approved");
+                        $('#second_status').addClass("greenText");
+                        $('#second_approval_name').text(data.second_approval_id);
+                        $('#second_approval_name').addClass("greenText");
+                        $('#second_created_time').text(data.first_approval_created_time);
+                        $('#second_created_time').addClass("greenText");
+
+                    } else if (data.status_2 === 'rejected') {
+                        $('#second_status').text("Rejected");
+                        $('#second_status').addClass("redText");
+                        $('#second_approval_name').text(data.second_approval_id);
+                        $('#second_approval_name').addClass("redText");
+                        $('#second_created_time').text(data.second_approval_created_time);
+                        $('#second_created_time').addClass("redText");
+                    }
+
+                    // Set the data-id & data-action attribute on buttons
+                    $('#approval_btn').data('id', id);
+                    $('#rejection_btn').data('id', id);
+                    if (data.status_1 === "pending") {
+                        $('#approval_btn').data('action', 'first_status');
+                        $('#rejection_btn').data('action', 'first_status');
+                    } else if (data.status_1 === "approved") {
+                        $('#approval_btn').data('action', 'second_status');
+                        $('#rejection_btn').data('action', 'second_status');
+                    }
+
                     // Separate off-days from leave details
                     const offDays = data.leave_details.filter(leave => leave.type === 'off_day').map(leave => leave.date);
                     const leaveDetails = data.leave_details.filter(leave => leave.type !== 'off_day');
@@ -230,6 +447,10 @@
         function populateLeaveSection(leaveDetails, offDays) {
             const leaveSections = document.querySelector('.leave-sections');
             leaveSections.innerHTML = ''; // Clear previous content
+
+            let totalLeaveDays = 0;
+            let totalAnnualLeaveDays = 0;
+            let totalOffDays = offDays.length; // Already filtered off days
 
             // Group leaves by type and month
             const groupedLeaves = {};
@@ -266,6 +487,22 @@
                 // Process leaves by grouping them by type and then by month
                 const startDate = new Date(leave.start_date);
                 const endDate = new Date(leave.end_date);
+                let leaveDaysCount = (endDate - startDate) / (1000 * 3600 * 24) + 1; // Days count for full-day leaves
+
+                // If it's a half-day leave, count as 0.5 days
+                if (leave.type === 'half_day') {
+                    leaveDaysCount = 0.5;
+                }
+
+                // Add leave days to total leave days
+                totalLeaveDays += leaveDaysCount;
+
+                // Add only annual leave days to total annual leave days
+                if (leaveTypeId === 1) {
+                    totalAnnualLeaveDays += leaveDaysCount;
+                }
+
+
                 let currentDate = new Date(startDate);
 
                 while (currentDate <= endDate) {
@@ -297,7 +534,7 @@
             for (let leaveType in groupedLeaves) {
                 for (let month in groupedLeaves[leaveType]) {
                     const section = document.createElement('div');
-                    section.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
+                    section.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
 
                     const firstLeaveDay = groupedLeaves[leaveType][month][0].fullDate;
                     const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
@@ -344,6 +581,11 @@
                     displayHalfDayLeave(leave);
                 }
             });
+
+            // Update totals in the modal
+            document.getElementById('total_leave_days').textContent = `${totalLeaveDays} days`;
+            document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays - totalOffDays} days`;
+            document.getElementById('total_off_days').textContent = `${totalOffDays} days`;
         }
 
         // Separate function for handling half-day leave display
@@ -356,7 +598,7 @@
             leaveSections.appendChild(hrElement);
 
             const halfDaySection = document.createElement('div');
-            halfDaySection.classList.add('personal-info', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
+            halfDaySection.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'flex-wrap');
 
             halfDaySection.innerHTML = `
         <span class="fw-semibold">Annual Leave (Half Day):</span>
@@ -380,7 +622,7 @@
 
             // Display the half-day leave date as a circle
             const halfDayCircle = document.createElement('div');
-            halfDayCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1', 'bg-light-blue');
+            halfDayCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1', 'ms-3', 'bg-light-blue');
             halfDayCircle.innerText = new Date(leave.date).getDate();
             leaveSections.appendChild(halfDayCircle);
         }

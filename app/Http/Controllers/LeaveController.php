@@ -161,8 +161,26 @@ class LeaveController extends Controller
     public function display_leave(Request $request)
     {
         if ($request->ajax()) {
+            // $leaves = LeaveManagement::with('user')
+            //     ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance']);
+            $authId = auth()->user()->id;
             $leaves = LeaveManagement::with('user')
-                ->select(['id', 'user_id', 'title', 'description', 'leave_details']);
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance'])
+                ->where(function ($query) use ($authId) {
+                    $query->where(function ($subQuery) use ($authId) {
+                        // If status_1 is pending
+                        $subQuery->where('status_1', 'pending')
+                            ->whereJsonContains('team_leader_ids', $authId);
+                    })
+                        ->orWhere(function ($subQuery) use ($authId) {
+                            // If status_1 is approved and status_2 is pending
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'pending')
+                                ->whereJsonContains('manager_ids', $authId);
+                        });
+                })
+                ->get();
+
 
             return Datatables::of($leaves)
                 ->addIndexColumn()
@@ -234,14 +252,102 @@ class LeaveController extends Controller
     public function getLeaveApplication($id)
     {
         $leave = LeaveManagement::with('user')->findOrFail($id);
+        // Call the helper function to get the username
+        $first_approval_username = getUser($leave->first_approval_id);
 
         return response()->json([
+            'id' => $leave->id,
             'employee_id' => $leave->user->employee_id,
             'username' => $leave->user->username,
             'title' => $leave->title,
             'description' => $leave->description,
             'leave_details' => json_decode($leave->leave_details), // Ensure leave details are properly decoded
+            'status_1' => $leave->status_1,
+            // Get User ID
+            'first_approval_id' => $first_approval_username ?? "Null",
+            'first_approval_created_time' => $leave->first_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
+            'status_2' => $leave->status_2,
+            // Get User ID
+            'second_approval_id' => $second_approval_username ?? "Null",
+            'second_approval_created_time' => $leave->second_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
         ]);
     }
+
+    // Actions for approval/rejection
+    public function leave_action(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'leave_id' => 'required|integer',
+            'leave_action' => 'required|string',
+            'leave_step' => 'required|string', // Ensure leave_step is also validated
+        ]);
+
+        $leave_id = $request->leave_id;
+        $leave_action = $request->leave_action;
+        $leave_step = $request->leave_step;
+        $activeUserId = auth()->user()->id;
+
+
+        $tester = "";
+
+        // Perform your action based on the leave action
+        if ($leave_action === "approval_request") {
+            if ($leave_step === 'first_status') {
+                $leaveUpdate = LeaveManagement::find($leave_id);
+                $leaveUpdate->status_1 = "approved";
+                $leaveUpdate->first_approval_id = $activeUserId;
+                $leaveUpdate->first_approval_created_time = now();
+
+                $leaveUpdate->save();
+
+                $tester = "first step approval is done"; // Correct way to concatenate strings in PHP
+                // Logic for first step approval
+            } elseif ($leave_step === 'second_status') {
+                $leaveUpdate = LeaveManagement::find($leave_id);
+                $leaveUpdate->status_2 = "approved";
+                $leaveUpdate->second_approval_id = $activeUserId;
+                $leaveUpdate->second_approval_created_time = now();
+
+                // Logic to add these leave applications count and added to the schedule accordingly. 
+
+                // $leaveUpdate->save();
+                $test = $leaveUpdate->leave_details;
+                $tester = json_decode($test);
+                // $tester = "second step approval";
+                // Logic for second step approval
+            }
+        } elseif ($leave_action === "reject_request") {
+            if ($leave_step === 'first_status') {
+                $leaveUpdate = LeaveManagement::find($leave_id);
+                $leaveUpdate->status_1 = "rejected";
+                $leaveUpdate->first_approval_id = $activeUserId;
+                $leaveUpdate->first_approval_created_time = now();
+
+                $leaveUpdate->save();
+
+                $tester = "first step rejection";
+                // Logic for first step rejection
+            } elseif ($leave_step === 'second_status') {
+                $leaveUpdate = LeaveManagement::find($leave_id);
+                $leaveUpdate->status_2 = "rejected";
+                $leaveUpdate->second_approval_id = $activeUserId;
+                $leaveUpdate->second_approval_created_time = now();
+
+                $leaveUpdate->save();
+                $tester = "second step rejection";
+                // Logic for second step rejection
+            }
+        }
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'leave_id' => $leave_id,
+            'leave_action' => $leave_action,
+            'tester' => $tester
+        ]);
+    }
+
 
 }
