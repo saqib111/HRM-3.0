@@ -10,19 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('attendance_records', function (Blueprint $table) {
+        Schema::create('finger_prints', function (Blueprint $table) {
             $table->id();
-            $table->integer('leader_id');
             $table->integer('user_id');
-            $table->integer('shift_id');
-            $table->datetime('shift_in');
-            $table->datetime('shift_out');
-            $table->integer('duty_hours')->nullable();
             $table->datetime('check_in')->nullable();
             $table->datetime('check_out')->nullable();
-            $table->integer('emergency_checkout')->nullable();
-            $table->enum('dayoff', ['Yes', 'No', 'AL'])->default('No');
-            $table->enum('status', ['0', '1'])->default('0');
             $table->timestamps();
         });
     }
@@ -32,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('attendance_records');
+        Schema::dropIfExists('finger_prints');
     }
 };

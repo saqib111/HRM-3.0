@@ -83,6 +83,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(LeaveManagement::class);
     }
+
+    public function approvedLeaves()
+    {
+        return $this->hasMany(ApprovedLeave::class);
+    }
     /**
      * Get the attributes that should be cast.
      *

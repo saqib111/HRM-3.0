@@ -2,16 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AnnualLeaves;
 use Illuminate\Http\Request;
 use App\Models\LeaveManagement;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
     public function leave_form()
     {
-        return view('leave_application.leave_form');
+        $active_user_id = auth()->user()->id;
+        $annualLeaves = AnnualLeaves::where('user_id', '=', $active_user_id)->first();
+        $annualLeaveBalance = $annualLeaves->leave_balance;
+        // Format the leave balance to remove unnecessary trailing zeros
+        $formattedLeaveBalance = rtrim(rtrim($annualLeaveBalance, '0'), '.');
+        return view('leave_application.leave_form', compact('formattedLeaveBalance'));
     }
 
     // Leave Application Backend Starts From Here.
@@ -20,7 +28,7 @@ class LeaveController extends Controller
         // Step 1: Validate the request using Validator for AJAX
         $validator = Validator::make($request->all(), [
             'leave_title' => 'required|string|max:255',
-            'annual_leave_balance' => 'required|integer',
+            'annual_leave_balance' => 'required|numeric',
             'full_day_leave.*' => 'nullable|integer', // assuming you pass leave types as integers
             'full_leave_from.*' => 'nullable|date',
             'full_leave_to.*' => 'nullable|date|after_or_equal:full_leave_from.*',
@@ -254,6 +262,7 @@ class LeaveController extends Controller
         $leave = LeaveManagement::with('user')->findOrFail($id);
         // Call the helper function to get the username
         $first_approval_username = getUser($leave->first_approval_id);
+        $formattedLeaveBalance = rtrim(rtrim($leave->leave_balance, '0'), '.');
 
         return response()->json([
             'id' => $leave->id,
@@ -261,6 +270,7 @@ class LeaveController extends Controller
             'username' => $leave->user->username,
             'title' => $leave->title,
             'description' => $leave->description,
+            'leave_balance' => $formattedLeaveBalance,
             'leave_details' => json_decode($leave->leave_details), // Ensure leave details are properly decoded
             'status_1' => $leave->status_1,
             // Get User ID
@@ -304,17 +314,122 @@ class LeaveController extends Controller
                 $tester = "first step approval is done"; // Correct way to concatenate strings in PHP
                 // Logic for first step approval
             } elseif ($leave_step === 'second_status') {
+                // Fetch the leave application
                 $leaveUpdate = LeaveManagement::find($leave_id);
                 $leaveUpdate->status_2 = "approved";
                 $leaveUpdate->second_approval_id = $activeUserId;
                 $leaveUpdate->second_approval_created_time = now();
 
-                // Logic to add these leave applications count and added to the schedule accordingly. 
+                // Decode leave_details JSON
+                $leaveDetails = json_decode($leaveUpdate->leave_details, true);
 
-                // $leaveUpdate->save();
-                $test = $leaveUpdate->leave_details;
-                $tester = json_decode($test);
-                // $tester = "second step approval";
+                // Get annual leave balance for the user from the annual_leaves table
+                $annualLeave = AnnualLeaves::where('user_id', $leaveUpdate->user_id)->first();
+
+                if (!$annualLeave) {
+                    return response()->json(['error' => 'Annual leave balance not found.'], 404);
+                }
+
+                $totalAnnualLeaveDays = 0;
+
+                foreach ($leaveDetails as $leave) {
+                    if (isset($leave['leave_type_id'])) {
+                        $leaveTypeId = (int) $leave['leave_type_id'];
+
+                        if ($leave['type'] === 'full_day' && $leaveTypeId === 1) {
+                            // Calculate the days between start and end dates for full-day annual leaves
+                            $startDate = new \DateTime($leave['start_date']);
+                            $endDate = new \DateTime($leave['end_date']);
+                            $days = $startDate->diff($endDate)->days + 1;
+
+                            for ($i = 0; $i < $days; $i++) {
+                                $currentDate = $startDate->format('Y-m-d');
+
+                                // Check for off days
+                                $isOffDay = collect($leaveDetails)->contains(function ($detail) use ($currentDate) {
+                                    return $detail['type'] === 'off_day' && $detail['date'] === $currentDate;
+                                });
+
+                                if (!$isOffDay) {
+                                    // Check if there's enough balance for Annual Leave
+                                    if ($annualLeave->leave_balance > 0) {
+                                        // Deduct from Annual Leave Balance
+                                        DB::table('approved_leaves')->insert([
+                                            'user_id' => $leaveUpdate->user_id,
+                                            'leave_type' => $leaveTypeId, // Store as integer for 'AL'
+                                            'date' => $currentDate,
+                                        ]);
+                                        $totalAnnualLeaveDays++;
+                                        $annualLeave->leave_balance--;
+                                    } else {
+                                        // If no balance, convert to Unpaid Leave (leave_type 4)
+                                        DB::table('approved_leaves')->insert([
+                                            'user_id' => $leaveUpdate->user_id,
+                                            'leave_type' => 4, // Unpaid Leave
+                                            'date' => $currentDate,
+                                        ]);
+                                    }
+                                }
+
+                                $startDate->modify('+1 day');
+                            }
+                        } elseif ($leave['type'] === 'half_day' && $leaveTypeId === 1) {
+                            // Half-day leave for Annual Leave
+                            $isOffDay = collect($leaveDetails)->contains(function ($detail) use ($leave) {
+                                return $detail['type'] === 'off_day' && $detail['date'] === $leave['date'];
+                            });
+
+                            if (!$isOffDay) {
+                                // Check if there's enough balance for Annual Leave
+                                if ($annualLeave->leave_balance >= 0.5) {
+                                    // Deduct 0.5 days for half-day leave
+                                    DB::table('approved_leaves')->insert([
+                                        'user_id' => $leaveUpdate->user_id,
+                                        'leave_type' => $leaveTypeId, // Store as integer for 'AL'
+                                        'date' => $leave['date'],
+                                        'start_time' => $leave['start_time'],
+                                        'end_time' => $leave['end_time'],
+                                    ]);
+                                    $totalAnnualLeaveDays += 0.5;
+                                    $annualLeave->leave_balance -= 0.5;
+                                } else {
+                                    // If no balance, convert to Unpaid Leave (leave_type 4)
+                                    DB::table('approved_leaves')->insert([
+                                        'user_id' => $leaveUpdate->user_id,
+                                        'leave_type' => 4, // Unpaid Leave
+                                        'date' => $leave['date'],
+                                        'start_time' => $leave['start_time'],
+                                        'end_time' => $leave['end_time'],
+                                    ]);
+                                }
+                            }
+                        } elseif ($leave['type'] === 'full_day' && in_array($leaveTypeId, [2, 3, 4])) {
+                            // For other full-day leaves that are not Annual Leave (Birthday, Marriage, Unpaid)
+                            $startDate = new \DateTime($leave['start_date']);
+                            $endDate = new \DateTime($leave['end_date']);
+                            $days = $startDate->diff($endDate)->days + 1;
+
+                            for ($i = 0; $i < $days; $i++) {
+                                $currentDate = $startDate->format('Y-m-d');
+
+                                // Add this day to the approved_leaves table without deduction
+                                DB::table('approved_leaves')->insert([
+                                    'user_id' => $leaveUpdate->user_id,
+                                    'leave_type' => $leaveTypeId, // Store as integer for type (2 = BL, 3 = ML, 4 = UL)
+                                    'date' => $currentDate,
+                                ]);
+
+                                $startDate->modify('+1 day');
+                            }
+                        }
+                    }
+                }
+
+                // Save the leave approval changes
+                $leaveUpdate->save();
+                $annualLeave->save(); // Save updated leave balance
+
+                $tester = "second step approval";
                 // Logic for second step approval
             }
         } elseif ($leave_action === "reject_request") {

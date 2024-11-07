@@ -26,7 +26,9 @@
                     <i class="fas fa-plane-departure"></i>
                     Leave Application
                 </h4>
-                <h5 class="text-success" style="position:absolute; top: 24px; right: 20px;">Leave Balance: 28</h5>
+                <h5 class="text-success" style="position:absolute; top: 24px; right: 20px;">Leave Balance:
+                    {{$formattedLeaveBalance}}
+                </h5>
                 <hr />
             </div>
             <form id="leave_application_form" action="{{route('leave.form.store')}}" method="POST">
@@ -48,8 +50,8 @@
                     </div>
                     <div class="input-block mb-3 row">
                         <div class="col-md-12">
-                            <!-- <label class="col-form-label" for="annual_leave_balance">AL Balance:</label> -->
-                            <input type="hidden" value="30" name="annual_leave_balance" id="annual_leave_balance">
+                            <input type="hidden" value="{{$formattedLeaveBalance}}" name="annual_leave_balance"
+                                id="annual_leave_balance">
                         </div>
                     </div>
                     <div class="input-block mb-3 row">

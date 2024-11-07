@@ -139,3 +139,56 @@ function getUser($id)
     // Check if user exists and return the username
     return $user ? $user->username : null; // Return null if not found
 }
+
+function getName($id)
+{
+    $username = User::select('username', 'id')->where('id', $id)->first();
+    return [$username->username, $username->id];
+}
+
+function dateSelect($start, $end)
+{
+    $starray = (explode(" - ", $start));
+    $stnew = array_chunk($starray, 2);
+    $stfirst = date('Y-m-d H:i A', strtotime($stnew[0][0]));
+    $stfirstSplit = (explode(" ", $stfirst));
+
+    $startDate = date('Y-m-d', strtotime($stfirstSplit[0]));
+    $startTime = date('H:i A', strtotime($stfirstSplit[1]));
+    $startShift = [$startDate, $startTime];
+
+    $endarray = (explode(" - ", $end));
+    $endnew = array_chunk($endarray, 2);
+    $endfirst = date('Y-m-d H:i A', strtotime($endnew[0][0]));
+    $endfirstSplit = (explode(" ", $endfirst));
+
+    $endsecond = date('Y-m-d H:i A', strtotime($endnew[0][1]));
+    $endSecondSplit = (explode(" ", $endsecond));
+    $endDate = date('Y-m-d', strtotime($endSecondSplit[0]));
+    $endTime = date('H:i A', strtotime($endfirstSplit[1]));
+    $startShift = [$startDate, $startTime];
+    $endShift = [$endDate, $endTime];
+
+    return [$startShift, $endShift];
+}
+
+function scheduleInfo($id)
+{
+    $records = DB::table('schedules')
+        ->select(DB::raw('DATE(created_at) as date'))
+        ->where('user_id', $id)
+        ->where('status', '1')
+        ->groupBy(DB::raw('DATE(created_at)'))
+
+        ->latest()
+        ->get();
+
+    $schedule = DB::table('schedules')
+        ->select('*')
+        ->where('user_id', $id)
+
+        ->where('status', '1')
+        ->where(DB::raw('DATE(created_at)'), date($records[0]->date))
+        ->get();
+    return ([$records, $schedule]);
+}

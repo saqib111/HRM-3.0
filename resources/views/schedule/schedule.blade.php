@@ -172,65 +172,6 @@
 </div>
 <!-- Edit Modal -->
 
-<div id="edit_employee" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-employee-form" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" name="id" id="id">
-                    <div class="row">
-
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Employee ID</label>
-                                <input class="form-control " type="text" name="employee_id" id="edit_eid">
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Username</label>
-                                <input class="form-control  " type="text" name="username" id="edit_username">
-                            </div>
-                        </div>
-
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Email <span class="text-danger">*</span></label>
-                                <input class="form-control " type="email" name="email" id="edit_email">
-                            </div>
-                        </div>
-
-
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Joining Date <span class="text-danger">*</span></label>
-                                <input class="form-control datetimepicker" type="text" name="joining_date"
-                                    id="edit_joiningdate">
-                            </div>
-                        </div>
-
-
-
-                    </div>
-
-                    <div class="submit-section">
-                        <button class="btn btn-primary" type="submit" id="onUpdate">Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-</form>
-<!-- End Edit Modal -->
 
 
 <!-- PreLoader -->
@@ -293,9 +234,7 @@
             orderable: false,
             searchable: false,
             render: function (data, type, row) {
-                return `  
-                                <button class="btn btn-danger" onclick="deleteSchedule(${row.id})"><i class="fa fa-trash fa-1x"></i></button>
-                                `;
+                return `<button class="btn btn-danger" onclick="deleteSchedule(${row.id})"><i class="fa fa-trash fa-1x"></i></button>`;
             }
         }
         ],
@@ -339,6 +278,7 @@
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             $('#startdate').val(resultArray);
+           
 
         },
     });
@@ -420,7 +360,7 @@
                     hideLoader();
                     $('#schedule').modal('hide');
                     $('#scheduletable').DataTable().ajax.reload();
-
+                    console.log(response)
                     createToast('info', 'fa-solid fa-circle-check', 'Success', 'Schedule created successfully.');
                 },
                 error: function (data) {

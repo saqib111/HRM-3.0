@@ -20,6 +20,8 @@ use App\Http\Controllers\{
     AssignedLeaveApprovalsController,
     AnnualLeavesController,
     ExpiredVisaInfoController,
+    AttendanceRecordController,
+    LeaderEmployeeController,
 };
 
 Route::get('/', function () {
@@ -44,7 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/update-employee', [AdminController::class, 'updateEmployee'])->name('update.employee');
     Route::delete('/delete-employee/{id}', [AdminController::class, 'deleteEmployee'])->name('delete.employee');
     Route::get('/check-designation/{id}', [AdminController::class, 'checkDesignation'])->name('check.designation');
-    //schedule start
+    //Schedule Start
     Route::get('schedule-list', [ScheduleController::class, 'index'])->name('schedule');
     Route::resource('schedule', ScheduleController::class);
     Route::get('/schedule-data', [ScheduleController::class, 'dataTable'])->name('schedule.data');
@@ -56,13 +58,39 @@ Route::middleware('auth')->group(function () {
     Route::post('/manage-schedule-data', [ScheduleController::class, 'updateSchedule'])->name('schedule.update');
     Route::get('/delete-schedule/{id}', [ScheduleController::class, 'deleteSchedule'])->name('schedule.delete');
     Route::get('/add-holiday', [ScheduleController::class, 'addHoliday'])->name('add.holiday');
+    Route::post('/holiday', [ScheduleController::class, 'submitHoliday'])->name('holiday.submit');
     Route::resource('group', GroupController::class);
     Route::get('group-data', [GroupController::class, 'groupData'])->name('group.data');
     Route::get('group-employee', [GroupController::class, 'groupEmployee'])->name('group.employee');
     Route::get('change-employee-group', [GroupController::class, 'groupChange'])->name('group.change');
     Route::post('change-group', [GroupController::class, 'changeGroupData'])->name('changegroup.data');
     Route::get('group-member/{id}', [GroupController::class, 'groupMember'])->name('group.member');
-    //schedule end
+    Route::get('get-employee', [ScheduleController::class, 'getEmolyee'])->name('employee.get');
+    Route::get('manage-attendance', [AttendanceRecordController::class, 'index'])->name('attendance.manage');
+    Route::get('attendance-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.record');
+    Route::get('groupuser-data', [ScheduleController::class, 'groupNameData'])->name('groupname.data');
+    // Schedule Ends
+
+    //Attendance---------
+    Route::get('attendance-employee', [AttendanceRecordController::class, 'attendanceEmployeeRecord'])->name('attendanceemployee.record');
+    Route::get('attendance-employee-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.detail');
+    Route::post('search-record', [AttendanceRecordController::class, 'searchRecord'])->name('search.record');
+    Route::post('attendance-checkin', [AttendanceRecordController::class, 'attendanceCheckIn'])->name('attendance.checkin');
+    Route::post('/punch-in', [AttendanceRecordController::class, 'punchIn']);
+    Route::post('/check-employee-authentication', [AttendanceRecordController::class, 'checkEmpAuhentication'])->name('check.emp');
+    Route::get('/get-punch-time', [AttendanceRecordController::class, 'checkStatus'])->name('check.attendance');
+    Route::post('/punch-out', [AttendanceRecordController::class, 'punchOut'])->name('punch.out');
+    Route::get('/statistics', [AttendanceRecordController::class, 'statistics'])->name('statistics');
+
+    Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team');
+    Route::get('team-data', [LeaderEmployeeController::class, 'teamData'])->name('team.data');
+    Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store');
+    Route::get('team-data-datatable', [LeaderEmployeeController::class, 'teamDatatable'])->name('data.datatable');
+    Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team');
+    Route::get('team-edit/{id}', [LeaderEmployeeController::class, 'teamEdit'])->name('edit.team');
+    Route::post('team-update', [LeaderEmployeeController::class, 'update'])->name('update.team');
+    Route::get('test/{id}', [ScheduleController::class, 'test']);
+    // Attendance Ends
 
     // Route to Active/Deactive Users by Admin 
     Route::post('/update-employee-status', [AdminController::class, 'updateStatus'])->name('update.employee.status');

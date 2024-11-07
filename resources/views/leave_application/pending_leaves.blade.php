@@ -138,7 +138,7 @@
                                     </div>
                                     <div class="py-2 greenText text-center  ">
                                         <span class="fw-semibold">AL Balance:</span>
-                                        <span id="modal-alblance" class="                         fs-6 ms-2">30</span>
+                                        <span id="modal-alblance" class="fs-6 ms-2">31</span>
                                     </div>
                                 </div>
 
@@ -317,11 +317,16 @@
                 {
                     data: 'leave_balance',
                     render: function (data) {
-                        // Check if data is a number
-                        if (typeof data === 'number') {
-                            return (data >= 2) ? data + ' Days' : data + ' Day';
+                        // Convert the data to a number (in case it's a string)
+                        let balance = parseFloat(data);
+
+                        // Check if it's a valid number
+                        if (!isNaN(balance)) {
+                            // Format the number and append the 'Days' or 'Day'
+                            return (balance >= 2) ? balance + ' Days' : balance + ' Day';
                         }
-                        // Handle case where data is null or not a number
+
+                        // If it's not a valid number, return 'N/A' or another default value
                         return 'N/A'; // or any appropriate default value
                     },
                     orderable: false,
@@ -362,6 +367,7 @@
                     $('#modal-username').text(data.username);
                     $('#modal-title').text(data.title);
                     $('#modal-description').text(data.description);
+                    $('#modal-alblance').text(data.leave_balance)
 
                     // 1st Step Information
                     if (data.status_1 === 'pending') {
@@ -395,7 +401,7 @@
                         $('#second_status').addClass("yellowText");
                         $('#second_approval_name').text(data.second_approval_id);
                         $('#second_approval_name').addClass("yellowText");
-                        $('#second_created_time').text(data.first_approval_created_time);
+                        $('#second_created_time').text(data.second_approval_created_time);
                         $('#second_created_time').addClass("yellowText");
 
                     } else if (data.status_2 === 'approved') {
@@ -403,7 +409,7 @@
                         $('#second_status').addClass("greenText");
                         $('#second_approval_name').text(data.second_approval_id);
                         $('#second_approval_name').addClass("greenText");
-                        $('#second_created_time').text(data.first_approval_created_time);
+                        $('#second_created_time').text(data.second_approval_created_time);
                         $('#second_created_time').addClass("greenText");
 
                     } else if (data.status_2 === 'rejected') {

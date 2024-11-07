@@ -351,6 +351,7 @@ function assignEmployee(id) {
                         hideLoader();
                        
                         var errors = data.responseJSON;
+                        console.log(errors)
                         createToast('info', 'fa-solid fa-circle-uncheck', 'Fail',data.responseJSON.employee_name+' ' + 'Schedule already exist.');
                     }
                 });

@@ -47,9 +47,7 @@
                 font-size: 1.1em;
                 color: #333;
             }
- .dt-column-order{
-    display:none!important;
- }
+            
            
             table.dataTable th.dt-type-numeric, table.dataTable th.dt-type-date, table.dataTable td.dt-type-numeric, table.dataTable td.dt-type-date {text-align:center!important;}
      
@@ -59,31 +57,34 @@
 <div class="page-header">
   <div class="row align-items-center">
     <div class="col-md-4">
-      <h3 class="page-title">Assign Offday</h3>
+      <h3 class="page-title">Manage Attendance</h3>
       <ul class="breadcrumb">
         <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
-        <li class="breadcrumb-item active">Assign Offday</li>
+        <li class="breadcrumb-item active">Manage Attendance</li>
       </ul>
     </div>
    
   </div>
 </div>
-<div id="notification" aria-live="polite" aria-atomic="true"></div>
 
-<div class="col-auto ms-auto mb-3">
-    <ul class="split-head">
-        <li>
-            <button class="btn add-btn text-white" onclick="addHoliday()">
-                <i class="fa fa-plus"></i> Add Offday</button>
-        </li>
-    </ul>
-</div>
 <!-- Table -->
 <div class="row">
     <div class="col-md-12">
         <div class="table-responsive">
             <table class="table  custom-table" id="attendance">
-                
+                <thead>
+                    <tr style="text-left">
+                        <th>#</th>
+                        <th>Employee Name</th>
+                        <th>Shift In</th>
+                        <th>Shift Out</th>
+                        <th>Duty Hours</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Off Day</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
                 <tbody id="attendance-list">
                 </tbody>
             </table>
@@ -94,7 +95,7 @@
 <!--End-->
 
 
-
+<div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div id="holiday" class="modal custom-modal fade" data-bs-backdrop='static' role="dialog">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -155,33 +156,132 @@
  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
  
 <script>
-$(document).ready(function () {
-    $.ajax({
-        url: "{{ route('groupname.data') }}", 
-        type: 'GET',
-        success: function (data) {
-            console.log(data.groups); 
-           
-         
-            $('#attendance').DataTable({
-                data: data.groups, 
-                
-                columns: [
-                    { data: 'id', title: 'User Id' },
-                    { data: 'name', title: 'Username' },
-                    { data:'group_name', title: 'Group Name'},
-                    { data: 'group_id', title: 'Group ID' },
-                   
-                ]
-            });
+ $(document).ready(function () {
+   
+    let table = $('#attendance').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('attendance.record') }}",
+            type: 'GET'
         },
-        error: function(xhr, status, error) {
-            console.log(xhr.status);
-            console.error(error);
-        }
-    });
-});
+        columns: [{
+            data: 'DT_RowIndex',
+            name: 'DT_RowIndex',
+            orderable: false,
+            searchable: false
+        },
+        
+        {
+            data: 'name',
+            name: 'name',
+            orderable: false,
+        },
+        {
+            data: 'shift_in',
+            name: 'shift_in',
+            orderable: false,
+        },
+        {
+            data: 'shift_out',
+            name: 'shift_out',
+            orderable: false,
+        },
+        {
+            data: 'duty_hours',
+            name: 'duty_hours',
+            orderable: false,
+        },
+        {
+            data: 'check_in',
+            name: 'chek_in',
+            orderable: false,
+        },
 
+        {
+            data: 'check_out',
+            name: 'check_out',
+            orderable: false, 
+
+        },
+        {
+            data: 'dayoff',
+            name: 'dayoff',
+            orderable: false, 
+        },
+        {
+            data: 'action',
+            name: 'action',
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+                if (row.dayoff === "Yes") {
+                    console.log(row)
+                   
+                   
+                }
+                return `<button class="btn btn-primary" onclick="deleteSchedule(${row.id})"><i class="fa fa-edit fa-1x"></i></button>`;
+            }
+        }
+        ],
+        order: [],
+            createdRow: function (row, data, dataIndex) {
+            if (data.dayoff === "Yes") {
+                $(row).addClass("dayoff");
+            }
+        }
+        
+    });
+
+
+
+   
+
+        const datePicker = flatpickr("#date-picker", {
+        mode: "multiple",
+        dateFormat: "Y-m-d",
+        onChange: function (selectedDates) {
+
+           
+            }
+          
+    });
+    
+        $.ajax({
+                url: "{{route('employee.get')}}" ,
+                type: 'get',
+                data: {
+                    _token: "{{ csrf_token() }}" // Include CSRF token for security
+                },
+                success: function (response) {
+                    var select = $('#employee');
+                     select.empty();  
+                $.each(response, function (key, value) {
+                     
+                    select.append('<option value="' + value.id + '">' + value.name + '</option>');
+
+
+                });
+                new MultiSelectTag("employee", {
+                        rounded: true,
+                        shadow: false,
+                        placeholder: "Search",
+                        tagColor: {
+                        textColor: "#327b2c",
+                        borderColor: "#92e681",
+                        bgColor: "#eaffe6"
+            }
+        });
+                  
+                },
+                error: function (err) {
+                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error deleting .');
+                }
+            });
+        
+    $('#holiday').modal('show');  
+
+});
 
 
 $('#assign-holiday').on('submit', function (event) {
@@ -279,54 +379,6 @@ function validateField(selector, fieldName) {
             }
         }
 
- function addHoliday()
- {
-    
-    const datePicker = flatpickr("#date-picker", {
-        mode: "multiple",
-        dateFormat: "Y-m-d",
-        onChange: function (selectedDates) {
 
-           
-            }
-          
-    });
-    
-        $.ajax({
-                url: "{{route('employee.get')}}" ,
-                type: 'get',
-                data: {
-                    _token: "{{ csrf_token() }}" // Include CSRF token for security
-                },
-                success: function (response) {
-                    var select = $('#employee');
-                     select.empty();  
-                $.each(response, function (key, value) {
-                     
-                    select.append('<option value="' + value.id + '">' + value.name + '</option>');
-
-
-                });
-                if (!select.data('multiselect-initialized')) {
-                new MultiSelectTag("employee", {
-                    rounded: true,
-                    shadow: false,
-                    placeholder: "Search",
-                    tagColor: {
-                        textColor: "#327b2c",
-                        borderColor: "#92e681",
-                        bgColor: "#eaffe6"
-                    }
-                });
-                select.data('multiselect-initialized', true); 
-            }
-        },
-        error: function(err) {
-            createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error loading employees.');
-        }
-    });
-        
-    $('#holiday').modal('show'); 
- }
 </script>
 @endsection 

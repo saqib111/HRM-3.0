@@ -69,3 +69,5 @@
 
 <!-- All Custom Script Files (Preloader, customToaster) -->
 <script src="{{ asset('assets/js/myAllCustomScript.js') }}"></script>
+<!-- Multi Select Tag JS -->
+<script src="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.1.0/dist/js/multi-select-tag.js"></script>

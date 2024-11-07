@@ -101,3 +101,6 @@
 <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
 <!-- All CustomStyles (Preloader, CustomToaseer) -->
 <link rel="stylesheet" href="{{ asset('/assets/css/myAllCustomStyles.css') }}">
+<!-- Multi-Select-Tag -->
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.1.0/dist/css/multi-select-tag.css" />

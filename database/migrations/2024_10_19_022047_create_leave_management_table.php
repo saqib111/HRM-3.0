@@ -19,7 +19,7 @@ return new class extends Migration {
             // Store leave details dynamically
             $table->json('leave_details'); // Store full-day, half-day, and off-day data in JSON format
 
-            $table->integer('leave_balance')->nullable(); // Store the user's remaining annual leave balance at the time of application
+            $table->decimal('leave_balance', 8, 2)->nullable(); // Store user's remaining annual leave balance
 
             // Approval details
             $table->enum('status_1', ['pending', 'approved', 'rejected'])->default('pending'); // Team leader approval status

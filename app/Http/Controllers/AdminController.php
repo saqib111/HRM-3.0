@@ -17,6 +17,9 @@ use App\Models\{
     Brand,
     VisaInfo,
     AnnualLeaves,
+    Dependant,
+    AssignedLeaveApprovals,
+    Emergency,
 
 };
 use Illuminate\Support\Facades\{
@@ -90,6 +93,20 @@ class AdminController extends Controller
         $visa = new VisaInfo();
         $visa->user_id = $user_id;
         $visa->save();
+
+        $assignedLeave = new AssignedLeaveApprovals();
+        $assignedLeave->user_id = $user_id;
+        $assignedLeave->save();
+
+
+        $emergency = new Emergency();
+        $emergency->user_id = $user_id;
+        $emergency->save();
+
+
+        $dependant = new Dependant();
+        $dependant->user_id = $user_id;
+        $dependant->save();
 
         // Calculate Annual Leaves
         $leave_type_days = (int) $request->leave_type; // Fetch the leave type (14 or 28)
@@ -330,5 +347,10 @@ class AdminController extends Controller
             return response()->json(['employee_id' => $employee->id]); // Ensure you return employee_id
         }
         return response()->json(['message' => 'Employee not found'], 404);
+    }
+
+    public function createTeam()
+    {
+        return view('admin.leader-team.leader-team');
     }
 }

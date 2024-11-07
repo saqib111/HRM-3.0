@@ -65,6 +65,20 @@
                 </li>
 
                 <li class="menu-title">
+                    <span>Team Leader Team</span>
+                </li>
+                <li class="submenu">
+                    <a href="#"><i class="fa fa-user"></i> <span>Team</span> <span class="menu-arrow"></span></a>
+                    <ul>
+                        <li>
+                            <a href="{{ route('create.team')}}"
+                                class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Create Team</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li class="menu-title">
                     <span>Schedule</span>
                 </li>
                 <li class="submenu ">
@@ -80,10 +94,19 @@
                         <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
                                 href="{{ route('assign.employee')}}">Assign Group</a></li>
                         <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
-                                href="{{route('add.holiday')}}">Assign Holiday</a></li>
+                                href="{{route('add.holiday')}}">Assign Offday</a></li>
                         <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
                                 href="{{route('schedule.manage')}}">Manage Schedule</a></li>
+                        <li><a class="{{ Request::is('employees', 'employees-list') ? 'active' : '' }}"
+                                href="{{route('attendance.manage')}}">Manage Attendance</a></li>
                     </ul>
+                </li>
+                <li class="menu-title">
+                    <span>Attendance</span>
+                </li>
+                <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
+                    <a href="{{route('attendanceemployee.record')}}"><i class="fa fa-home"></i> <span>Attendance</span>
+                    </a>
                 </li>
                 <!-- Roles & Permissions -->
                 <li class="menu-title">

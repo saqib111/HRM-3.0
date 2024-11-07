@@ -341,3 +341,50 @@ body {
     border: 1px solid #c5c5c5 !important;
     background-color: #eeee !important;
 }
+
+/* ---Theme select 2 CSS ---- */
+.select2-container--default
+    .select2-results__option--highlighted[aria-selected] {
+    background-color: #5897fb !important;
+}
+
+/* ----Btn Active And Inactive Style --- */
+.btn_active {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 10px 10px 10px 0px;
+    width: 137px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    background-color: #00c5fb;
+    color: white !important;
+    transition: background-color 0.3s;
+}
+
+.btn_active:hover {
+    background-color: #009dc8;
+}
+
+.btn_inactive {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 10px 10px 10px 0px;
+    width: 137px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    background-color: #dc3545;
+    color: white !important;
+    transition: background-color 0.3s;
+}
+
+.btn_inactive:hover {
+    background-color: #c82333;
+}
+
+/* //Import button style // */

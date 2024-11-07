@@ -9,6 +9,7 @@ class AttendanceRecord extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'leader_id',
         'user_id',
         'shift_id',
         'shift_in',
@@ -17,6 +18,7 @@ class AttendanceRecord extends Model
         'check-in',
         'check_out',
         'emergency_checkout',
-        'status'
+        'status',
+        'offday'
     ];
 }
