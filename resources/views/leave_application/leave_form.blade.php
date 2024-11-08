@@ -97,7 +97,27 @@
 <div id="loader" class="loader" style="display: none;">
     <div class="loader-animation"></div>
 </div>
-
+<!-- PreLoader Ends -->
+<!-- Unpaid Leave Confirmation Modal -->
+<div class="modal fade" id="unpaidLeaveModal" tabindex="-1" aria-labelledby="unpaidLeaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unpaidLeaveModalLabel">Confirm Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="unpaidLeaveMessage"></p>
+                <p><strong>Note:</strong> The remaining days will be applied as unpaid leave.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmUnpaidLeave">Apply with Unpaid Leave</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Unpaid Leave Confirmation Modal Ends -->
 @endsection
 
 @section('script-z')
@@ -204,6 +224,11 @@
             birthdayLeaveCount = 0; // Reset the count on each submission
             marriageLeaveCount = 0; // Reset the count on each submission
 
+            // Calculate Annual Leave days and validate against balance
+            let annualLeaveDaysRequested = 0;
+            let annualLeaveBalance = parseFloat($('#annual_leave_balance').val());
+            let unpaidLeaveDays = 0;
+
             // Clear previous error messages
             $('.leave_error').text('');
 
@@ -246,16 +271,14 @@
                 }
 
                 // Validate "Birthday Leave" can only be selected once and for a single day
-                if (category === 'Birthday Leave') {
+                if (category === 'Birthday Leave' || category === '2') {
                     birthdayLeaveCount++;
 
-                    // Check if it's already been selected more than once
                     if (birthdayLeaveCount > 1) {
                         $(this).find('.leave-category').next('.leave_error').text('Birthday Leave can only be selected once.');
                         isValid = false;
                     }
 
-                    // Check if the "From" and "To" dates are the same (i.e., one day only)
                     if (fromDate !== toDate) {
                         $(this).find('.leave-date').eq(1).next('.leave_error').text('Birthday Leave must be for one day only.');
                         isValid = false;
@@ -263,21 +286,18 @@
                 }
 
                 // Validation "Marriage Leave" can only be selected once and for maximum of 3 days 
-                if (category === 'Marriage Leave') {
+                if (category === 'Marriage Leave' || category === '3') {
                     marriageLeaveCount++;
 
-                    // Check if it's already been selected more than once
                     if (marriageLeaveCount > 1) {
                         $(this).find('.leave-category').next('.leave_error').text('Marriage Leave can only be selected once.');
                         isValid = false;
                     }
 
-                    // Check if the duration does not exceed 3 days
                     if (fromDate && toDate) {
                         let startDate = new Date(fromDate);
                         let endDate = new Date(toDate);
-                        let timeDiff = endDate - startDate;
-                        let dayDiff = timeDiff / (1000 * 3600 * 24) + 1; // Calculate number of days (inclusive)
+                        let dayDiff = (endDate - startDate) / (1000 * 3600 * 24) + 1;
 
                         if (dayDiff > 3) {
                             $(this).find('.leave-date').eq(1).next('.leave_error').text('Marriage Leave cannot exceed 3 days.');
@@ -286,9 +306,31 @@
                     }
                 }
 
+                if (category === "1") {  // 1 stands for Annual Leave
+                    let startDate = new Date(fromDate);
+                    let endDate = new Date(toDate);
+                    let dayDiff = (endDate - startDate) / (1000 * 3600 * 24) + 1;
+
+                    for (let i = 0; i < dayDiff; i++) {
+                        let currentDate = new Date(startDate);
+                        currentDate.setDate(startDate.getDate() + i);
+                        let currentDateString = currentDate.toISOString().split('T')[0];
+
+                        let isOffDay = false;
+                        $('.off-day-date').each(function () {
+                            if ($(this).val() === currentDateString) {
+                                isOffDay = true;
+                                return false;
+                            }
+                        });
+
+                        if (!isOffDay) {
+                            annualLeaveDaysRequested++;
+                        }
+                    }
+                }
             });
 
-            // Validate Off Days
             $('.off-day-date').each(function () {
                 if ($(this).val() === '') {
                     $(this).next('.leave_error').text('Please select an off-day date.');
@@ -296,7 +338,6 @@
                 }
             });
 
-            // Validate Half-Day Fields
             $('.dynamic-half-day').each(function () {
                 let halfDayDate = $(this).find('.half-day-date').val();
                 let startTime = $(this).find('.half-day-start-time').val();
@@ -316,17 +357,14 @@
                 }
 
                 if (startTime && endTime) {
-                    // Check if end time is after start time
                     if (startTime >= endTime) {
                         $(this).find('.half-day-end-time').next('.leave_error').text('End time must be after start time.');
                         isValid = false;
                     } else {
-                        // Calculate the time difference in hours
                         let start = new Date('1970-01-01T' + startTime + 'Z');
                         let end = new Date('1970-01-01T' + endTime + 'Z');
                         let diffInHours = (end - start) / (1000 * 60 * 60);
 
-                        // Check if the duration is at least 4 hours
                         if (diffInHours < 4) {
                             $(this).find('.half-day-end-time').next('.leave_error').text('The duration between start and end time must be at least 4 hours.');
                             isValid = false;
@@ -335,64 +373,70 @@
                 }
             });
 
-            // If the form is valid, proceed; otherwise, show errors
             if (isValid) {
-                // Serialize the form data
-                let formData = $('#leave_application_form').serialize();
-
-                // Show loading indicator
-                showLoader();
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-
-                // Send AJAX request
-                $.ajax({
-                    url: $('#leave_application_form').attr('action'),
-                    type: 'POST',
-                    data: formData,
-                    success: function (response) {
-                        // Hide loading indicator
-                        hideLoader();
-
-                        // Display success message
-                        $('#notification').html('<div class="alert alert-success">' + response.message + '</div>');
-
-                        // Reset form and dynamic fields
-                        $('#leave_application_form')[0].reset();
-                        $('#dynamic-fields-container').empty();
-                        $('#dynamic-half-days-container').empty();
-                        $('#dynamic-off-days-container').empty();
-                    },
-                    error: function (xhr, status, error) {
-                        // Hide loading indicator
-                        hideLoader();
-
-                        if (xhr.status === 422) {
-                            // Validation error
-                            let errors = xhr.responseJSON.errors;
-                            // Clear previous error messages
-                            $('.leave_error').text('');
-                            // Display the errors on the form
-                            $.each(errors, function (key, value) {
-                                // For dynamic fields, you may need to adjust how to display errors
-                                // This is a simplified example
-                                let field = $('[name="' + key + '"]');
-                                field.next('.leave_error').text(value[0]);
-                            });
-                        } else {
-                            // Other errors
-                            $('#notification').html('<div class="alert alert-danger">An error occurred. Please try again later.</div>');
-                        }
-                    }
-                });
-            } else {
-                console.log('Please correct the errors in the form.');
+                if (annualLeaveDaysRequested > annualLeaveBalance) {
+                    unpaidLeaveDays = annualLeaveDaysRequested - annualLeaveBalance;
+                    $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. The remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid.`);
+                    $('#unpaidLeaveModal').modal('show');
+                } else {
+                    sendAjaxRequest();
+                }
             }
         });
-    });
 
+        $('#confirmUnpaidLeave').click(function () {
+            $('#unpaidLeaveModal').modal('hide');
+            sendAjaxRequest();
+        });
+
+        function sendAjaxRequest() {
+            let formData = $('#leave_application_form').serialize();
+            showLoader();
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            $.ajax({
+                url: $('#leave_application_form').attr('action'),
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    console.log(response);
+                    hideLoader();
+                    $('#notification').html('<div class="alert alert-success">' + response.message + '</div>');
+                    $('#leave_application_form')[0].reset();
+                    $('#dynamic-fields-container').empty();
+                    $('#dynamic-half-days-container').empty();
+                    $('#dynamic-off-days-container').empty();
+                },
+                error: function (xhr) {
+                    hideLoader();
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        $('.leave_error').text(''); // Clear previous errors
+
+                        // Display specific errors
+                        if (errors.birthday_leave) {
+                            $('#notification').html(`<div class="alert alert-danger">${errors.birthday_leave}</div>`);
+                        }
+
+                        if (errors.marriage_leave) {
+                            $('#notification').html(`<div class="alert alert-danger">${errors.marriage_leave}</div>`);
+                        }
+
+                        // Display other validation errors if any
+                        $.each(errors, function (key, value) {
+                            let field = $('[name="' + key + '"]');
+                            field.next('.leave_error').text(value[0]);
+                        });
+                    } else {
+                        $('#notification').html('<div class="alert alert-danger">An error occurred. Please try again later.</div>');
+                    }
+                }
+            });
+        }
+    });
 </script>
 @endsection

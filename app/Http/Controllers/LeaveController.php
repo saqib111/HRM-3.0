@@ -22,7 +22,6 @@ class LeaveController extends Controller
         return view('leave_application.leave_form', compact('formattedLeaveBalance'));
     }
 
-    // Leave Application Backend Starts From Here.
     public function store_leave(Request $request)
     {
         // Step 1: Validate the request using Validator for AJAX
@@ -43,13 +42,67 @@ class LeaveController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Step 3: Get form inputs
+        // Step 3: Check if the user has already taken a Birthday Leave this year
+        $user_id = auth()->user()->id; // Assuming the user is authenticated
+        $errors = [];
+
+        // Check if "Birthday Leave" is selected in the request
+        if (in_array(2, $request->full_day_leave ?? [])) { // 2 stands for "Birthday Leave"
+            $currentYear = now()->year;
+            $birthdayLeaveTaken = LeaveManagement::where('user_id', $user_id)
+                ->whereJsonContains('leave_details', [['leave_type_id' => "2"]])
+                ->whereYear('created_at', $currentYear)
+                ->exists();
+
+            if ($birthdayLeaveTaken) {
+                $errors['birthday_leave'] = 'You have already taken Birthday Leave this year.';
+            }
+        }
+
+        // Check total "Marriage Leave" days taken in lifetime
+        if (in_array(3, $request->full_day_leave ?? [])) { // 3 stands for "Marriage Leave"
+            $marriageLeaveDaysTaken = LeaveManagement::where('user_id', $user_id)
+                ->whereJsonContains('leave_details', [['leave_type_id' => "3"]])
+                ->get()
+                ->sum(function ($leave) {
+                    $details = json_decode($leave->leave_details, true);
+                    return collect($details)->where('leave_type_id', "3")->sum(function ($marriageLeave) {
+                        $start = new \DateTime($marriageLeave['start_date']);
+                        $end = new \DateTime($marriageLeave['end_date']);
+                        return $end->diff($start)->days + 1;
+                    });
+                });
+
+            // Calculate new requested Marriage Leave days
+            $newMarriageLeaveDaysRequested = 0;
+            if (!empty($request->full_day_leave)) {
+                foreach ($request->full_day_leave as $index => $leave_type) {
+                    if ($leave_type == "3") {
+                        $from = new \DateTime($request->full_leave_from[$index]);
+                        $to = new \DateTime($request->full_leave_to[$index]);
+                        $newMarriageLeaveDaysRequested += $to->diff($from)->days + 1;
+                    }
+                }
+            }
+
+            if ($marriageLeaveDaysTaken + $newMarriageLeaveDaysRequested > 3) {
+                $errors['marriage_leave'] = 'Marriage Leave cannot exceed a total of 3 days in your lifetime.';
+            }
+        }
+
+        // Return errors if any exist
+        if (!empty($errors)) {
+            return response()->json(['errors' => $errors], 422);
+        }
+
+        // Step 4: Get form inputs
         $leave_title = $request->leave_title;
         $description = $request->description;
         $user_id = auth()->user()->id; // Assuming the user is authenticated
         $annual_leave_balance = $request->annual_leave_balance;
+        $off_days = $request->off_days ?? [];
 
-        // Step 4: Prepare leave details array
+        // Step 5: Prepare leave details array
         $leave_details = [];
 
         // Full-day leave processing
@@ -58,23 +111,27 @@ class LeaveController extends Controller
                 $from = $request->full_leave_from[$index];
                 $to = $request->full_leave_to[$index];
 
-                // Handle unpaid leave if the user exceeds their annual leave balance
-                $total_days = $this->calculateLeaveDays($from, $to, $request->off_days ?? []);
+                // Calculate the effective leave days (excluding off-days)
+                $total_days = $this->calculateLeaveDays($from, $to, $off_days);
+
                 if ($leave_type == 1 && $total_days > $annual_leave_balance) { // 1 is for "Annual Leave"
                     // Store the part covered by annual leave
+                    $paid_end_date = $this->calculateRemainingUnpaidStartDate($from, $annual_leave_balance, $off_days);
+
                     $leave_details[] = [
                         'type' => 'full_day',
                         'leave_type_id' => 1, // Annual Leave
                         'start_date' => $from,
-                        'end_date' => $this->calculateRemainingUnpaidStartDate($from, $annual_leave_balance - 1),
+                        'end_date' => $paid_end_date,
                         'status' => 'paid'
                     ];
 
-                    // Store the unpaid part
+                    // Store the unpaid part starting after paid days end
+                    $unpaid_start_date = (new \DateTime($paid_end_date))->modify('+1 day')->format('Y-m-d');
                     $leave_details[] = [
                         'type' => 'full_day',
                         'leave_type_id' => 4, // Unpaid Leave
-                        'start_date' => $this->calculateRemainingUnpaidStartDate($from, $annual_leave_balance),
+                        'start_date' => $unpaid_start_date,
                         'end_date' => $to,
                         'status' => 'unpaid'
                     ];
@@ -116,7 +173,7 @@ class LeaveController extends Controller
             }
         }
 
-        // Step 5: Save leave application to the database
+        // Step 6: Save leave application to the database
         LeaveManagement::create([
             'user_id' => $user_id,
             'title' => $leave_title,
@@ -135,35 +192,98 @@ class LeaveController extends Controller
             'hr_approval_created_time' => null
         ]);
 
-        // Step 6: Return success response for AJAX
+        // Step 7: Return success response for AJAX
         return response()->json(['message' => 'Leave application submitted successfully.'], 200);
     }
 
+
+    /**
+     * Calculate the number of leave days excluding the given off days
+     */
     // Helper method to calculate leave days excluding off-days
     private function calculateLeaveDays($start, $end, $off_days = [])
     {
         $start_date = new \DateTime($start);
         $end_date = new \DateTime($end);
-        $interval = $start_date->diff($end_date);
-        $days = $interval->days + 1;
+        $days_count = 0;
 
-        foreach ($off_days as $off_day) {
-            $off_day_date = new \DateTime($off_day);
-            if ($off_day_date >= $start_date && $off_day_date <= $end_date) {
-                $days--; // Subtract off-day from total leave days
+        while ($start_date <= $end_date) {
+            $current_date_str = $start_date->format('Y-m-d');
+
+            // Only count the day if it's not an off-day
+            if (!in_array($current_date_str, $off_days)) {
+                $days_count++;
+            }
+
+            $start_date->modify('+1 day');
+        }
+
+        return $days_count;
+    }
+
+    // Helper method to calculate the end date of paid leave (covered by balance)
+    private function calculateRemainingUnpaidStartDate($start, $annual_leave_balance, $off_days = [])
+    {
+        $start_date = new \DateTime($start);
+        $days_used = 0;
+
+        // Move forward in days until reaching the full annual leave balance, skipping off-days
+        while ($days_used < $annual_leave_balance) {
+            $current_date_str = $start_date->format('Y-m-d');
+
+            // Only count the day if it is not an off-day
+            if (!in_array($current_date_str, $off_days)) {
+                $days_used++;
+            }
+
+            if ($days_used < $annual_leave_balance) {
+                $start_date->modify('+1 day');
             }
         }
 
-        return $days;
+        return $start_date->format('Y-m-d');
     }
 
-    // Helper method to calculate the start date of unpaid leave
-    private function calculateRemainingUnpaidStartDate($start, $annual_leave_balance)
-    {
-        $start_date = new \DateTime($start);
-        return $start_date->modify("+$annual_leave_balance days")->format('Y-m-d');
-    }
-    // Leave Application Backend Ends From Here.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     public function display_leave(Request $request)
