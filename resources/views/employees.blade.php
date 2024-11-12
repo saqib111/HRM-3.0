@@ -242,28 +242,30 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Employee ID</label>
-                                <input class="form-control " type="text" name="employee_id" id="edit_eid">
+                                <label class="col-form-label" for="edit_eid">Employee ID</label>
+                                <input class="form-control" type="text" name="employee_id" id="edit_eid">
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Username</label>
-                                <input class="form-control  " type="text" name="username" id="edit_username">
+                                <label class="col-form-label" for="edit_username">Username</label>
+                                <input class="form-control" type="text" name="username" id="edit_username">
                             </div>
                         </div>
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Email <span class="text-danger">*</span></label>
-                                <input class="form-control " type="email" name="email" id="edit_email">
+                                <label class="col-form-label" for="edit_email">Email <span
+                                        class="text-danger">*</span></label>
+                                <input class="form-control" type="email" name="email" id="edit_email">
                             </div>
                         </div>
 
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Joining Date <span class="text-danger">*</span></label>
+                                <label class="col-form-label" for="edit_joiningdate">Joining Date <span
+                                        class="text-danger">*</span></label>
                                 <input class="form-control datetimepicker" type="text" name="joining_date"
                                     id="edit_joiningdate">
                             </div>
@@ -271,7 +273,7 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label class="col-form-label">Company</label>
+                                <label class="col-form-label" for="edit_company">Company</label>
                                 <select class="form-select company" name="company" id="edit_company">
 
                                     @foreach($company as $com)
@@ -284,7 +286,8 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label class="col-form-label">Department <span class="text-danger">*</span></label>
+                                <label class="col-form-label" for="edit_department">Department <span
+                                        class="text-danger">*</span></label>
                                 <select class="form-select department" name="department" id="edit_department">
                                     @foreach($department as $dep)
                                         <option value="{{$dep->id}}">{{$dep->name}}</option>
@@ -294,7 +297,8 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Designation <span class="text-danger">*</span></label>
+                                <label class="col-form-label" for="edit_designation">Designation <span
+                                        class="text-danger">*</span></label>
                                 <select class="form-select " name="designation" id="edit_designation">
                                     <option value=""></option>
                                 </select>
@@ -302,7 +306,8 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3 valid">
-                                <label class="col-form-label">Brand <span class="text-danger">*</span></label>
+                                <label class="col-form-label" for="edit_brand">Brand <span
+                                        class="text-danger">*</span></label>
 
                                 <select class="form-select tagging brand " name="brand[]" multiple="multiple"
                                     id="edit_brand">
@@ -320,7 +325,8 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label class="col-form-label">Profile Image <span class="text-danger">*</span></label>
+                                <label class="col-form-label" for="edit_image">Profile Image <span
+                                        class="text-danger">*</span></label>
                                 <input class="form-control old_img" type="hidden" name="old_image" id="edit_oldimage">
                                 <input class="form-control img" type="file" name="image" id="edit_image">
                             </div>

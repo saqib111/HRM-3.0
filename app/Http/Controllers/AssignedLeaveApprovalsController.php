@@ -25,14 +25,19 @@ class AssignedLeaveApprovalsController extends Controller
 
             // Prepare names for first and second assigned users
             foreach ($leaveApprovals as $approval) {
-                $firstAssignedUserIds = json_decode($approval->first_assign_user_id, true);
-                $secondAssignedUserIds = json_decode($approval->second_assign_user_id, true);
+                $firstAssignedUserIds = json_decode($approval->first_assign_user_id, true) ?? [];
+                $secondAssignedUserIds = json_decode($approval->second_assign_user_id, true) ?? [];
 
-                $firstAssignedUserNames = User::whereIn('id', $firstAssignedUserIds)->pluck('username')->toArray();
-                $secondAssignedUserNames = User::whereIn('id', $secondAssignedUserIds)->pluck('username')->toArray();
+                $firstAssignedUserNames = !empty($firstAssignedUserIds)
+                    ? User::whereIn('id', $firstAssignedUserIds)->pluck('username')->toArray()
+                    : null;
 
-                $approval->first_assigned_user_name = $firstAssignedUserNames; // Store as array
-                $approval->second_assigned_user_name = $secondAssignedUserNames; // Store as array
+                $secondAssignedUserNames = !empty($secondAssignedUserIds)
+                    ? User::whereIn('id', $secondAssignedUserIds)->pluck('username')->toArray()
+                    : null;
+
+                $approval->first_assigned_user_name = $firstAssignedUserNames; // Store as array or null
+                $approval->second_assigned_user_name = $secondAssignedUserNames; // Store as array or null
             }
 
             return DataTables::of($leaveApprovals)->make(true);
@@ -65,22 +70,34 @@ class AssignedLeaveApprovalsController extends Controller
     {
         // Validate the incoming request
         $validated = $request->validate([
-            'first_assigned_user' => 'required|array',
-            'second_assigned_user' => 'required|array',
+            'first_assigned_user' => 'nullable|array', // Change to nullable
+            'second_assigned_user' => 'nullable|array', // Change to nullable
             'leaveApprovalId' => 'required|integer', // Assuming you're also passing the leave approval ID
         ]);
 
         // You can save the assignments to the database
         $leaveApproval = AssignedLeaveApprovals::find($validated['leaveApprovalId']);
         if ($leaveApproval) {
-            // Assuming you have methods to set these values
-            $leaveApproval->first_assign_user_id = json_encode($validated['first_assigned_user']);
-            $leaveApproval->second_assign_user_id = json_encode($validated['second_assigned_user']);
+            // Check if first_assigned_user is empty, if so, set it to null
+            if (empty($validated['first_assigned_user'])) {
+                $leaveApproval->first_assign_user_id = null;
+            } else {
+                $leaveApproval->first_assign_user_id = json_encode($validated['first_assigned_user']);
+            }
+
+            // Check if second_assigned_user is empty, if so, set it to null
+            if (empty($validated['second_assigned_user'])) {
+                $leaveApproval->second_assign_user_id = null;
+            } else {
+                $leaveApproval->second_assign_user_id = json_encode($validated['second_assigned_user']);
+            }
+
             $leaveApproval->save();
         }
 
         return response()->json(['success' => true]);
     }
+
 
 
     /**
@@ -98,11 +115,6 @@ class AssignedLeaveApprovalsController extends Controller
     {
         // Find the leave approval record
         $leaveApproval = AssignedLeaveApprovals::find($id);
-
-        if (!$leaveApproval) {
-            return response()->json(['success' => false, 'message' => 'Leave approval not found.'], 404);
-        }
-
         // Return the assigned user IDs as an array
         return response()->json([
             'success' => true,
@@ -119,21 +131,7 @@ class AssignedLeaveApprovalsController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Validate the incoming request
-        $validated = $request->validate([
-            'first_assigned_user' => 'required|array',
-            'second_assigned_user' => 'required|array',
-        ]);
-
-        // Find the leave approval record
-        $leaveApproval = AssignedLeaveApprovals::find($id);
-        if ($leaveApproval) {
-            $leaveApproval->first_assign_user_id = json_encode($validated['first_assigned_user']);
-            $leaveApproval->second_assign_user_id = json_encode($validated['second_assigned_user']);
-            $leaveApproval->save();
-        }
-
-        return response()->json(['success' => true]);
+        //
     }
 
     /**

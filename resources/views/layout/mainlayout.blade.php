@@ -13,7 +13,7 @@
 
 
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/asseys/img/favicon.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/assets/img/favicon.png') }}">
     @include('layout.partials.head')
     @yield('head')
     @yield('css')

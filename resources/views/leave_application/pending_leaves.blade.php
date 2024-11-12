@@ -458,6 +458,8 @@
             let totalAnnualLeaveDays = 0;
             let totalOffDaysInAnnualLeave = 0;
             let totalOffDays = offDays.length;
+            let halfDayCounter = 0;
+
 
             // Group leaves by type and month, excluding off-days from annual and unpaid leaves
             const groupedLeaves = {};
@@ -497,6 +499,7 @@
 
                 if (leave.type === 'half_day') {
                     leaveDaysCount = 0.5;
+                    halfDayCounter += 0.5;
                 }
 
                 totalLeaveDays += leaveDaysCount;
@@ -513,10 +516,8 @@
                         } else {
                             totalOffDaysInAnnualLeave++;
                         }
-
                         currentDate.setDate(currentDate.getDate() + 1);
                     }
-
                     totalAnnualLeaveDays += currentAnnualLeaveDays;
                 }
 
@@ -585,9 +586,15 @@
 
             // Display off-days in a separate section with month info
             displayOffDays(offDays);
+            // Handle half-day leaves separately after full-day processing
+            leaveDetails.forEach(leave => {
+                if (leave.type === 'half_day') {
+                    displayHalfDayLeave(leave);
+                }
+            });
 
             document.getElementById('total_leave_days').textContent = `${totalLeaveDays} days`;
-            document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays} days`;
+            document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays + halfDayCounter} days`;
             document.getElementById('total_off_days').textContent = `${totalOffDays} days`;
         }
 

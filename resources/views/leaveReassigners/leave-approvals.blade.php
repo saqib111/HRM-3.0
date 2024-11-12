@@ -50,7 +50,7 @@
           <div class="input-block mb-3">
             <label class="col-form-label" for="first_assigned_user">First Assign Name <span
                 class="text-danger">*</span></label>
-            <select name="first_assigned_user[]" id="first_assigned_user" multiple required>
+            <select name="first_assigned_user[]" id="first_assigned_user" multiple>
               @foreach ($users as $user)
           <option value="{{ $user->id }}">{{ $user->username }}</option>
         @endforeach
@@ -61,7 +61,7 @@
           <div class="input-block mb-3">
             <label class="col-form-label" for="second_assigned_user">Second Assign Name <span
                 class="text-danger">*</span></label>
-            <select name="second_assigned_user[]" id="second_assigned_user" multiple required>
+            <select name="second_assigned_user[]" id="second_assigned_user" multiple>
               @foreach ($users as $user)
           <option value="{{ $user->id }}">{{ $user->username }}</option>
         @endforeach
@@ -186,7 +186,6 @@
   });
 </script>
 
-
 <script>
   $(document).ready(function () {
     // Function to initialize MultiSelectTag
@@ -224,9 +223,15 @@
         type: 'GET',
         success: function (response) {
           if (response.success) {
-            $('#first_assigned_user').val(response.data.first_assigned_user_id).trigger('change');
-            $('#second_assigned_user').val(response.data.second_assigned_user_id).trigger('change');
+            // Set selected values
+            $('#first_assigned_user').val(response.data.first_assigned_user_id);
+            $('#second_assigned_user').val(response.data.second_assigned_user_id);
             $('#leaveApprovalId').val(id);
+
+            // Trigger change to update MultiSelectTag display
+            $('#first_assigned_user').trigger('change');
+            $('#second_assigned_user').trigger('change');
+
             $('#assign_leave').modal('show');
           } else {
             alert('Error: ' + response.message);
@@ -241,4 +246,5 @@
     window.AssignLeaveApprovals = AssignLeaveApprovals;
   });
 </script>
+
 @endsection

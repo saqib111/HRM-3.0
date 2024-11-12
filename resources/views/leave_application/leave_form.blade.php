@@ -371,12 +371,29 @@
                         }
                     }
                 }
+
+                if (halfDayDate) {
+                    annualLeaveDaysRequested += 0.5;
+                }
             });
 
             if (isValid) {
                 if (annualLeaveDaysRequested > annualLeaveBalance) {
-                    unpaidLeaveDays = annualLeaveDaysRequested - annualLeaveBalance;
-                    $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. The remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid.`);
+                    // unpaidLeaveDays = annualLeaveDaysRequested - annualLeaveBalance;
+                    // $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. The remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid.`);
+                    // $('#unpaidLeaveModal').modal('show');
+
+                    unpaidLeaveDays = annualLeaveDaysRequested - Math.floor(annualLeaveBalance);
+                    let remainingALBalance = annualLeaveBalance - Math.floor(annualLeaveBalance);
+
+                    // Display message based on whether they need to define a half-day
+                    if (remainingALBalance > 0) {
+                        $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. To fully utilize your balance, you need to define a half-day leave. Otherwise, only <strong>${Math.floor(annualLeaveBalance)}</strong> days will be counted, and the remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid. Your remaining balance will be <strong>0.5</strong> Annual Leave.`);
+                    } else {
+                        $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. The remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid.`);
+                    }
+
+                    // Show the modal
                     $('#unpaidLeaveModal').modal('show');
                 } else {
                     sendAjaxRequest();
