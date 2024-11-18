@@ -58,6 +58,10 @@
         /* Center the modal */
     }
 
+    .hideBlock {
+        display: none !important;
+    }
+
     @media (max-width: 768px) {
         .modal-body {
             max-height: 70vh;
@@ -73,12 +77,33 @@
     }
 </style>
 <div class="page-header">
-    <div class="row align-items-center">
+    <div class="row align-items-center justify-content-between">
         <div class="col-md-4">
             <h3 class="page-title">Pending Leave Applications</h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
                 <li class="breadcrumb-item active">Pending Leave Applications</li>
+            </ul>
+        </div>
+        <div class="col-md-4 d-flex justify-content-end">
+            <ul class="c_Employee">
+                <li>
+                    @if(auth()->user()->role === "1" || auth()->user()->role === "4")
+                                        <div class="d-flex justify-content-end">
+                                            <!-- Status Buttons (Pendings, Approved, Rejected) -->
+                                            @php
+                                                $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'];
+                                            @endphp
+
+                                            @foreach($statuses as $status => $label)
+                                                <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->first ? 'active' : '' }}"
+                                                    data-status="{{ $status }}" onclick="filterByStatus('{{ $status }}')">
+                                                    {{ $label }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                    @endif
+                </li>
             </ul>
         </div>
     </div>
@@ -109,7 +134,6 @@
     </div>
 </div>
 
-<!-- Dynamic Modal Start -->
 <!-- Leave Detail Modal Start -->
 <div class="modal custom-modal fade mt-4" role="dialog" id="leaveDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
@@ -229,7 +253,106 @@
 
 @section('script-z')
 <script>
+    let table;
+
+    // Function to initialize the DataTable
+    function initializeDataTable(status) {
+        table = $('#leave_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('leave_application.data') }}", // Backend URL
+                data: function (d) {
+                    d.status = status;  // Send the selected status as a query parameter
+                }
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'employee_id', name: 'employee_id', orderable: false, searchable: false },
+                { data: 'username', name: 'username', orderable: false, searchable: false },
+                {
+                    data: 'title',
+                    render: function (data) {
+                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'description',
+                    render: function (data) {
+                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'leave_balance',
+                    render: function (data) {
+                        // Convert the data to a number (in case it's a string)
+                        let balance = parseFloat(data);
+
+                        // Check if it's a valid number
+                        if (!isNaN(balance)) {
+                            // Format the number and append the 'Days' or 'Day'
+                            return (balance >= 2) ? balance + ' Days' : balance + ' Day';
+                        }
+
+                        // If it's not a valid number, return 'N/A' or another default value
+                        return 'N/A'; // or any appropriate default value
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                { data: 'day', name: 'day', orderable: false, searchable: false },
+                { data: 'from', name: 'from', orderable: false, searchable: false },
+                { data: 'to', name: 'to', orderable: false, searchable: false },
+                { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
+                {
+                    data: 'id',
+                    render: function (data) {
+                        return '<div class="ms-3 toggle-modal" data-id="' + data +
+                            '" style="cursor: pointer;">' +
+                            '<i class="fas fa-eye"></i>' +
+                            '</div>';
+                    },
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            order: [[0, 'desc']]
+        });
+    }
+
+    // Function to filter data by company
+    function filterByStatus(status) {
+        // Clear the active class from all buttons
+        $('.company-btn').removeClass('active');
+
+        // Add active class to clicked button using the 'data-status' attribute
+        $(`button[data-status='${status}']`).addClass('active');
+
+        // Destroy the previous DataTable instance and reinitialize it with the new status
+        if (table) {
+            table.destroy();
+        }
+
+        // Reinitialize DataTable with the selected status
+        initializeDataTable(status);
+    }
+
     $(document).ready(function () {
+
+        /// Initialize DataTable with the default status (Pending)
+        const defaultStatus = 'pending';  // You can adjust this based on which status you want to load by default
+        initializeDataTable(defaultStatus);
+
+        // Handle the status buttons click event to filter data
+        $('.company-btn').on('click', function () {
+            const status = $(this).data('status');  // Get the status from the button's data-status attribute
+            filterByStatus(status);
+        });
+
         $('#approval_btn').click(function () {
             const id = $(this).data('id');
             const step = $(this).data('action');
@@ -286,71 +409,6 @@
             });
         });
 
-        // Initialize DataTables
-        $('#leave_table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: "{{ route('leave_application.data') }}",
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'employee_id', name: 'employee_id', orderable: false, searchable: false },
-                { data: 'username', name: 'username', orderable: false, searchable: false },
-                // { data: 'title', name: 'title' },
-                // { data: 'description', name: 'description' },
-                {
-                    data: 'title',
-                    render: function (data) {
-                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
-                    },
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'description',
-                    render: function (data) {
-                        return (data && data.length > 15) ? data.substring(0, 15) + '...' : data || ''; // Handle null
-                    },
-                    orderable: false,
-                    searchable: false
-                },
-                // { data: 'leave_balance', name: 'leave_balance', orderable: false, searchable: false },
-                {
-                    data: 'leave_balance',
-                    render: function (data) {
-                        // Convert the data to a number (in case it's a string)
-                        let balance = parseFloat(data);
-
-                        // Check if it's a valid number
-                        if (!isNaN(balance)) {
-                            // Format the number and append the 'Days' or 'Day'
-                            return (balance >= 2) ? balance + ' Days' : balance + ' Day';
-                        }
-
-                        // If it's not a valid number, return 'N/A' or another default value
-                        return 'N/A'; // or any appropriate default value
-                    },
-                    orderable: false,
-                    searchable: false
-                },
-                { data: 'day', name: 'day', orderable: false, searchable: false },
-                { data: 'from', name: 'from', orderable: false, searchable: false },
-                { data: 'to', name: 'to', orderable: false, searchable: false },
-                { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
-                {
-                    data: 'id',
-                    render: function (data) {
-                        return '<div class="ms-3 toggle-modal" data-id="' + data +
-                            '" style="cursor: pointer;">' +
-                            '<i class="fas fa-eye"></i>' +
-                            '</div>';
-                    },
-                    orderable: false,
-                    searchable: false
-                }
-            ],
-            order: [[0, 'desc']]
-        });
-
         // Fetch leave details and open the modal
         $(document).on('click', '.toggle-modal', function () {
             const id = $(this).data('id');
@@ -369,67 +427,36 @@
                     $('#modal-description').text(data.description);
                     $('#modal-alblance').text(data.leave_balance)
 
-                    // 1st Step Information
-                    if (data.status_1 === 'pending') {
-                        $('#first_status').text("Pending");
-                        $('#first_status').addClass("yellowText");
-                        $('#first_approval_name').text(data.first_approval_id);
-                        $('#first_approval_name').addClass("yellowText");
-                        $('#first_created_time').text(data.first_approval_created_time);
-                        $('#first_created_time').addClass("yellowText");
+                    // Update 1st Step Information
+                    updateApprovalStatus('#first_status', '#first_approval_name', '#first_created_time', data.status_1, data.first_approval_id, data.first_approval_created_time);
+                    // Update 2nd Step Information
+                    updateApprovalStatus('#second_status', '#second_approval_name', '#second_created_time', data.status_2, data.second_approval_id, data.second_approval_created_time);
 
-                    } else if (data.status_1 === 'approved') {
-                        $('#first_status').text("Approved");
-                        $('#first_status').addClass("greenText");
-                        $('#first_approval_name').text(data.first_approval_id);
-                        $('#first_approval_name').addClass("greenText");
-                        $('#first_created_time').text(data.first_approval_created_time);
-                        $('#first_created_time').addClass("greenText");
+                    // Show or hide action buttons based on status
+                    const actionButtons = $('#action_buttons');
 
-                    } else if (data.status_1 === 'rejected') {
-                        $('#first_status').text("Rejected");
-                        $('#first_status').addClass("redText");
-                        $('#first_approval_name').text(data.first_approval_id);
-                        $('#first_approval_name').addClass("redText");
-                        $('#first_created_time').text(data.first_approval_created_time);
-                        $('#first_created_time').addClass("redText");
-                    }
-
-                    // 2nd Step Information
-                    if (data.status_2 === 'pending') {
-                        $('#second_status').text("Pending");
-                        $('#second_status').addClass("yellowText");
-                        $('#second_approval_name').text(data.second_approval_id);
-                        $('#second_approval_name').addClass("yellowText");
-                        $('#second_created_time').text(data.second_approval_created_time);
-                        $('#second_created_time').addClass("yellowText");
-
-                    } else if (data.status_2 === 'approved') {
-                        $('#second_status').text("Approved");
-                        $('#second_status').addClass("greenText");
-                        $('#second_approval_name').text(data.second_approval_id);
-                        $('#second_approval_name').addClass("greenText");
-                        $('#second_created_time').text(data.second_approval_created_time);
-                        $('#second_created_time').addClass("greenText");
-
-                    } else if (data.status_2 === 'rejected') {
-                        $('#second_status').text("Rejected");
-                        $('#second_status').addClass("redText");
-                        $('#second_approval_name').text(data.second_approval_id);
-                        $('#second_approval_name').addClass("redText");
-                        $('#second_created_time').text(data.second_approval_created_time);
-                        $('#second_created_time').addClass("redText");
-                    }
-
-                    // Set the data-id & data-action attribute on buttons
-                    $('#approval_btn').data('id', id);
-                    $('#rejection_btn').data('id', id);
-                    if (data.status_1 === "pending") {
-                        $('#approval_btn').data('action', 'first_status');
-                        $('#rejection_btn').data('action', 'first_status');
-                    } else if (data.status_1 === "approved") {
+                    // Check if 2nd step needs action
+                    if (data.status_1 === "approved" && data.status_2 === "pending") {
+                        $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
+                        actionButtons.removeClass("hideBlock");
+                        $('#approval_btn').data('id', id);
+                        $('#rejection_btn').data('id', id);
                         $('#approval_btn').data('action', 'second_status');
                         $('#rejection_btn').data('action', 'second_status');
+                    }
+                    // Check if 1st step needs action
+                    else if (data.status_1 === "pending") {
+                        $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
+                        actionButtons.removeClass("hideBlock");
+                        $('#approval_btn').data('id', id);
+                        $('#rejection_btn').data('id', id);
+                        $('#approval_btn').data('action', 'first_status');
+                        $('#rejection_btn').data('action', 'first_status');
+                    }
+                    // If both steps are completed, hide buttons
+                    else {
+                        $('#approval_btn, #rejection_btn').prop('disabled', true); // Disable buttons
+                        actionButtons.addClass("hideBlock");
                     }
 
                     // Separate off-days from leave details
@@ -449,6 +476,27 @@
                 }
             });
         });
+
+        // Helper function to update approval statuses in the modal
+        function updateApprovalStatus(statusSelector, nameSelector, timeSelector, status, approverName, approvalTime) {
+            const statusElement = $(statusSelector);
+            const nameElement = $(nameSelector);
+            const timeElement = $(timeSelector);
+
+            if (status === 'pending') {
+                statusElement.text("Pending").removeClass().addClass("fw-semibold yellowText");
+                nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold yellowText");
+                timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold yellowText");
+            } else if (status === 'approved') {
+                statusElement.text("Approved").removeClass().addClass("fw-semibold greenText");
+                nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold greenText");
+                timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold greenText");
+            } else if (status === 'rejected') {
+                statusElement.text("Rejected").removeClass().addClass("fw-semibold redText");
+                nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold redText");
+                timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold redText");
+            }
+        }
 
         function populateLeaveSection(leaveDetails, offDays) {
             const leaveSections = document.querySelector('.leave-sections');

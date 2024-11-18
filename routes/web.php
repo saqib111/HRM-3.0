@@ -118,6 +118,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');
     Route::post('/leave_application_store', [LeaveController::class, 'store_leave'])->name('leave.form.store');
     Route::get('/leave_application/data', [LeaveController::class, 'display_leave'])->name('leave_application.data');
+    Route::get('/unassigned_application', [LeaveController::class, 'UnassignedLeaveIndex'])->name('leave_application.unassigned');
+    Route::post('/add_unassigned_leave', [LeaveController::class, 'AddUnassignedLeave'])->name('leave.add_unassigned');
+
     // Route to fetch the data for Modal
     Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
     Route::post('/leave_action', [LeaveController::class, 'leave_action'])->name('leave.form.action');

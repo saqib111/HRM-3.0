@@ -131,6 +131,7 @@ class UserProfileController extends Controller
     public function profileShow($id)
     {
         $userProfile = User::with(['visaInfo', 'userProfile', 'emergencyUser', 'dependantUser'])->findOrFail($id);
+        // $mainUser->week_days = $request->week_days;
         $mainUser = $userProfile;
         $visaInfo = $userProfile->visaInfo;
         $profileUser = $userProfile->userProfile;
@@ -168,20 +169,38 @@ class UserProfileController extends Controller
 
     public function update(Request $request, $id)
     {
-        $mainUser = UserProfile::findOrFail($id);
-        $mainUser->update($request->only(['real_name', 'accomodation', 'gender', 'phone']));
+
+        $mainUser = User::find($id);
+        $mainUser->week_days = $request->week_days;
+        $mainUser->save();
+
+        $updatePersonal = UserProfile::where('user_id', $id)->first();
+
+
+        $updatePersonal->real_name = $request->real_name;
+        $updatePersonal->dob = $request->dob;
+        $updatePersonal->accomodation = $request->accomodation;
+        $updatePersonal->gender = $request->gender;
+        $updatePersonal->phone = $request->phone;
+        $updatePersonal->save();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Profile updated successfully!',
             'data' => [
-                'real_name' => $mainUser->real_name,
-                'accomodation' => $mainUser->accomodation,
-                'gender' => $mainUser->gender,
-                'phone' => $mainUser->phone,
+                'real_name' => $updatePersonal->real_name,
+                'dob' => $updatePersonal->dob,
+                'accomodation' => $updatePersonal->accomodation,
+                'gender' => $updatePersonal->gender,
+                'phone' => $updatePersonal->phone,
+                'week_days' => $mainUser->week_days,
             ]
         ]);
     }
+
+
+
+
 
     public function updateVisaInfo(Request $request)
     {

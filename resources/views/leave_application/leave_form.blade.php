@@ -100,11 +100,11 @@
 <!-- PreLoader Ends -->
 <!-- Unpaid Leave Confirmation Modal -->
 <div class="modal fade" id="unpaidLeaveModal" tabindex="-1" aria-labelledby="unpaidLeaveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="unpaidLeaveModalLabel">Confirm Leave Application</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h4 class="modal-title mx-auto" id="unpaidLeaveModalLabel"></h4>
+                <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
             </div>
             <div class="modal-body">
                 <p id="unpaidLeaveMessage"></p>
@@ -112,7 +112,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmUnpaidLeave">Apply with Unpaid Leave</button>
+                <button type="button" class="btn btn-danger" id="confirmUnpaidLeave">Apply with Unpaid Leave</button>
             </div>
         </div>
     </div>
@@ -386,11 +386,20 @@
                     unpaidLeaveDays = annualLeaveDaysRequested - Math.floor(annualLeaveBalance);
                     let remainingALBalance = annualLeaveBalance - Math.floor(annualLeaveBalance);
 
-                    // Display message based on whether they need to define a half-day
                     if (remainingALBalance > 0) {
-                        $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. To fully utilize your balance, you need to define a half-day leave. Otherwise, only <strong>${Math.floor(annualLeaveBalance)}</strong> days will be counted, and the remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid. Your remaining balance will be <strong>0.5</strong> Annual Leave.`);
+                        $('#unpaidLeaveMessage').html(
+                            `You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong class="text-success">${annualLeaveBalance} Days</strong>. To fully utilize your balance, you need to define a "<strong class="text-warning">half-day</strong>" leave. Otherwise, only <strong class="text-success">${Math.floor(annualLeaveBalance)} Days</strong> will be counted, and the remaining <strong class="text-danger">${unpaidLeaveDays} Days</strong> will be <strong class="text-danger">unpaid</strong>. Your remaining balance will be <strong class="text-success">0.5</strong> Annual Leave.`
+                        );
+                        $("#unpaidLeaveModalLabel").html(`
+                    Confirmation For <strong class="badge text-bg-danger text-wrap fs-5">${unpaidLeaveDays} Days</strong> of Unpaid Leaves
+                    `)
                     } else {
-                        $('#unpaidLeaveMessage').html(`You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong>${annualLeaveBalance}</strong>. The remaining <strong>${unpaidLeaveDays}</strong> days will be unpaid.`);
+                        $('#unpaidLeaveMessage').html(
+                            `You are applying for <strong>${annualLeaveDaysRequested}</strong> Annual Leave days, but your balance is only <strong class="text-success">${annualLeaveBalance} Days</strong>.<br class="mt-2">The remaining <strong class="text-danger">${unpaidLeaveDays} Days</strong> will be <strong class="text-danger">unpaid</strong>.`
+                        );
+                        $("#unpaidLeaveModalLabel").html(`
+                    Confirmation For <strong class="badge text-bg-danger text-wrap fs-5">${unpaidLeaveDays} Days</strong> of <strong class="text-danger">Unpaid</strong> Leaves
+                    `)
                     }
 
                     // Show the modal

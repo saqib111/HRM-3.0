@@ -19,6 +19,7 @@
 <!-- /Page Header -->
 <div class="card mb-0">
   <div class="card-body">
+    <h3 class="pb-4">Personal Information</h3>
     <div class="row">
       <div class="col-md-12">
         <div class="profile-view">
@@ -32,6 +33,7 @@
               <div class="col-md-5">
                 <div class="profile-info-left" id="profileDisplay">
                   <h3 class="user-name m-t-0 mb-0">{{ $mainUser->username }}</h3>
+                  <div class="text">{{ $mainUser->email }}</div>
                   <h6 class="text-muted">{{ $mainUser->designationName }}</h6>
                   <small class="text-muted">{{ $mainUser->departmentName }}</small>
                   <div class="staff-id">Employee ID : {{ $mainUser->employee_id }}</div>
@@ -54,13 +56,10 @@
                     </div>
                   </li>
 
-                  <li>
-                    <div class="title">Email:</div>
-                    <div class="text">{{ $mainUser->email }}</div>
-                  </li>
+
                   <li>
                     <div class="title">Birthday:</div>
-                    <div class="text">{{ $profileUser->dob }}</div>
+                    <div class="text" id="dateofbirth">{{ $profileUser->dob }}</div>
                   </li>
                   <li>
                     <div class="title">Accomodation:</div>
@@ -75,6 +74,14 @@
                     <div class="title">Phone:</div>
                     <div class="text" id="phone">{{ $profileUser->phone }}</div>
                   </li>
+
+                  <li>
+                    <div class="title">Week Off Days:</div>
+                    <div class="text" id="weekDays"> {{ $mainUser->week_days == 5 ? '5 Days' : '6 Days' }}</div>
+                  </li>
+
+
+
                 </ul>
               </div>
             </div>
@@ -115,7 +122,7 @@
       <div class="col-md-6 d-flex">
         <div class="card profile-box flex-fill">
           <div class="card-body">
-            <h3 class="card-title">Personal Informations <a href="#" class="edit-icon" data-bs-toggle="modal"
+            <h3 class="card-title">Passport & Visa Infomation <a href="#" class="edit-icon" data-bs-toggle="modal"
                 data-bs-target="#personal_info_modal"><i class="fa-solid fa-pencil"></i></a></h3>
             <ul class="personal-info">
               <li>
@@ -791,34 +798,15 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="profileModal" method="POST">
+        <form id="profileModal" method="POST" action="{{ route('user-profile.update', $profileUser->id) }}">
           @csrf
           @method('PUT')
-          <input type="hidden" name="userProfileId" value="{{ $profileUser->id }}">
-          <!-- Assuming you have this ID -->
+          <input type="hidden" name="userProfileId" value="{{ $profileUser->user_id }}">
           <div class="row">
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">UserName</label>
                 <input type="text" class="form-control" value="{{ $mainUser->username }}" disabled name="username">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-block mb-3">
-                <label class="col-form-label">Designation</label>
-                <select class="select form-control" name="designation_id" disabled>
-                  <option value="" selected>{{ $profileUser->designationName }}
-                  </option>
-                </select>
-                <div class="val_error text-danger"></div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-block mb-3">
-                <label class="col-form-label">Department</label>
-                <select class="select form-control " tabindex="-1" aria-hidden="true" name="departmentName" disabled>
-                  <option value="" selected>{{ $profileUser->departmentName }}</option>
-                </select>
               </div>
             </div>
             <div class="col-md-6">
@@ -837,21 +825,8 @@
             </div>
             <div class="col-md-6">
               <div class="input-block mb-3">
-                <label class="col-form-label">Status</label>
-                <select class="select form-control" name="status" disabled>
-                  <option value="" disabled>Select Status</option>
-                  <option value="1" {{ $profileUser->status == '1' ? 'selected' : '' }}>
-                    Active</option>
-                  <option value="0" {{ $profileUser->status == '0' ? 'selected' : '' }}>
-                    Inactive</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-block mb-3">
                 <label class="col-form-label">Real Name</label>
-                <input type="text" class="form-control" id="profileName" value="{{ $profileUser->real_name }}"
-                  name="real_name" id="realName">
+                <input type="text" class="form-control" value="{{ $profileUser->real_name }}" name="real_name">
               </div>
             </div>
             <div class="col-md-6">
@@ -863,37 +838,40 @@
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Birthday</label>
-                <input type="date" class="form-control" value="{{ $profileUser->dob }}" name="dob" disabled>
+                <input type="date" class="form-control" value="{{ $profileUser->dob }}" name="dob">
               </div>
             </div>
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Accommodation</label>
-                <input type="text" class="form-control" id="profileAccommodation"
-                  value="{{ $profileUser->accomodation }}" name="accomodation">
+                <input type="text" class="form-control" value="{{ $profileUser->accomodation }}" name="accomodation">
               </div>
             </div>
-
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label" for="gender">Gender</label>
-                <select class="select form-control" name="gender" id="profileGender">
+                <select class="form-control" name="gender">
                   <option value="" disabled {{ empty($profileUser->gender) ? 'selected' : '' }}>Select Gender</option>
-                  <option value="Male" {{ $profileUser->gender === 'Male' ? 'selected' : '' }}>
-                    Male</option>
-                  <option value="Female" {{ $profileUser->gender === 'Female' ? 'selected' : '' }}>
-                    Female</option>
-                  <option value="Other" {{ $profileUser->gender === 'Other' ? 'selected' : '' }}>
-                    Other</option>
+                  <option value="Male" {{ $profileUser->gender === 'Male' ? 'selected' : '' }}>Male</option>
+                  <option value="Female" {{ $profileUser->gender === 'Female' ? 'selected' : '' }}>Female</option>
+                  <option value="Other" {{ $profileUser->gender === 'Other' ? 'selected' : '' }}>Other</option>
                 </select>
               </div>
             </div>
-
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Phone Number</label>
-                <input type="text" class="form-control" id="profilePhone" value="{{ $profileUser->phone }}"
-                  name="phone">
+                <input type="text" class="form-control" value="{{ $profileUser->phone }}" name="phone">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-block mb-3">
+                <label class="col-form-label" for="week_days_label">Week Off-Days</label>
+                <select class="form-select" name="week_days" id="week_days">
+                  <option disabled {{ empty($mainUser->week_days) ? 'selected' : '' }}>SELECT OPTION</option>
+                  <option value="5" {{ $mainUser->week_days == 5 ? 'selected' : '' }}>5 Days</option>
+                  <option value="6" {{ $mainUser->week_days == 6 ? 'selected' : '' }}>6 Days</option>
+                </select>
               </div>
             </div>
           </div>
@@ -909,12 +887,13 @@
 
 
 
+
 <!-- Personal Info Modal -->
 <div id="personal_info_modal" class="modal custom-modal fade" role="dialog">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Personal Information</h5>
+        <h5 class="modal-title">Passport & Visa Infomation</h5>
         <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -1351,11 +1330,21 @@
         if (response.status === 'success' && response.data) {
           hideLoader();
           $(this).closest('.modal').modal('hide');
+          console.log(response);
 
           $('#realName').text(response.data.real_name || '');
+          $('#dateofbirth').text(response.data.dob || '');
           $('#accommodation').text(response.data.accomodation || '');
           $('#gender').text(response.data.gender || '');
           $('#phone').text(response.data.phone || '');
+
+          // Update the weekDays text
+          $('#weekDays').text(response.data.week_days == 5 ? '5 Days' : '6 Days');
+
+          // Update the week_days select dropdown value
+          $('#week_days').val(response.data.week_days);
+
+
           createToast('info', 'fa-solid fa-circle-check', 'Success',
             'Profile Updated Successfully.');
         } else {

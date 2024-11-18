@@ -128,6 +128,10 @@
                     <a href="{{route('leave_application.data')}}"><i class="fa fa-home"></i> <span> Pending
                             Leaves</span> </a>
                 </li>
+                <li class="{{ request()->routeIs('leave_application.unassigned') ? 'active' : '' }}">
+                    <a href="{{route('leave_application.unassigned')}}"><i class="fa fa-home"></i> <span> Unassigned
+                            Leaves</span> </a>
+                </li>
 
                 <!-- Wasif Created -->
                 <li class="menu-title">

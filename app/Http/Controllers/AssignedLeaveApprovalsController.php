@@ -82,14 +82,16 @@ class AssignedLeaveApprovalsController extends Controller
             if (empty($validated['first_assigned_user'])) {
                 $leaveApproval->first_assign_user_id = null;
             } else {
-                $leaveApproval->first_assign_user_id = json_encode($validated['first_assigned_user']);
+                // Ensure all elements are integers before encoding
+                $leaveApproval->first_assign_user_id = json_encode(array_map('intval', $validated['first_assigned_user']));
             }
 
             // Check if second_assigned_user is empty, if so, set it to null
             if (empty($validated['second_assigned_user'])) {
                 $leaveApproval->second_assign_user_id = null;
             } else {
-                $leaveApproval->second_assign_user_id = json_encode($validated['second_assigned_user']);
+                // Ensure all elements are integers before encoding
+                $leaveApproval->second_assign_user_id = json_encode(array_map('intval', $validated['second_assigned_user']));
             }
 
             $leaveApproval->save();

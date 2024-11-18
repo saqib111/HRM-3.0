@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\AnnualLeaves;
 use Illuminate\Http\Request;
 use App\Models\LeaveManagement;
+use App\Models\User;
+use App\Models\AssignedLeaveApprovals;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
@@ -194,6 +196,16 @@ class LeaveController extends Controller
             }
         }
 
+        $assigners = AssignedLeaveApprovals::where('user_id', '=', $user_id)->first();
+        // Check if the record is found, otherwise set empty or null values
+        $first_assigners = ($assigners && !empty($assigners->first_assign_user_id))
+            ? $assigners->first_assign_user_id
+            : null; // or [] if you prefer an empty array
+
+        $second_assigners = ($assigners && !empty($assigners->second_assign_user_id))
+            ? $assigners->second_assign_user_id
+            : null; // or [] if you prefer an empty array
+
         // Step 6: Save leave application to the database
         LeaveManagement::create([
             'user_id' => $user_id,
@@ -203,8 +215,8 @@ class LeaveController extends Controller
             'leave_details' => json_encode($leave_details),
             'status_1' => 'pending',
             'status_2' => 'pending',
-            'team_leader_ids' => json_encode([1, 2, 3]),
-            'manager_ids' => json_encode([1, 4, 5]),
+            'team_leader_ids' => $first_assigners,
+            'manager_ids' => $second_assigners,
             'first_approval_id' => null,
             'first_approval_created_time' => null,
             'second_approval_id' => null,
@@ -257,31 +269,78 @@ class LeaveController extends Controller
         return $current_date->format('Y-m-d');
     }
 
-
     public function display_leave(Request $request)
     {
         if ($request->ajax()) {
-            // $leaves = LeaveManagement::with('user')
-            //     ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance']);
+            // Get the authenticated user's ID
             $authId = auth()->user()->id;
+
+            // Get the selected status from the request (if any)
+            $status = $request->input('status', 'pending');  // default to 'pending' if no status is passed
+
+            // Build the query based on the status and user role
             $leaves = LeaveManagement::with('user')
                 ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance'])
-                ->where(function ($query) use ($authId) {
-                    $query->where(function ($subQuery) use ($authId) {
-                        // If status_1 is pending
-                        $subQuery->where('status_1', 'pending')
-                            ->whereJsonContains('team_leader_ids', $authId);
-                    })
-                        ->orWhere(function ($subQuery) use ($authId) {
-                            // If status_1 is approved and status_2 is pending
+                ->where(function ($query) use ($authId, $status) {
+                    if ($status === 'pending') {
+                        // Query for pending leaves
+                        $query->where(function ($subQuery) use ($authId) {
+                            $subQuery->where('status_1', 'pending')
+                                ->whereJsonContains('team_leader_ids', $authId);
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
                             $subQuery->where('status_1', 'approved')
                                 ->where('status_2', 'pending')
                                 ->whereJsonContains('manager_ids', $authId);
                         });
+                    } elseif ($status === 'approved') {
+                        // Query for approved leaves where status_1 is approved and status_2 is either pending or approved
+                        $query->where(function ($subQuery) use ($authId) {
+                            // Only status_1 is approved, status_2 is pending (not yet processed)
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'pending')  // status_2 is pending, indicating it's not yet processed
+                                ->whereJsonContains('team_leader_ids', $authId); // Show for first step assigners (team leader)
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
+                            // Both status_1 and status_2 are approved, and the user should be in either team_leader_ids or manager_ids
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'approved')
+                                ->where(function ($innerSubQuery) use ($authId) {
+                                // Allow the user to be in either team_leader_ids or manager_ids
+                                $innerSubQuery->whereJsonContains('team_leader_ids', $authId)
+                                    ->orWhereJsonContains('manager_ids', $authId);
+                            });
+                        });
+                    } elseif ($status === 'rejected') {
+                        // Query for rejected leaves where status_1 is rejected OR status_2 is rejected
+                        $query->where(function ($subQuery) use ($authId) {
+                            // If status_1 is rejected, and the user is in the team_leader_ids (step 1)
+                            $subQuery->where('status_1', 'rejected')
+                                ->whereJsonContains('team_leader_ids', $authId);
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
+                            // If status_2 is rejected, and the user is in the manager_ids (step 2)
+                            $subQuery->where('status_2', 'rejected')
+                                ->whereJsonContains('manager_ids', $authId);
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
+                            // If status_1 is approved but status_2 is rejected, and the user is in the team_leader_ids (step 1)
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'rejected')
+                                ->whereJsonContains('team_leader_ids', $authId);
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
+                            // If status_1 is approved but status_2 is rejected, and the user is in the manager_ids (step 2)
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'rejected')
+                                ->whereJsonContains('manager_ids', $authId);
+                        });
+                    }
+
                 })
                 ->get();
 
-
+            // Return the leaves data as Datatables
             return Datatables::of($leaves)
                 ->addIndexColumn()
                 ->addColumn('username', function ($row) {
@@ -354,6 +413,7 @@ class LeaveController extends Controller
         $leave = LeaveManagement::with('user')->findOrFail($id);
         // Call the helper function to get the username
         $first_approval_username = getUser($leave->first_approval_id);
+        $second_approval_username = getUser($leave->second_approval_id);
         $formattedLeaveBalance = rtrim(rtrim($leave->leave_balance, '0'), '.');
 
         return response()->json([
@@ -563,5 +623,120 @@ class LeaveController extends Controller
         ]);
     }
 
+    public function UnassignedLeaveIndex(Request $request)
+    {
+        $users = User::all();
+        if ($request->ajax()) {
+            // Build the query based on the status and user role
+            $leaves = LeaveManagement::with('user')
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance'])
+                ->where(function ($query) {
+                    // Check for 'pending' status
+                    $query->where('status_1', 'pending')
+                        // Check if 'team_leader_ids' is NULL or an empty array
+                        ->where(function ($subQuery) {
+                        $subQuery->whereNull('team_leader_ids')
+                            ->orWhereJsonLength('team_leader_ids', 0);
+                    });
+                })
+                ->get();
 
+            // Return the leaves data as Datatables
+            return Datatables::of($leaves)
+                ->addIndexColumn()
+                ->addColumn('username', function ($row) {
+                    return $row->user->username ?? 'N/A';
+                })
+                ->addColumn('employee_id', function ($row) {
+                    return $row->user->employee_id ?? 'N/A';
+                })
+                ->addColumn('day', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $day_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $day_str .= '<span class="badge bg-primary">Full Day</span><br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $day_str .= '<span class="badge bg-warning">Half Day</span><br>';
+                        }
+                    }
+                    return $day_str;
+                })
+                ->addColumn('from', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $from_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $from_str .= $detail->start_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $from_str .= $detail->date . ' (' . $detail->start_time . ')<br>';
+                        }
+                    }
+                    return $from_str;
+                })
+                ->addColumn('to', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $to_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $to_str .= $detail->end_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $to_str .= $detail->date . ' (' . $detail->end_time . ')<br>';
+                        }
+                    }
+                    return $to_str;
+                })
+                ->addColumn('off_days', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $off_day_str = '<ul class="list-unstyled mb-0">';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'off_day') {
+                            $off_day_str .= "<li><span class='badge bg-secondary'>{$detail->date}</span></li>";
+                        }
+                    }
+
+                    return $off_day_str .= '</ul>';
+                })
+                ->rawColumns(['day', 'from', 'to', 'off_days'])
+                ->make(true);
+        }
+
+        return view('leave_application.unassigned_leave_applications', compact('users'));
+    }
+
+    public function AddUnassignedLeave(Request $request)
+    {
+        // Validate the incoming data
+        $request->validate([
+            'team_leader_ids' => 'required|array', // Ensure it's an array
+            'team_leader_ids.*' => 'exists:users,id', // Ensure each ID exists in the users table
+            'manager_ids' => 'required|array', // Ensure it's an array
+            'manager_ids.*' => 'exists:users,id', // Ensure each ID exists in the users table
+            'leaveApprovalId' => 'required|exists:leave_management,id' // Ensure leaveApprovalId exists in the database
+        ]);
+
+        // Retrieve the leave record by the provided leaveApprovalId
+        $leaveManagement = LeaveManagement::find($request->leaveApprovalId);
+
+        // If the leave record does not exist, return an error response
+        if (!$leaveManagement) {
+            return response()->json(['success' => false, 'message' => 'Leave not found.'], 404);
+        }
+
+        // Convert all team_leader_ids and manager_ids to integers
+        $teamLeaderIds = array_map('intval', $request->team_leader_ids); // Convert to integers
+        $managerIds = array_map('intval', $request->manager_ids); // Convert to integers
+
+        // Update the team_leader_ids and manager_ids fields
+        $leaveManagement->team_leader_ids = json_encode($teamLeaderIds); // Update team leader IDs
+        $leaveManagement->manager_ids = json_encode($managerIds); // Update manager IDs
+        $leaveManagement->save(); // Save the changes
+
+        // Return success response
+        return response()->json(['success' => true]);
+    }
 }
