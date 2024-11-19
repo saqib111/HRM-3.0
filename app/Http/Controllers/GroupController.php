@@ -176,6 +176,14 @@ class GroupController extends Controller
     }
     public function changeGroupData(Request $request)
     {
+
+        if ($request->group_id == null) {
+            $oldId = $request->old_group_id;
+            $msg = "Select Group";
+
+            return redirect()->back()->with('oldId', $oldId)->withErrors(['group' => ['select Group']]);
+            ;
+        }
         $old_id = $request->old_group_id;
         $employee_id = $request->employee_id;
         $group_id = $request->group_id;
@@ -209,5 +217,20 @@ class GroupController extends Controller
 
         ]);
         return redirect()->back()->with('success', 'Employe group has been changed Successfully');
+    }
+
+    public function groupMember($id)
+    {
+        $data = DB::table('groups')
+            ->select('name', 'user_id')
+            ->where('id', $id)
+            ->first();
+        $name = [];
+        $username = explode(',', $data->user_id);
+        for ($i = 0; $i < count($username); $i++) {
+            $nam = getName($username[$i]);
+            array_push($name, $nam);
+        }
+        return (['name' => $name, 'total' => count($username), 'group_name' => $data->name]);
     }
 }

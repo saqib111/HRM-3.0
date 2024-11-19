@@ -27,7 +27,7 @@
                         <th>From</th>
                         <th>To</th>
                         <th>Off Days</th>
-                        <th>Action</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>

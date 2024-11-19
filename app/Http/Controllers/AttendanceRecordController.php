@@ -19,7 +19,8 @@ use App\Models\{
     LeaderEmployee,
     Group,
     AttendanceSession,
-    FingerPrint
+    FingerPrint,
+    ApprovedLeave
 };
 
 class AttendanceRecordController extends Controller
@@ -104,12 +105,16 @@ class AttendanceRecordController extends Controller
 
     public function attendanceRecord()
     {
-
-
         $info = [];
-        $id = auth()->user()->id;
-
         $i = 0;
+        $absent = "";
+        $id = auth()->user()->id;
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $approvedLeaves = ApprovedLeave::whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->where('user_id', $id)
+            ->get();
         $data = DB::table('attendance_records as ar')
             ->join('users as u', 'u.id', '=', 'ar.user_id')
             ->select(
@@ -117,7 +122,6 @@ class AttendanceRecordController extends Controller
                 'ar.user_id as user_id',
                 'u.employee_id as emp_id',
                 'ar.shift_in as shift_in',
-                'ar.id as id',
                 'ar.shift_out as shift_out',
                 'ar.duty_hours as duty_hours',
                 'ar.check_in as check_in',
@@ -128,8 +132,31 @@ class AttendanceRecordController extends Controller
             ->whereMonth('ar.shift_in', Carbon::now()->month)
             ->get();
 
-
         foreach ($data as $d) {
+            $start = Carbon::parse($d->shift_in);
+
+            if ($approvedLeaves) {
+                foreach ($approvedLeaves as $app) {
+                    $date = Carbon::parse($app->date);
+                    if ($start->isSameDay($date)) {
+                        $color = getColorByLeaveType($app->leave_type);
+                        break;
+                    } else {
+                        $color = "";
+                    }
+                }
+            }
+            if ($color == "" && $d->dayoff != "Yes") {
+                $currentDate = Carbon::now();
+                if ($start->lte($currentDate) && !$d->check_in && !$d->check_out) {
+                    $absent = "Yes";
+                } else {
+                    $absent = "No";
+                }
+            }
+
+
+
             $i++;
             $closPunchIn = null;
             $smallDifferenceIn = PHP_INT_MAX;
@@ -138,6 +165,18 @@ class AttendanceRecordController extends Controller
             $emp_id = $d->emp_id;
             preg_match('/[1-9][0-9]*/', $emp_id, $actual_id);
             $employee_id = (int) $actual_id[0];
+            $start_date = date('d F Y', strtotime($d->shift_in));
+            $end_date = date('d F Y', strtotime($d->shift_out));
+            if ($d->check_in != null) {
+                $in_date = date('d F Y', strtotime($d->check_in));
+            } else {
+                $in_date = "";
+            }
+            if ($d->check_out != null) {
+                $out_date = date('d F Y', strtotime($d->check_out));
+            } else {
+                $out_date = "";
+            }
 
             $checkInTime = date('Y-m-d ', strtotime($d->shift_in));
             $check1 = DB::table('check_verify')
@@ -202,65 +241,76 @@ class AttendanceRecordController extends Controller
             }
 
             $name = $d->name;
-            $start_date = date('d F Y', strtotime($d->shift_in));
-            $shift_in = date('H:i:s A', strtotime($d->shift_in));
-            $end_date = date('d F Y', strtotime($d->shift_out));
-            $shift_out = date('H:i:s A', strtotime($d->shift_out));
-            if ($d->check_in != null) {
-                $check_in = date('H:i:s A', strtotime($d->check_in));
-            } else {
-                $check_in = $d->check_in;
-            }
-            if ($d->check_out != null) {
-                $check_out = date('H:i:s A', strtotime($d->check_out));
-            } else {
-                $check_out = $d->check_out;
-            }
 
-            if ($d->check_in != null && $d->check_out != null) {
-                $cin = date('Y-m-d H:i:s', strtotime($d->check_in));
-                $cout = date('Y-m-d H:i:s', strtotime($d->check_out));
+            $shift_in = Carbon::parse($d->shift_in);
+            $shift_out = Carbon::parse($d->shift_out);
+            $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+            $total_working_duration = $scheduled_duration;
+
+            if ($d->check_in && $d->check_out) {
+                $check_in = Carbon::parse($d->check_in);
+                $check_out = Carbon::parse($d->check_out);
 
 
-                $sh_in = Carbon::parse($cin);
-                $sh_out = Carbon::parse($cout);
-                $difference = $sh_in->diff($sh_out);
-                if ($difference->h >= 9 && $difference->h < 15) {
-                    $duty_hours = "9:00:00";
-                } elseif ($difference->h < 9) {
-                    $duty_hours = $difference->h . ":" . $difference->i . ":" . $difference->s;
-                } elseif ($difference->h > 15) {
-                    $duty_hours = "00:00:00";
+                $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+                $total_working_duration = $scheduled_duration;
+
+                if ($check_in <= $shift_in && $check_out >= $shift_out) {
+                    $duty_hours = gmdate("H:i:s", $scheduled_duration);
+                } else {
+
+                    if ($shift_out->diffInHours($check_out, false) > 6) {
+                        $duty_hours = "00:00:00";
+                    } else {
+
+                        if ($check_in > $shift_in) {
+                            $late_duration = $shift_in->diffInSeconds($check_in);
+                            $total_working_duration -= $late_duration;
+                        }
+
+                        if ($check_out < $shift_out) {
+                            $early_checkout_duration = $check_out->diffInSeconds($shift_out);
+                            $total_working_duration -= $early_checkout_duration;
+                        }
+
+
+                        $hours = floor($total_working_duration / 3600);
+                        $minutes = floor(($total_working_duration % 3600) / 60);
+                        $seconds = $total_working_duration % 60;
+
+                        $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+                    }
                 }
-
             } else {
+
                 $duty_hours = "00:00:00";
             }
 
-            $dayoff = $d->dayoff;
 
-
-            array_push($info, [
+            $info[] = [
                 'no' => $i,
                 'start_date' => $start_date,
-                'shift_in' => $shift_in,
-                'end_date' => $end_date,
-                'shift_out' => $shift_out,
-                'dayoff' => $dayoff,
-                'check_in' => $check_in,
-                'check_out' => $check_out,
+                'name' => $d->name,
+                'shift_in' => $shift_in->format('H:i:s A'),
+                'shift_out' => $shift_out->format('H:i:s A'),
+                'check_in' => $d->check_in ? Carbon::parse($d->check_in)->format('H:i:s A') : null,
+                'check_out' => $d->check_out ? Carbon::parse($d->check_out)->format('H:i:s A') : null,
+                'color' => $color,
                 'duty_hours' => $duty_hours,
-                'verify1' => $v1,
-                'verify2' => $v2
-            ]);
+                'dayoff' => $d->dayoff,
+                'end_date' => $end_date,
+                'in_date' => $in_date,
+                'out_date' => $out_date,
+                'absent' => $absent,
+            ];
         }
+
+
 
         return response()->json([
 
             'data' => $info,
         ], 200);
-
-
 
     }
     public function attendanceEmployeeRecord()
@@ -271,7 +321,7 @@ class AttendanceRecordController extends Controller
     public function searchRecord(Request $request)
     {
         $id = auth()->user()->id;
-
+        $absent = "";
 
         $from = Carbon::parse($request->from_date);
         $to = Carbon::parse($request->to_date);
@@ -296,11 +346,16 @@ class AttendanceRecordController extends Controller
 
         $info = [];
         $i = 0;
+        $total_late_minutes = 0;
+        $total_penalty = 0.0;
 
+        $fine = 0.0;
+        $late_minutes = 0;
         $data = DB::table('attendance_records as ar')
             ->join('users as u', 'u.id', '=', 'ar.user_id')
             ->select(
                 'u.username as name',
+                'u.week_days as wd',
                 'ar.user_id as user_id',
                 'u.employee_id as emp_id',
                 'ar.shift_in as shift_in',
@@ -310,13 +365,48 @@ class AttendanceRecordController extends Controller
                 'ar.check_in as check_in',
                 'ar.check_out as check_out',
                 'ar.dayoff as dayoff'
+
             )
             ->where('ar.user_id', $id)
             ->whereBetween('ar.shift_in', [$from, $to])
             ->get();
-
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $approvedLeaves = ApprovedLeave::whereBetween('date', [$from, $to])
+            ->where('user_id', $id)
+            ->get();
         foreach ($data as $d) {
-            $i++;
+            $start = Carbon::parse($d->shift_in);
+
+            if ($approvedLeaves) {
+                foreach ($approvedLeaves as $app) {
+                    $date = Carbon::parse($app->date);
+                    if ($start->isSameDay($date)) {
+                        $color = getColorByLeaveType($app->leave_type);
+                        break;
+                    } else {
+                        $color = "";
+                    }
+                }
+            }
+            if ($color == "" && $d->dayoff != "Yes") {
+                $currentDate = Carbon::now();
+                if ($start->lte($currentDate) && !$d->check_in && !$d->check_out) {
+                    $absent = "Yes";
+                    if ($d->wd == "6") {
+                        $i++;
+                        $fine = $fine + 4;
+
+                    } else if ($d->wd == "5") {
+                        $fine = $fine + 4.8;
+                        $i++;
+                    }
+                } else {
+                    $absent = "No";
+                }
+            }
+
+
             $closPunchIn = null;
             $smallDifferenceIn = PHP_INT_MAX;
             $closPunchOut = null;
@@ -357,6 +447,52 @@ class AttendanceRecordController extends Controller
                 $v1 = "no";
             }
 
+
+            if ($d->check_in && $d->check_out && $d->shift_in && $d->shift_out) {
+
+                $shift_in = Carbon::parse($d->shift_in);
+                $shift_out = Carbon::parse($d->shift_out);
+                $check_in = Carbon::parse($d->check_in);
+                $check_out = Carbon::parse($d->check_out);
+
+
+                if (
+                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
+                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
+                    abs($check_out->diffInHours($shift_out)) > 6
+                ) {
+
+
+                    if (auth()->user()->week_days == "6") {
+                        $i++;
+                        $fine = $fine + 4;
+                    } else if (auth()->user()->week_days == "5") {
+                        $fine = $fine + 4.8;
+                        $i++;
+                    }
+                } else {
+
+
+                    if ($check_in->greaterThan($shift_in)) {
+                        $late_minutes += abs($shift_in->diffInMinutes($check_in));
+                        $i++;
+
+                    }
+
+                    if ($check_out->lessThan($shift_out)) {
+                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $i++;
+                    }
+
+                    $total_late_minutes += $late_minutes;
+
+                }
+
+            }
+
+
+
+
             $checkOutTime = date('Y-m-d ', strtotime($d->shift_out));
             $check2 = DB::table('check_verify')
                 ->where('user_id', $employee_id)
@@ -389,60 +525,120 @@ class AttendanceRecordController extends Controller
 
             $name = $d->name;
             $start_date = date('d F Y', strtotime($d->shift_in));
-            $shift_in = date('H:i:s A', strtotime($d->shift_in));
             $end_date = date('d F Y', strtotime($d->shift_out));
-            $shift_out = date('H:i:s A', strtotime($d->shift_out));
+            $shift_in = Carbon::parse($d->shift_in);
+            $shift_out = Carbon::parse($d->shift_out);
             if ($d->check_in != null) {
-                $check_in = date('H:i:s A', strtotime($d->check_in));
+                $in_date = date('d F Y', strtotime($d->check_in));
             } else {
-                $check_in = $d->check_in;
+                $in_date = "";
             }
             if ($d->check_out != null) {
-                $check_out = date('H:i:s A', strtotime($d->check_out));
+                $out_date = date('d F Y', strtotime($d->check_out));
             } else {
-                $check_out = $d->check_out;
+                $out_date = "";
             }
-            if ($d->check_in != null && $d->check_out != null) {
-                $cin = date('Y-m-d H:i:s', strtotime($d->check_in));
-                $cout = date('Y-m-d H:i:s', strtotime($d->check_out));
+            $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+            $total_working_duration = $scheduled_duration;
+
+            if ($d->check_in && $d->check_out) {
+                $check_in = Carbon::parse($d->check_in);
+                $check_out = Carbon::parse($d->check_out);
 
 
-                $sh_in = Carbon::parse($cin);
-                $sh_out = Carbon::parse($cout);
-                $difference = $sh_in->diff($sh_out);
-                if ($difference->h >= 9 && $difference->h < 15) {
-                    $duty_hours = "9:00:00";
-                } elseif ($difference->h < 9) {
-                    $duty_hours = $difference->h . ":" . $difference->i . ":" . $difference->s;
-                } elseif ($difference->h > 15) {
-                    $duty_hours = "00:00:00";
+                $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+                $total_working_duration = $scheduled_duration;
+
+
+                if ($check_in <= $shift_in && $check_out >= $shift_out) {
+                    $duty_hours = gmdate("H:i:s", $scheduled_duration);
+                } else {
+
+                    if ($shift_out->diffInHours($check_out, false) > 6) {
+                        $duty_hours = "00:00:00";
+                    } else {
+
+                        if ($check_in > $shift_in) {
+                            $late_duration = $shift_in->diffInSeconds($check_in);
+                            $total_working_duration -= $late_duration;
+                        }
+
+                        if ($check_out < $shift_out) {
+                            $early_checkout_duration = $check_out->diffInSeconds($shift_out);
+                            $total_working_duration -= $early_checkout_duration;
+                        }
+
+
+                        $hours = floor($total_working_duration / 3600);
+                        $minutes = floor(($total_working_duration % 3600) / 60);
+                        $seconds = $total_working_duration % 60;
+
+                        $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+                    }
                 }
-
             } else {
+
                 $duty_hours = "00:00:00";
             }
 
-            $dayoff = $d->dayoff;
 
-
-            array_push($info, [
+            $info[] = [
                 'no' => $i,
                 'start_date' => $start_date,
-                'shift_in' => $shift_in,
-                'end_date' => $end_date,
-                'shift_out' => $shift_out,
-                'dayoff' => $dayoff,
-                'check_in' => $check_in,
-                'check_out' => $check_out,
+                'name' => $d->name,
+                'shift_in' => $shift_in->format('H:i:s A'),
+                'shift_out' => $shift_out->format('H:i:s A'),
+                'check_in' => $d->check_in ? Carbon::parse($d->check_in)->format('H:i:s A') : null,
+                'check_out' => $d->check_out ? Carbon::parse($d->check_out)->format('H:i:s A') : null,
+                'color' => $color,
                 'duty_hours' => $duty_hours,
-                'verify1' => $v1,
-                'verify2' => $v2
-            ]);
+                'dayoff' => $d->dayoff,
+                'end_date' => $end_date,
+                'in_date' => $in_date,
+                'out_date' => $out_date,
+                'absent' => $absent,
+            ];
         }
+
+        $hours = floor($late_minutes / 60);
+        $minutes = $late_minutes % 60;
+
+
+
+
+        if (auth()->user()->week_days == "6") {
+            if ($late_minutes > 0 && $late_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
+                $range_index = ceil(($late_minutes - 15) / 15);
+                $total_penalty += 0.125 * $range_index;
+            }
+
+        }
+        if (auth()->user()->week_days == "5") {
+            if ($late_minutes > 0 && $late_minutes <= 15) {
+                $total_penalty += 0.25;
+            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
+                $range_index = ceil(($late_minutes - 15) / 15);
+                $total_penalty += 0.25 * $range_index;
+            }
+        }
+
+
+        $deduction = $total_penalty + $fine;
+        $in[] = [
+            'day' => $i,
+            'hour' => $hours,
+            'minute' => $minutes,
+            'deduction' => $deduction,
+            'abc' => $total_penalty
+        ];
 
         return response()->json([
 
             'data' => $info,
+            'in' => $in
+
         ], 200);
     }
 
@@ -540,26 +736,31 @@ class AttendanceRecordController extends Controller
         return response()->json(['status' => 'success']);
     }
 
-    public function statistics()
+    public function statistics($fromDate = null, $toDate = null)
     {
-        $checkInTime = date('Y-m-d');
         $info = [];
         $id = auth()->user()->id;
+
+        $total_late_minutes = 0;
+        $total_penalty = 0.0;
         $i = 0;
-        $deduction = 0;
-        $tot_hour = 0;
-        $tot_minute = 0;
+        $fine = 0.0;
+        $late_minutes = 0;
+        $today = Carbon::today();
+        $datetoday = date('Y-m-d', strtotime($today));
+        $chj = DB::table('attendance_records')
+            ->select('check_in', 'check_out')
+            ->where('user_id', $id)
+            ->whereDate('shift_in', $datetoday)
+            ->first();
+
         $data = DB::table('attendance_records as ar')
             ->join('users as u', 'u.id', '=', 'ar.user_id')
             ->select(
-                'u.username as name',
+                'u.week_days as wd',
                 'ar.user_id as user_id',
-                'u.employee_id as emp_id',
-                'u.week_days as week_day',
                 'ar.shift_in as shift_in',
-                'ar.id as id',
                 'ar.shift_out as shift_out',
-                'ar.duty_hours as duty_hours',
                 'ar.check_in as check_in',
                 'ar.check_out as check_out',
                 'ar.dayoff as dayoff'
@@ -567,89 +768,136 @@ class AttendanceRecordController extends Controller
             ->where('ar.user_id', $id)
             ->whereMonth('ar.shift_in', Carbon::now()->month)
             ->get();
-
-        foreach ($data as $d) {
-            $check_in = $d->check_in;
-            $shift_in = $d->shift_in;
-            $check_out = $d->check_out;
-            $shift_out = $d->shift_out;
-            $week_day = $d->week_day;
-            if ($check_in != null && $check_out != null && $shift_in != null && $shift_out != null) {
-                if ($shift_in < $check_in || $shift_out > $check_out) {
-
-                    $i++;
-                    $sh_in = Carbon::parse($shift_in);
-                    $sh_out = Carbon::parse($shift_out);
-                    $ch_in = Carbon::parse($check_in);
-                    $ch_out = Carbon::parse($check_out);
-
-                    $sh_dif = $sh_in->diffInMinutes($sh_out);
-                    $ch_diff = $ch_in->diffInMinutes($ch_out);
-
-                    $final_difference = $sh_dif - $ch_diff;
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $approvedLeaves = ApprovedLeave::whereMonth('date', $currentMonth)
+            ->whereYear('date', $currentYear)
+            ->where('user_id', $id)
+            ->get();
 
 
-                    $hours = intdiv($final_difference, 60);
-                    $minutes = abs($final_difference % 60);
-                    $tot_hour = $tot_hour + $hours;
-                    $tot_minute = $tot_minute + $minutes;
+        foreach ($data as $record) {
+            $start = Carbon::parse($record->shift_in);
 
-                    if ($week_day == "6") {
-                        if ($final_difference <= 15) {
-                            $deduction += 0.125;
-                        } elseif ($final_difference <= 540) {
-                            $range_index = ceil(($final_difference - 15) / 15);
-                            $deduction += 0.125 * $range_index;
-                        } elseif ($final_difference > 900) {
-                            $deduction += 4;
-                        }
+            if ($approvedLeaves) {
+                foreach ($approvedLeaves as $app) {
+                    $date = Carbon::parse($app->date);
+                    if ($start->isSameDay($date)) {
+                        $color = "yes";
 
+                        break;
+                    } else {
+                        $color = "";
                     }
-                    if ($week_day == "5") {
-                        if ($final_difference <= 15) {
-                            $deduction += 0.25;
-                        } elseif ($final_difference <= 540) {
-                            $range_index = ceil(($final_difference - 15) / 15);
-                            $deduction += 0.25 * $range_index;
-                        } elseif ($final_difference > 900) {
-                            $deduction += 4.5;
-                        }
-                    }
-
-
                 }
             }
+            if ($color == "" && $record->dayoff != "Yes") {
+
+                $currentDate = Carbon::now();
+                if ($start->lte($currentDate) && !$record->check_in && !$record->check_out) {
+                    $i++;
+                    if ($record->wd == "6") {
+                        $fine = $fine + 4;
+
+                    } else if ($record->wd == "5") {
+                        $fine = $fine + 4.8;
+                    }
+                }
+            }
+
+
+
+
+            if ($record->check_in && $record->check_out && $record->shift_in && $record->shift_out && $color == "" && $record->dayoff != "Yes") {
+
+                $shift_in = Carbon::parse($record->shift_in);
+                $shift_out = Carbon::parse($record->shift_out);
+                $check_in = Carbon::parse($record->check_in);
+                $check_out = Carbon::parse($record->check_out);
+
+
+                if (
+                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
+                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
+                    abs($check_out->diffInHours($shift_out)) > 6
+                ) {
+
+                    $i++;
+                    if ($record->wd == "6") {
+                        $fine = $fine + 4;
+                    } else if ($record->wd == "5") {
+                        $fine = $fine + 4.8;
+                    }
+                } else {
+
+                    if ($check_in->greaterThan($shift_in)) {
+                        $late_minutes += abs($check_in->diffInMinutes($shift_in));
+
+                        $i++;
+                    }
+
+                    if ($check_out->lessThan($shift_out)) {
+                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $i++;
+                    }
+
+                    // $penalty = ceil($late_minutes / 15) * 0.125;
+                    // $total_penalty += $penalty;
+
+                    $total_late_minutes += $late_minutes;
+
+                }
+
+            }
         }
-        if ($tot_minute >= 60) {
-            $hour = intdiv($tot_minute, 60);
-            $tot_hour = $tot_hour + $hour;
-            $minute = $tot_minute % 60;
-            $tot_minute = $minute;
+
+
+        $hour = floor($late_minutes / 60);
+        $minute = $late_minutes % 60;
+
+
+        if (auth()->user()->week_days == "6") {
+            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
+                $range_index = ceil(($total_late_minutes - 15) / 15);
+                $total_penalty += 0.125 * $range_index;
+            }
 
         }
-        $check = DB::table('attendance_records')
-            ->select('check_in', 'check_out')
-            ->where('user_id', $id)
-            ->whereDate('shift_in', $checkInTime)
-            ->first();
+        if (auth()->user()->week_days == "5") {
+            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
+                $total_penalty += 0.25;
+            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
+                $range_index = ceil(($total_late_minutes - 15) / 15);
+                $total_penalty += 0.25 * $range_index;
+            }
+        }
 
-        if ($check->check_in != null) {
-            $check_in = date('H:i A', strtotime($check->check_in));
+
+        $deduction = $total_penalty + $fine;
+        if ($chj->check_in != null) {
+            $c_in = date('H:i:s A', strtotime($chj->check_in));
         } else {
-            $check_in = "";
+            $c_in = "";
         }
-        if ($check->check_out != null) {
-            $check_out = date('H:i A', strtotime($check->check_out));
+        if ($chj->check_out != null) {
+            $c_in = date('H:i:s A', strtotime($chj->check_out));
         } else {
-            $check_out = "";
+            $c_out = "";
         }
+        $info[] = [
+            'day' => $i,
+            'hour' => $hour,
+            'minute' => $minute,
+            'deduction' => $deduction,
+            'check_in' => $c_in,
+            'check_out' => $c_out
+        ];
 
-
-        array_push($info, ['days' => $i, 'hours' => $tot_hour, 'minute' => $tot_minute, 'deduction' => $deduction, 'check_in' => $check_in, 'check_out' => $check_out]);
         return response()->json([
             'status' => 'success',
             'info' => $info
-
         ]);
     }
 
@@ -657,7 +905,7 @@ class AttendanceRecordController extends Controller
     {
 
         $userData = array(
-            'email' => $request->email,
+            'email' => auth()->user()->email,
             'password' => $request->password
         );
         if (Auth::attempt($userData)) {

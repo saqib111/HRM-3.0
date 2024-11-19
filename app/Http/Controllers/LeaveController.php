@@ -727,6 +727,8 @@ class LeaveController extends Controller
             return response()->json(['success' => false, 'message' => 'Leave not found.'], 404);
         }
 
+        $leaveApplierID = $leaveManagement->user_id;
+
         // Convert all team_leader_ids and manager_ids to integers
         $teamLeaderIds = array_map('intval', $request->team_leader_ids); // Convert to integers
         $managerIds = array_map('intval', $request->manager_ids); // Convert to integers
@@ -735,6 +737,11 @@ class LeaveController extends Controller
         $leaveManagement->team_leader_ids = json_encode($teamLeaderIds); // Update team leader IDs
         $leaveManagement->manager_ids = json_encode($managerIds); // Update manager IDs
         $leaveManagement->save(); // Save the changes
+
+        $leaveApprovals = AssignedLeaveApprovals::where('user_id', '=', $leaveApplierID)->first();
+        $leaveApprovals->first_assign_user_id = json_encode($teamLeaderIds);
+        $leaveApprovals->second_assign_user_id = json_encode($managerIds);
+        $leaveApprovals->save(); // Save the changes
 
         // Return success response
         return response()->json(['success' => true]);

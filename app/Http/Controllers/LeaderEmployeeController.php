@@ -149,7 +149,6 @@ class LeaderEmployeeController extends Controller
     {
         $employee = DB::table('users')
             ->select('id', 'username')
-            ->where('role', '!=', 1)
             ->where('status', '1')
             ->get();
 

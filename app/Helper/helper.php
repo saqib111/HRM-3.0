@@ -146,6 +146,13 @@ function getName($id)
     return [$username->username, $username->id];
 }
 
+function getUserName($id)
+{
+    $username = User::select('username', 'id')->where('id', $id)->first();
+    return $username->username;
+}
+
+
 function dateSelect($start, $end)
 {
     $starray = (explode(" - ", $start));
@@ -191,4 +198,32 @@ function scheduleInfo($id)
         ->where(DB::raw('DATE(created_at)'), date($records[0]->date))
         ->get();
     return ([$records, $schedule]);
+}
+
+function getColorByLeaveType($leaveType)
+{
+    switch ($leaveType) {
+        case '1':
+            return '1';
+        case '2':
+            return '2';
+        case '3':
+            return '3';
+        case '4':
+            return '4';
+        default:
+            return ""; // Default color
+    }
+}
+function calculateDeduction($difference, $week_day)
+{
+    $deduction = 0;
+
+    if ($week_day == "6") { // Saturday
+        $deduction += ($difference <= 15) ? 0.125 : min(4, ceil(($difference - 15) / 15) * 0.125);
+    } elseif ($week_day == "5") { // Friday
+        $deduction += ($difference <= 15) ? 0.25 : min(4.5, ceil(($difference - 15) / 15) * 0.25);
+    }
+
+    return $deduction;
 }

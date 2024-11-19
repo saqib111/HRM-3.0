@@ -265,9 +265,9 @@
 
     <li class="nav-item dropdown has-arrow main-drop">
       <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-        <span class="user-img"><img src="{{ URL::asset('/assets/img/avatar/avatar-27.jpg') }}" alt="User Image">
+        <span class="user-img"><img src="{{ URL::asset('/uploads/' . auth()->user()->image) }}" alt="User Image">
           <span class="status online"></span></span>
-        <span>Admin</span>
+        <span>{{auth()->user()->username}}</span>
       </a>
       <div class="dropdown-menu">
         <a class="dropdown-item" href="{{ route('user-profile.customDetails', Auth::id()) }}">My Profile</a>
