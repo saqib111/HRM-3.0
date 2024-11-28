@@ -22,6 +22,9 @@ use App\Http\Controllers\{
     ExpiredVisaInfoController,
     AttendanceRecordController,
     LeaderEmployeeController,
+    PayrollController,
+    FingerprintController,
+    SettingController
 };
 
 Route::get('/', function () {
@@ -71,6 +74,10 @@ Route::middleware('auth')->group(function () {
     Route::get('groupuser-data', [ScheduleController::class, 'groupNameData'])->name('groupname.data');
     // Schedule Ends
 
+    // Schedule Ends
+    Route::get('leader', [LeaderEmployeeController::class, 'leader'])->name('leader');
+    Route::get('team-data', [LeaderEmployeeController::class, 'teamData'])->name('team.data');
+
     //Attendance---------
     Route::get('attendance-employee', [AttendanceRecordController::class, 'attendanceEmployeeRecord'])->name('attendanceemployee.record');
     Route::get('attendance-employee-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.detail');
@@ -83,13 +90,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/statistics', [AttendanceRecordController::class, 'statistics'])->name('statistics');
 
     Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team');
-    Route::get('team-data', [LeaderEmployeeController::class, 'teamData'])->name('team.data');
+
     Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store');
     Route::get('team-data-datatable', [LeaderEmployeeController::class, 'teamDatatable'])->name('data.datatable');
     Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team');
     Route::get('team-edit/{id}', [LeaderEmployeeController::class, 'teamEdit'])->name('edit.team');
     Route::post('team-update', [LeaderEmployeeController::class, 'update'])->name('update.team');
     Route::get('test/{id}', [ScheduleController::class, 'test']);
+    Route::get('/employee-attendance-list', [AttendanceRecordController::class, 'attendanceRecordEdit'])->name('emp.edit');
+    Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list');
+    Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page');
+    Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance');
+    Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete');
+    Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single');
+    Route::get('/get-schedule/{id}', [AttendanceRecordController::class, 'getSchedule']);
+    Route::post('/schedule-update', [AttendanceRecordController::class, 'updateAttendance'])->name('schedule.update');
+    Route::get('/statistics-admin/{id}', [AttendanceRecordController::class, 'statisticsAdmin'])->name('statistics.emp');
+    Route::post('search-record-admin', [AttendanceRecordController::class, 'searchAdmin'])->name('search.admin');
     // Attendance Ends
 
     // Route to Active/Deactive Users by Admin 
@@ -117,21 +134,48 @@ Route::middleware('auth')->group(function () {
     // Leave Application Frontend Route
     Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');
     Route::post('/leave_application_store', [LeaveController::class, 'store_leave'])->name('leave.form.store');
+    Route::get('/leave_status', [LeaveController::class, 'LeaveStatus'])->name('leave.status');
     Route::get('/leave_application/data', [LeaveController::class, 'display_leave'])->name('leave_application.data');
     Route::get('/unassigned_application', [LeaveController::class, 'UnassignedLeaveIndex'])->name('leave_application.unassigned');
     Route::post('/add_unassigned_leave', [LeaveController::class, 'AddUnassignedLeave'])->name('leave.add_unassigned');
+    Route::get('/multiselect', [LeaveController::class, 'multiSelect'])->name('multiselect');
+    // HR Pending Leave Working Route
+    Route::get('/leave_applications/hr', [LeaveController::class, 'leave_view_hr'])->name('leave.hr_work');
+    Route::get('/leave_application/hr_data', [LeaveController::class, 'display_leave_hr'])->name('leave_application.hr_data');
 
     // Route to fetch the data for Modal
     Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
     Route::post('/leave_action', [LeaveController::class, 'leave_action'])->name('leave.form.action');
+    Route::post('/leave_action/hr_work_done', [LeaveController::class, 'leave_hr_workdone'])->name('leave.hr.work_done');
+
+    // Route for Payrolls
+    Route::get('/salary_deduction', [PayrollController::class, 'salary_deduction_index'])->name('payroll.salary_deduction');
+    Route::get('/salary_deduction_data', [PayrollController::class, 'salary_deduction_dynamic_data'])->name('payroll.dynamic_data');
 
 
-    Route::resource('roles-permissions', RolesPermissionsController::class);
 
+    //Route AssignLeaveApprovals
     Route::resource('leave-approvals', AssignedLeaveApprovalsController::class);
+    Route::get('/searchAssigner', [AssignedLeaveApprovalsController::class, 'searchAssigner'])->name('searchAssigner');
+
+
+    // Define route for Fingerprint records
+    Route::resource('fingerprint-record', FingerprintController::class);
+    Route::get('/search-users', [FingerprintController::class, 'searchUsers'])->name('search.users');
+
+    // Single Routes 
+    Route::resource('roles-permissions', RolesPermissionsController::class);
     Route::resource('annual-leaves', AnnualLeavesController::class);
     Route::resource('expired-visa-information', ExpiredVisaInfoController::class);
 
+    //user profile image and password update route group
+    Route::controller(SettingController::class)->group(function () {
+        Route::get('/settings', 'index')->name('user.settings');
+        Route::post('/settings/update-image', 'updateImage')->name('settings.updateImage');
+        Route::post('/update-password', [SettingController::class, 'updatePassword'])->name('update.password');
+
+
+    });
 });
 
 require __DIR__ . '/auth.php';

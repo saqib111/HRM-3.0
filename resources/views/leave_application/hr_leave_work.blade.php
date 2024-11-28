@@ -83,10 +83,10 @@
 <div class="page-header">
     <div class="row align-items-center justify-content-between">
         <div class="col-md-4">
-            <h3 class="page-title">Pending Leave Applications</h3>
+            <h3 class="page-title">HR Work(Leave Applications)</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Pending Leave Applications</li>
+                <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Leave Application</a></li>
+                <li class="breadcrumb-item active">HR Work (Leaves)</li>
             </ul>
         </div>
         <div class="col-md-4 d-flex justify-content-end">
@@ -96,7 +96,7 @@
                                         <div class="d-flex justify-content-end">
                                             <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                             @php
-                                                $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'];
+                                                $statuses = ['pending' => 'All Pending', 'approved' => 'HR Task', 'rejected' => 'All Rejected', 'completed' => 'All Completed'];
                                             @endphp
 
                                             @foreach($statuses as $status => $label)
@@ -242,8 +242,7 @@
             </div>
             <!-- Action Buttons -->
             <div class="d-flex flex-column flex-sm-row justify-content-center mt-4 mb-4 p-2" id="action_buttons">
-                <button class="btn btn-success mb-2 mb-sm-0" id="approval_btn">Approved</button>
-                <button class="btn btn-danger ms-0 ms-sm-2" id="rejection_btn">Decline</button>
+                <button class="btn btn-success mb-2 mb-sm-0" id="hr_task_done">HR Task Done</button>
             </div>
         </div>
     </div>
@@ -268,7 +267,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('leave_application.data') }}", // Backend URL
+                url: "{{ route('leave_application.hr_data') }}", // Backend URL
                 data: function (d) {
                     d.status = status;  // Send the selected status as a query parameter
                 }
@@ -360,47 +359,17 @@
             filterByStatus(status);
         });
 
-        $('#approval_btn').click(function () {
+        $('#hr_task_done').click(function () {
             const id = $(this).data('id');
-            const step = $(this).data('action');
             showLoader(); // Start loader
 
             // Fetch leave details using AJAX
             $.ajax({
-                url: `/leave_action`, // Route for fetching leave application by ID
+                url: `/leave_action/hr_work_done`, // Route for fetching leave application by ID
                 method: 'POST',
                 data: {
                     leave_id: id,
-                    leave_action: 'approval_request',
-                    leave_step: step,
-                    _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
-                },
-                success: function (response) {
-                    console.log(response);
-                    hideLoader(); // Hide loader
-                    $('#leaveDetailsModal').modal('hide');
-                    $('#leave_table').DataTable().ajax.reload();
-                },
-                error: function (xhr) {
-                    console.error('Error fetching leave application:', xhr);
-                    hideLoader(); // Hide loader even if there's an error
-                }
-            });
-        });
-
-        $('#rejection_btn').click(function () {
-            const id = $(this).data('id');
-            const step = $(this).data('action');
-            showLoader(); // Start loader
-
-            // Fetch leave details using AJAX
-            $.ajax({
-                url: `/leave_action`, // Route for fetching leave application by ID
-                method: 'POST',
-                data: {
-                    leave_id: id,
-                    leave_action: 'reject_request',
-                    leave_step: step,
+                    leave_action: 'hr_done_request',
                     _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
                 },
                 success: function (response) {
@@ -440,30 +409,19 @@
                     updateApprovalStatus('#second_status', '#second_approval_name', '#second_created_time', data.status_2, data.second_approval_id, data.second_approval_created_time);
                     // Update HR Step Information
                     updateApprovalStatus('#hr_status', '#hr_approval_name', '#hr_created_time', data.hr_approval_id, data.hr_approval_id, data.hr_approval_created_time);
+
                     // Show or hide action buttons based on status
                     const actionButtons = $('#action_buttons');
 
                     // Check if 2nd step needs action
-                    if (data.status_1 === "approved" && data.status_2 === "pending") {
-                        $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
+                    if (data.status_1 === "approved" && data.status_2 === "approved" && (data.hr_approval_id === "" || data.hr_approval_id === null || data.hr_approval_id === "Null")) {
+                        $('#hr_task_done').prop('disabled', false); // Enable buttons
                         actionButtons.removeClass("hideBlock");
-                        $('#approval_btn').data('id', id);
-                        $('#rejection_btn').data('id', id);
-                        $('#approval_btn').data('action', 'second_status');
-                        $('#rejection_btn').data('action', 'second_status');
-                    }
-                    // Check if 1st step needs action
-                    else if (data.status_1 === "pending") {
-                        $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
-                        actionButtons.removeClass("hideBlock");
-                        $('#approval_btn').data('id', id);
-                        $('#rejection_btn').data('id', id);
-                        $('#approval_btn').data('action', 'first_status');
-                        $('#rejection_btn').data('action', 'first_status');
+                        $('#hr_task_done').data('id', id);
                     }
                     // If both steps are completed, hide buttons
                     else {
-                        $('#approval_btn, #rejection_btn').prop('disabled', true); // Disable buttons
+                        $('#hr_task_done').prop('disabled', true); // Disable buttons
                         actionButtons.addClass("hideBlock");
                     }
 
@@ -778,195 +736,3 @@
     });
 </script>
 @endsection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- 
-
-function populateLeaveSection(leaveDetails, offDays) {
-            const leaveSections = document.querySelector('.leave-sections');
-            leaveSections.innerHTML = ''; // Clear previous content
-
-            let totalLeaveDays = 0;
-            let totalAnnualLeaveDays = 0;
-            let totalOffDaysInAnnualLeave = 0;
-            let totalOffDays = offDays.length; // Already filtered off days
-
-            // Group leaves by type and month
-            const groupedLeaves = {};
-
-            leaveDetails.forEach(leave => {
-                const leaveTypeId = parseInt(leave.leave_type_id, 10);
-
-                // Define leave type and corresponding color
-                let leaveType = '';
-                let bgColorClass = '';
-
-                switch (leaveTypeId) {
-                    case 1:
-                        leaveType = leave.type === 'full_day' ? 'Annual Leave (Full Day)' : 'Annual Leave (Half Day)';
-                        bgColorClass = 'bg-light-blue';
-                        break;
-                    case 2:
-                        leaveType = 'Birthday Leave';
-                        bgColorClass = 'bg-light-green';
-                        break;
-                    case 3:
-                        leaveType = 'Marriage Leave';
-                        bgColorClass = 'bg-light-pink';
-                        break;
-                    case 4:
-                        leaveType = 'Unpaid Leave';
-                        bgColorClass = 'bg-light-red';
-                        break;
-                    default:
-                        bgColorClass = 'bg-light-gray'; // Fallback color
-                        leaveType = 'Other Leave'; // Default type
-                }
-
-                // Process leaves by grouping them by type and then by month
-                const startDate = new Date(leave.start_date);
-                const endDate = new Date(leave.end_date);
-                let leaveDaysCount = (endDate - startDate) / (1000 * 3600 * 24) + 1; // Days count for full-day leaves
-
-                // If it's a half-day leave, count as 0.5 days
-                if (leave.type === 'half_day') {
-                    leaveDaysCount = 0.5;
-                }
-
-                // Add leave days to total leave days
-                totalLeaveDays += leaveDaysCount;
-
-                // Add only annual leave days to total annual leave days
-                if (leaveTypeId === 1) {
-                    let currentAnnualLeaveDays = 0;
-                    let currentDate = new Date(startDate);
-
-                    while (currentDate <= endDate) {
-                        const formattedDate = currentDate.toISOString().split('T')[0];
-
-                        // Check if the current date is an off day
-                        if (!offDays.includes(formattedDate)) {
-                            currentAnnualLeaveDays++;
-                        } else {
-                            totalOffDaysInAnnualLeave++; // Count only off days within annual leave
-                        }
-
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
-
-                    totalAnnualLeaveDays += currentAnnualLeaveDays;
-                }
-
-
-                let currentDate = new Date(startDate);
-
-                while (currentDate <= endDate) {
-                    const formattedDate = currentDate.toISOString().split('T')[0];
-                    const monthName = currentDate.toLocaleString('default', { month: 'long' });
-
-                    // Initialize groupings if they don't exist
-                    if (!groupedLeaves[leaveType]) {
-                        groupedLeaves[leaveType] = {};
-                    }
-
-                    if (!groupedLeaves[leaveType][monthName]) {
-                        groupedLeaves[leaveType][monthName] = [];
-                    }
-
-                    // Add date to the corresponding type and month
-                    groupedLeaves[leaveType][monthName].push({
-                        date: currentDate.getDate(),
-                        fullDate: formattedDate,
-                        bgColorClass: isOffDay(formattedDate, offDays) ? 'bg-light-gray' : bgColorClass,
-                        leaveType: leaveType, // Pass the leaveType into the grouping
-                    });
-
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-            });
-
-            // Now render each type and its respective months
-            for (let leaveType in groupedLeaves) {
-                for (let month in groupedLeaves[leaveType]) {
-                    const section = document.createElement('div');
-                    section.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
-
-                    const firstLeaveDay = groupedLeaves[leaveType][month][0].fullDate;
-                    const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
-
-                    // Display the date range for the leave type
-                    section.innerHTML = `
-                <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span>
-                <div>
-                    <span class="text-muted">From:</span>
-                    <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
-                </div>
-                <div>
-                    <span class="text-muted">To:</span>
-                    <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
-                </div>
-                <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-            `;
-
-                    const dateRow = section.querySelector('.d-flex.flex-wrap');
-
-                    // Add the dates for this month
-                    groupedLeaves[leaveType][month].forEach(leave => {
-                        const dateCircle = document.createElement('div');
-                        dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
-
-                        if (leave.bgColorClass && leave.bgColorClass.trim() !== '') {
-                            dateCircle.classList.add(leave.bgColorClass);
-                        } else {
-                            console.error(`Error: Empty bgColorClass for leave on ${leave.fullDate}`);
-                        }
-
-                        dateCircle.innerText = leave.date;
-                        dateRow.appendChild(dateCircle);
-                    });
-
-                    // Append each month row to the section
-                    leaveSections.appendChild(section);
-                }
-            }
-
-            // Handle half-day leaves separately after full-day processing
-            leaveDetails.forEach(leave => {
-                if (leave.type === 'half_day') {
-                    displayHalfDayLeave(leave);
-                }
-            });
-
-            // Update totals in the modal
-            document.getElementById('total_leave_days').textContent = `${totalLeaveDays} days`;
-            document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays} days`;
-            document.getElementById('total_off_days').textContent = `${totalOffDays} days`;
-        } -->

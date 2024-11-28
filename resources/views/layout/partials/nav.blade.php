@@ -102,26 +102,55 @@
                     </a>
                 </li>
 
+                <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
+                    <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
+                    </a>
+                </li>
+
+                <li class="{{ request()->routeIs('fingerprint-record.index') ? 'active' : '' }}">
+                    <a href="{{route('fingerprint-record.index')}}"><i class="fa-solid fa-fingerprint"></i>
+                        <span>Fingerprint Record</span>
+                    </a>
+                </li>
+
                 <!-- Leave Application -->
                 <li class="menu-title">
                     <span>Leave Application</span>
                 </li>
+                <li class="{{ request()->routeIs('leave_application.unassigned') ? 'active' : '' }}">
+                    <a href="{{route('leave_application.unassigned')}}"><i class="fa fa-file"></i> <span>
+                            Unassigned
+                            Leaves</span> </a>
+                </li>
                 <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
                     <a href="{{route('leave.form.show')}}"><i class="fa fa-person-walking-luggage"></i> <span> Leave
                             Apply</span> </a>
+                </li>
+                <li class="{{ request()->routeIs('leave.status') ? 'active' : '' }}">
+                    <a href="{{route('leave.status')}}"><i class="fa fa-person-walking-luggage"></i> <span> Leave
+                            Status</span> </a>
                 </li>
                 <li class="{{ request()->routeIs('leave_application.data') ? 'active' : '' }}">
                     <a href="{{route('leave_application.data')}}"><i class="fa fa-person-circle-exclamation"></i> <span>
                             Pending
                             Leaves</span> </a>
                 </li>
-                <li class="{{ request()->routeIs('leave_application.unassigned') ? 'active' : '' }}">
-                    <a href="{{route('leave_application.unassigned')}}"><i class="fa fa-home"></i> <span> Unassigned
-                            Leaves</span> </a>
+                <li class="{{ request()->routeIs('leave.hr_work') ? 'active' : '' }}">
+                    <a href="{{route('leave.hr_work')}}"><i class="fa fa-users-cog"></i> <span>
+                            HR Work
+                            (Leaves)</span> </a>
                 </li>
                 <li class="{{ request()->routeIs('leave-approvals.index') ? 'active' : '' }}">
                     <a href="{{route('leave-approvals.index')}}"><i class="fa fa-person-circle-check"></i> <span>Leave
                             Approvals</span>
+                    </a>
+                </li>
+                <li class="menu-title">
+                    <span>Payroll</span>
+                </li>
+                <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
+                    <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
+                            Deduction</span>
                     </a>
                 </li>
 

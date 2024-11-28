@@ -259,6 +259,7 @@ class ScheduleController extends Controller
         ], 200);
 
     }
+
     public function manageSchedule()
     {
 
@@ -423,16 +424,34 @@ class ScheduleController extends Controller
 
     public function test(Request $request, $id)
     {
-        $employee = DB::table('users')
-            ->select('id', 'username')
-            ->where('role', '!=', '1')
-            ->where('status', '1')
-            ->get();
+        $user = auth()->user()->id;
+        $checkInTime = date('Y-m-d');
+        $punch1 = AttendanceSession::where('user_id', $user)->where('check_out', NULL)->latest()->first();
 
-        return response()->json([
-            'employees' => $employee,
-        ]);
+        $punch = AttendanceRecord::where('user_id', $user)->where('check_out', NULL)->whereNotNull('check_in')->latest()->first();
 
+        if ($punch && $punch1) {
+            $shift_in = date('Y-m-d H:i', strtotime($punch->shift_in));
+
+            $shift_end = date('Y-m-d H:i', strtotime($punch->shift_out));
+            $start = new Carbon($shift_in);
+            $end = new Carbon($shift_end);
+            $duration = $start->diff($end);
+
+
+            $hoursWorked = Carbon::parse($punch1->check_in)->diffInHours(Carbon::now());
+            return response()->json([
+                'punch_in_time' => $punch1->check_in,
+                'shift_duration' => $duration->h
+            ]);
+        } else {
+            $check = AttendanceRecord::where('user_id', $user)->whereDate('shift_in', $checkInTime)->latest()->first();
+            if ($check) {
+                return response()->json(['punch_in_time' => 'show']);
+            } else {
+                return response()->json(['punch_in_time' => 'nothing']);
+            }
+
+        }
     }
-
 }

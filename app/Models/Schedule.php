@@ -18,8 +18,6 @@ class Schedule extends Model
         'name',
         'user_id',
         'status'
-        
-
     ];
 
 }

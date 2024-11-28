@@ -278,7 +278,7 @@
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             $('#startdate').val(resultArray);
-           
+
 
         },
     });
@@ -359,8 +359,8 @@
                 success: function (response) {
                     hideLoader();
                     $('#schedule').modal('hide');
+                    clearValidationStates();
                     $('#scheduletable').DataTable().ajax.reload();
-                    console.log(response)
                     createToast('info', 'fa-solid fa-circle-check', 'Success', 'Schedule created successfully.');
                 },
                 error: function (data) {

@@ -81,6 +81,9 @@
         className: 'text-center'
       },
       ],
+      order: [],
+      pageLength: 24, // Set the default number of records to show
+      lengthMenu: [10, 24, 25, 50, 100] // Options for records per page
     });
   });
 </script>

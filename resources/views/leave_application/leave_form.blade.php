@@ -139,6 +139,10 @@
                         <option value="2">Birthday Leave</option>
                         <option value="3">Marriage Leave</option>
                         <option value="4">Unpaid Leave</option>
+                        <option value="5">Hospitalisation Leave</option>
+                        <option value="6">Compassionate Leave</option>
+                        <option value="7">Maternity Leave</option>
+                        <option value="8">Paternity Leave</option>
                     </select>
                     <div class="leave_error text-danger"></div>
                 </div>

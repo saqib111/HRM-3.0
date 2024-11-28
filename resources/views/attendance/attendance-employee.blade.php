@@ -72,8 +72,13 @@
 
     .punch-btn-section {
 
-        padding: 20% !important;
-        margin: 0% !important;
+        min-width: 120px;
+        /* Ensures buttons have a consistent size */
+        font-size: 16px;
+        /* Adjust font size for readability */
+        padding: 10px 20px;
+        /* Adjust padding for responsiveness */
+        /* For alignment fallback */
     }
 
     .punch-btn-section .punch-btn {
@@ -92,7 +97,7 @@
     }
 
     .table tr.dayoff {
-        --bs-table-bg: #d9f7fffc;
+        --bs-table-bg: #D3D3D3;
     }
 
     .table tr.today {
@@ -100,7 +105,27 @@
     }
 
     .table tr.late {
+        --bs-table-bg: rgb(243, 112, 112);
+    }
+
+    .table tr.one {
+        --bs-table-bg: #d9f7fffc;
+    }
+
+    .table tr.two {
+        --bs-table-bg: rgb(147, 231, 122);
+    }
+
+    .table tr.three {
+        --bs-table-bg: rgb(245, 143, 186);
+    }
+
+    .table tr.four {
         --bs-table-bg: #FF574A;
+    }
+
+    .table tr.absent {
+        --bs-table-bg: #C70039;
     }
 
     table.dataTable th.dt-type-numeric,
@@ -171,10 +196,9 @@
                     </svg>
                     <div class="time-counter" id="timeCounter">0:00 hrs</div>
                 </div>
-                <div class="punch-btn-section">
-                    <button id="punchInBtn" class="btn btn-primary punch-btn">Punch In</button>
-                    <button id="punchOutBtn" class="btn btn-primary punch-btn" disabled>Punch Out</button>
-
+                <div class="punch-btn-section d-flex justify-content-center mt-3">
+                    <button id="punchInBtn" class="btn btn-primary punch-btn mx-2">Punch In</button>
+                    <button id="punchOutBtn" class="btn btn-primary punch-btn mx-2" disabled>Punch Out</button>
                 </div>
 
             </div>
@@ -240,10 +264,8 @@
         <div class="col-sm-5">
             <label for=""> From date: </label>
             <div class="input-block mb-3 form-focus">
-
                 <div class="cal-icon">
-
-                    <input type="text" class="form-control floating datetimepicker" id="fromDate">
+                    <input type="text" class="form-control floating datetimepicker" id="fromDate" name="fromDate">
                 </div>
                 <label class="focus-label">Date</label>
             </div>
@@ -252,28 +274,19 @@
             <label for=""> To date: </label>
             <div class="input-block mb-3 form-focus">
                 <div class="cal-icon">
-
-                    <input type="text" class="form-control floating datetimepicker" id="toDate">
+                    <input type="text" class="form-control floating datetimepicker" id="toDate" name="toDate">
                 </div>
                 <label class="focus-label">Date</label>
             </div>
         </div>
 
-        <div class="col-sm-2 mt-4 ">
-            <div class="row">
-                <div class=" col-sm-4">
-                    <button class="btn btn-primary" id="refresh" onclick="refreshDate()"><i class="fa fa-refresh"
-                            aria-hidden="true"></i></button>
-
-                </div>
-                <div class=" col-sm-8">
-                    <button class="btn btn-primary " type="submit"> Search </button>
-
-                </div>
-            </div>
+        <div class="col-sm-2  d-flex align-items-center">
+            <button type="button" class="btn btn-primary me-2" id="refresh" onclick="refreshDate()">
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+            </button>
+            <button class="btn btn-primary" type="submit" id="submitButton"> Search </button>
         </div>
     </div>
-    <!-- /Search Filter -->
 </form>
 <div class="row">
     <div class="col-lg-12">
@@ -302,21 +315,18 @@
             </div>
             <div class="modal-body ">
                 <div class="form-title text-center">
-                    <h4>Check Employee</h4>
+                    <h4>Verify Employee</h4>
                 </div>
                 <div class="d-flex flex-column text-center ">
                     <form id="emp-check" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <div class="form-group mb-3">
-                            <input type="email" class="form-control" id="email" placeholder="Email address..."
-                                autocomplete="one-time-code">
-                        </div>
+
                         <div class="form-group mb-4">
                             <input type="password" class="form-control" id="password" placeholder="Password..."
                                 autocomplete="one-time-code">
                         </div>
                         <button
-                            class="btn btn-info btn-block btn-round ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Login&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                            class="btn btn-info btn-block btn-round ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Verify&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
                     </form>
 
 
@@ -388,6 +398,7 @@
                         { data: 'shift_in', title: 'Shift In' },
                         { data: 'end_date', title: 'End Date' },
                         { data: 'shift_out', title: 'Shift Out' },
+                        { data: 'in_date', title: 'Checkin Date' },
 
                         {
                             data: 'check_in',
@@ -401,6 +412,7 @@
                                 }
                             }
                         },
+                        { data: 'out_date', title: 'Checkout Date' },
                         {
                             data: 'check_out',
                             title: 'Check Out',
@@ -419,7 +431,13 @@
                                 if (row.dayoff === "Yes") {
                                     return "OFF";
                                 } else {
-                                    return data;
+                                    if (row.color == '1') { return "AL"; }
+                                    else if (row.color == '2') { return "BL"; }
+                                    else if (row.color == '3') { return "ML"; }
+                                    else if (row.color == '4') { return "UL"; }
+                                    else if (row.color == '5') { return "UL"; }
+                                    else if (row.absent == "Yes") { return "Absent"; }
+                                    else { return data; }
                                 }
                             }
                         },
@@ -446,22 +464,34 @@
 
                         }
 
-                        else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
 
-                            if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
-
-                                $(row).addClass("late");
-                            }
-                            else {
-                                $(row).addClass("today");
-                            }
-                        }
-                        else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
-
-                            $(row).addClass("late");
-                        }
 
                         else {
+                            if (data.color == '1') { $(row).addClass("one"); }
+                            else if (data.color == '2') { $(row).addClass("two"); }
+                            else if (data.color == '3') { $(row).addClass("three"); }
+                            else if (data.color == '4') { $(row).addClass("four"); }
+                            else if (data.color == '5') { $(row).addClass("one"); }
+                            else {
+                                if (data.absent == "Yes") { $(row).addClass("absent"); }
+
+                                else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
+
+                                    if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+
+                                        $(row).addClass("late");
+                                    }
+                                    else {
+                                        $(row).addClass("today");
+                                    }
+                                }
+                                else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+
+                                    $(row).addClass("late");
+                                }
+
+
+                            }
 
                         }
 
@@ -498,6 +528,18 @@
                 contentType: false,
                 success: function (response) {
                     hideLoader();
+                    var inf = response.in;
+                    console.log(inf)
+                    $('#day').empty();
+                    $('#hour').empty();
+                    $('#deduction').empty();
+
+
+
+                    $('#day').append(`${inf[0].day}  Days `);
+                    $('#hour').append(`${inf[0].hour} hr ${inf[0].minute} mins `);
+                    $('#deduction').append(`${inf[0].deduction} % `);
+
 
 
                     $('#attendance-employee').DataTable({
@@ -526,7 +568,7 @@
                             { data: 'shift_in', title: 'Shift In' },
                             { data: 'end_date', title: 'End Date' },
                             { data: 'shift_out', title: 'Shift Out' },
-
+                            { data: 'in_date', title: 'Checkin Date' },
                             {
                                 data: 'check_in',
                                 title: 'Check In',
@@ -539,6 +581,7 @@
                                     }
                                 }
                             },
+                            { data: 'out_date', title: 'Checkout Date' },
                             {
                                 data: 'check_out',
                                 title: 'Check Out',
@@ -557,7 +600,12 @@
                                     if (row.dayoff === "Yes") {
                                         return "OFF";
                                     } else {
-                                        return data;
+                                        if (row.color == '1') { return "AL"; }
+                                        else if (row.color == '2') { return "BL"; }
+                                        else if (row.color == '3') { return "ML"; }
+                                        else if (row.color == '4') { return "UL"; }
+                                        else if (row.absent == "Yes") { return "Absent"; }
+                                        else { return data; }
                                     }
                                 }
                             },
@@ -584,24 +632,32 @@
 
                             }
 
-                            else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
-                                if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
 
-                                    $(row).addClass("late");
-                                }
-                                else {
-                                    $(row).addClass("today");
-                                }
-
-
-                            }
-                            else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
-
-                                $(row).addClass("late");
-                            }
 
                             else {
+                                if (data.color == '1') { $(row).addClass("one"); }
+                                else if (data.color == '2') { $(row).addClass("two"); }
+                                else if (data.color == '3') { $(row).addClass("three"); }
+                                else if (data.color == '4') { $(row).addClass("four"); }
+                                else {
+                                    if (data.absent == "Yes") { $(row).addClass("absent"); }
+                                    else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
+                                        if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
 
+                                            $(row).addClass("late");
+                                        }
+                                        else {
+                                            $(row).addClass("today");
+                                        }
+
+
+                                    }
+                                    else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+
+                                        $(row).addClass("late");
+                                    }
+
+                                }
                             }
 
                         },
@@ -609,13 +665,6 @@
                     });
 
                 },
-
-
-
-
-
-
-
 
                 error: function (err) {
                     hideLoader();
@@ -643,11 +692,11 @@
         let shiftDuration = 9;
         let intervalId = null;
         let endShift = null;
-
+        let shitFinish = null;
         fetch('/get-punch-time')
             .then(response => response.json())
             .then(data => {
-
+                console.log(data)
                 if (data.punch_in_time == "nothing") {
 
                     clearInterval(intervalId);
@@ -679,6 +728,7 @@
                 else {
                     punchInTime = new Date(data.punch_in_time);
                     endShift = new Date(data.punch_in_time).setMinutes(0, 0, 0);
+                    shiftFinish = new Date(data.shiftEnd);
                     shiftDuration = data.shift_duration || shiftDuration;
 
                     punchInBtn.style.display = 'none';
@@ -703,7 +753,7 @@
         });
 
         function employeeCheck(data) {
-            email = $('#email').val('');
+
             password = $('#password').val('');
 
             clearValidationStates();
@@ -712,15 +762,15 @@
             $('#loginModal').modal('show');
             $('#emp-check').on('submit', function (event) {
                 event.preventDefault();
-                var email = $('#email').val();
+
                 var password = $('#password').val();
 
                 var formData = new FormData();
-                formData.append('email', email);
+
                 formData.append('password', password);
                 var isValid = true;
                 clearValidationStates();
-                if (!validateEmail('#email')) isValid = false;
+
                 if (!validateField('#password')) isValid = false;
                 if (isValid) {
                     showLoader();
@@ -748,7 +798,7 @@
                             else {
                                 valdateCancel();
                                 clearValidationStates();
-                                $('#email').addClass('is-invalid');
+
                                 $('#password').addClass('is-invalid');
                                 createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Invalid User.');
                             }
@@ -779,16 +829,19 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
+                        statistics();
+                        dataTab();
+
                         punchInTime = new Date(data.punch_in_time);
                         punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
 
                         punchInBtn.style.display = 'none';
                         punchOutBtn.style.display = 'block';
-                        punchOutBtn.disabled = false;
-
+                        punchOutBtn.disabled = true;
                         startShiftProgress(true);
 
-                        dataTab();
+
+
                     }
                     else {
 
@@ -823,8 +876,8 @@
                 progressCircle.style.strokeDashoffset = 314 - (314 * progressPercentage) / 100;
 
                 const shiftEndTime = new Date(endShift + shiftDuration * 60 * 60 * 1000);
-
-                if (now >= shiftEndTime) {
+                const shiftEnding = new Date(shiftFinish + shiftDuration * 60 * 60 * 1000);
+                if (now >= shiftEnding) {
                     punchOutBtn.disabled = false;
                     clearInterval(intervalId);
                 }
@@ -855,7 +908,8 @@
                 .then(data => {
 
                     if (data.status == 'success') {
-
+                        statistics();
+                        dataTab();
                         clearInterval(intervalId);
                         punchInTime = null;
                         punchInTimeDisplay.textContent = '';
@@ -873,6 +927,7 @@
     function refreshDate() {
         $('#fromDate').val('');
         $('#toDate').val('');
+        statistics();
         dataTab();
 
     }
@@ -887,15 +942,16 @@
         })
             .then(response => response.json())
             .then(data => {
-                $('#day').val(' ');
-                $('#hour').val('');
-                $('#deduction').val(' ');
-                $('#check_in').val(' ');
-                $('#check_out').val(' ');
+                console.log(data)
+                $('#day').empty();
+                $('#hour').empty();
+                $('#deduction').empty();
+                $('#check_in').empty();
+                $('#check_out').empty();
                 if (data.status == 'success') {
 
-                    $('#day').append(`${data.info[0].days}  Days `);
-                    $('#hour').append(`${data.info[0].hours} hr ${data.info[0].minute} mins `);
+                    $('#day').append(`${data.info[0].day}  Days `);
+                    $('#hour').append(`${data.info[0].hour} hr ${data.info[0].minute} mins `);
                     $('#deduction').append(`${data.info[0].deduction} % `);
                     $('#check_in').append(`${data.info[0].check_in} . `);
                     $('#check_out').append(`${data.info[0].check_out} . `);

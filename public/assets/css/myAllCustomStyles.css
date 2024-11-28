@@ -388,3 +388,7 @@ body {
 }
 
 /* //Import button style // */
+
+.form-control[readonly] {
+    background-color: #ffffff !important;
+}

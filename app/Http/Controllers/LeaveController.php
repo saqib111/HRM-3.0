@@ -106,6 +106,9 @@ class LeaveController extends Controller
                 $from = $request->full_leave_from[$index];
                 $to = $request->full_leave_to[$index];
 
+                // Cast leave_type to integer
+                $leave_type = (int) $leave_type;
+
                 // Calculate the effective leave days excluding off-days
                 $effective_days = $this->calculateLeaveDays($from, $to, $off_days);
 
@@ -226,6 +229,87 @@ class LeaveController extends Controller
         ]);
 
         return response()->json(['message' => 'Leave application submitted successfully.'], 200);
+    }
+
+    public function LeaveStatus(Request $request)
+    {
+        if ($request->ajax()) {
+            // Get the authenticated user's ID
+            $authId = auth()->user()->id;
+
+            // Get all leave data for the authenticated user without filtering by status
+            $leaves = LeaveManagement::with('user')
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance', 'status_1', 'status_2', 'hr_approval_id'])
+                ->where('user_id', $authId) // Filter by authenticated user
+                ->get();
+
+            // Return the leaves data as Datatables
+            return Datatables::of($leaves)
+                ->addIndexColumn()
+                // Make Username & Employee ID searchable using the "whereHas" filter for joined fields
+                ->addColumn('username', function ($row) {
+                    return $row->user->username ?? 'N/A';
+                })
+                ->addColumn('employee_id', function ($row) {
+                    return $row->user->employee_id ?? 'N/A';
+                })
+                ->addColumn('day', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $day_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $day_str .= '<span class="badge bg-primary">Full Day</span><br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $day_str .= '<span class="badge bg-warning">Half Day</span><br>';
+                        }
+                    }
+                    return $day_str;
+                })
+                ->addColumn('from', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $from_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $from_str .= $detail->start_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $from_str .= $detail->date . ' (' . $detail->start_time . ')<br>';
+                        }
+                    }
+                    return $from_str;
+                })
+                ->addColumn('to', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $to_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $to_str .= $detail->end_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $to_str .= $detail->date . ' (' . $detail->end_time . ')<br>';
+                        }
+                    }
+                    return $to_str;
+                })
+                ->addColumn('off_days', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $off_day_str = '<ul class="list-unstyled mb-0">';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'off_day') {
+                            $off_day_str .= "<li><span class='badge bg-secondary'>{$detail->date}</span></li>";
+                        }
+                    }
+
+                    return $off_day_str .= '</ul>';
+                })
+                ->rawColumns(['day', 'from', 'to', 'off_days'])
+                ->make(true);
+        }
+
+        // If it's not an AJAX request, return the view
+        return view('leave_application.leave_status');
     }
 
     // Helper to calculate leave days excluding off-days
@@ -414,6 +498,7 @@ class LeaveController extends Controller
         // Call the helper function to get the username
         $first_approval_username = getUser($leave->first_approval_id);
         $second_approval_username = getUser($leave->second_approval_id);
+        $hr_approval_username = getUser($leave->hr_approval_id);
         $formattedLeaveBalance = rtrim(rtrim($leave->leave_balance, '0'), '.');
 
         return response()->json([
@@ -432,6 +517,10 @@ class LeaveController extends Controller
             // Get User ID
             'second_approval_id' => $second_approval_username ?? "Null",
             'second_approval_created_time' => $leave->second_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
+            // Get HR ID
+            'hr_approval_id' => $hr_approval_username ?? "Null",
+            'hr_approval_created_time' => $leave->hr_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
+
         ]);
     }
 
@@ -555,7 +644,7 @@ class LeaveController extends Controller
                                     ]);
                                 }
                             }
-                        } elseif ($leave['type'] === 'full_day' && in_array($leaveTypeId, [2, 3, 4])) {
+                        } elseif ($leave['type'] === 'full_day' && in_array($leaveTypeId, [2, 3, 4, 5, 6, 7, 8])) {
                             // For other full-day leaves that are not Annual Leave (Birthday, Marriage, Unpaid)
                             $startDate = new \DateTime($leave['start_date']);
                             $endDate = new \DateTime($leave['end_date']);
@@ -710,33 +799,42 @@ class LeaveController extends Controller
 
     public function AddUnassignedLeave(Request $request)
     {
-        // Validate the incoming data
-        $request->validate([
-            'team_leader_ids' => 'required|array', // Ensure it's an array
-            'team_leader_ids.*' => 'exists:users,id', // Ensure each ID exists in the users table
-            'manager_ids' => 'required|array', // Ensure it's an array
-            'manager_ids.*' => 'exists:users,id', // Ensure each ID exists in the users table
-            'leaveApprovalId' => 'required|exists:leave_management,id' // Ensure leaveApprovalId exists in the database
+        // Validate the input fields
+        $validator = Validator::make($request->all(), [
+            'team_leader_ids' => 'required|array|min:1',
+            'team_leader_ids.*' => 'integer|exists:users,id',  // Validate each ID is an integer and exists in users table
+            'manager_ids' => 'required|array|min:1',
+            'manager_ids.*' => 'integer|exists:users,id',      // Validate each ID is an integer and exists in users table
         ]);
 
-        // Retrieve the leave record by the provided leaveApprovalId
+        // If validation fails, return the errors
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()], 422);
+        }
+
         $leaveManagement = LeaveManagement::find($request->leaveApprovalId);
 
         // If the leave record does not exist, return an error response
         if (!$leaveManagement) {
-            return response()->json(['success' => false, 'message' => 'Leave not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Leave record not found.'], 404);
         }
 
         $leaveApplierID = $leaveManagement->user_id;
 
-        // Convert all team_leader_ids and manager_ids to integers
-        $teamLeaderIds = array_map('intval', $request->team_leader_ids); // Convert to integers
-        $managerIds = array_map('intval', $request->manager_ids); // Convert to integers
+        // Convert team_leader_ids and manager_ids from usernames to user IDs
+        $teamLeaderUsernames = $request->team_leader_ids;
+        $managerUsernames = $request->manager_ids;
 
-        // Update the team_leader_ids and manager_ids fields
-        $leaveManagement->team_leader_ids = json_encode($teamLeaderIds); // Update team leader IDs
-        $leaveManagement->manager_ids = json_encode($managerIds); // Update manager IDs
-        $leaveManagement->save(); // Save the changes
+        // Convert the usernames (or user IDs) to integers
+        $teamLeaderIds = array_map('intval', $teamLeaderUsernames);  // Convert each ID to an integer
+        $managerIds = array_map('intval', $managerUsernames);        // Convert each ID to an integer
+
+        // Encode the arrays as JSON (now with integer values)
+        $leaveManagement->team_leader_ids = json_encode($teamLeaderIds); // Store as JSON array of integers
+        $leaveManagement->manager_ids = json_encode($managerIds);
+
+        // Save the changes
+        $leaveManagement->save();
 
         $leaveApprovals = AssignedLeaveApprovals::where('user_id', '=', $leaveApplierID)->first();
         $leaveApprovals->first_assign_user_id = json_encode($teamLeaderIds);
@@ -744,6 +842,186 @@ class LeaveController extends Controller
         $leaveApprovals->save(); // Save the changes
 
         // Return success response
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => 'Leave assigned successfully.']);
     }
+
+    public function multiSelect(Request $request)
+    {
+        $search = $request->input('search');
+        $page = $request->input('page', 1);  // Get the current page, default to 1
+
+        // If there is no search term, return the first 10 records
+        if (!$search) {
+            $data = User::where('status', '1')
+                ->paginate(10, ['*'], 'page', $page);  // Paginate, 10 items per page
+        } else {
+            $data = User::when($search, function ($query) use ($search) {
+                return $query->where('username', 'LIKE', '%' . $search . '%');
+            })
+                ->where('status', '1')
+                ->paginate(10, ['*'], 'page', $page);
+        }
+
+        return response()->json([
+            'data' => $data->items(),
+            'total' => $data->total(),
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+        ]);
+    }
+    // **************************************************************   HR Part Starts Here  *************************************************************************************
+    public function leave_view_hr()
+    {
+        return view('leave_application.hr_leave_work');
+    }
+
+    public function display_leave_hr(Request $request)
+    {
+        if ($request->ajax()) {
+            // Get the authenticated user's ID
+            $authId = auth()->user()->id;
+
+            // Get the selected status from the request (if any)
+            $status = $request->input('status', 'pending');  // default to 'pending' if no status is passed
+
+            // Build the query based on the status and user role
+            $leaves = LeaveManagement::with('user')
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance', 'status_1', 'status_2', 'hr_approval_id'])
+                ->when($status === 'pending', function ($query) {
+                    // Pending requests: status_1 is pending OR status_2 is pending, but not rejected
+                    $query->where(function ($subQuery) {
+                        $subQuery->where('status_1', 'pending')
+                            ->orWhere('status_2', 'pending');
+                    })->whereNotIn('status_1', ['rejected'])
+                        ->whereNotIn('status_2', ['rejected']);
+                })
+                ->when($status === 'approved', function ($query) {
+                    // Approved requests: Both status_1 and status_2 are approved
+                    $query->where('status_1', 'approved')
+                        ->where('status_2', 'approved')
+                        ->whereNull('hr_approval_id');
+                })
+                ->when($status === 'rejected', function ($query) {
+                    // Rejected requests: Either status_1 or status_2 is rejected
+                    $query->where(function ($subQuery) {
+                        $subQuery->where('status_1', 'rejected')
+                            ->orWhere('status_2', 'rejected');
+                    });
+                })
+                ->when($status === 'completed', function ($query) {
+                    // Completed requests: Both status_1 and status_2 are approved and hr_approval_id exists
+                    $query->where('status_1', 'approved')
+                        ->where('status_2', 'approved')
+                        ->whereNotNull('hr_approval_id');
+                })
+                ->get();
+
+            // Return the leaves data as Datatables
+            return Datatables::of($leaves)
+                ->addIndexColumn()
+                // Make Username & Employee ID searchable using the "whereHas" filter for joined fields
+
+                ->addColumn('username', function ($row) {
+                    return $row->user->username ?? 'N/A';
+                })
+                ->addColumn('employee_id', function ($row) {
+                    return $row->user->employee_id ?? 'N/A';
+                })
+                ->addColumn('day', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $day_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $day_str .= '<span class="badge bg-primary">Full Day</span><br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $day_str .= '<span class="badge bg-warning">Half Day</span><br>';
+                        }
+                    }
+                    return $day_str;
+                })
+                ->addColumn('from', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $from_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $from_str .= $detail->start_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $from_str .= $detail->date . ' (' . $detail->start_time . ')<br>';
+                        }
+                    }
+                    return $from_str;
+                })
+                ->addColumn('to', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $to_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $to_str .= $detail->end_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $to_str .= $detail->date . ' (' . $detail->end_time . ')<br>';
+                        }
+                    }
+                    return $to_str;
+                })
+                ->addColumn('off_days', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $off_day_str = '<ul class="list-unstyled mb-0">';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'off_day') {
+                            $off_day_str .= "<li><span class='badge bg-secondary'>{$detail->date}</span></li>";
+                        }
+                    }
+
+                    return $off_day_str .= '</ul>';
+                })
+                ->rawColumns(['day', 'from', 'to', 'off_days'])
+                ->make(true);
+        }
+
+        return view('leave_application.pending_leaves');
+    }
+
+    public function leave_hr_workdone(Request $request)
+    {
+        // Validate the incoming request data
+        $request->validate([
+            'leave_id' => 'required|integer|exists:leave_management,id', // Ensure the leave_id exists in the database
+            'leave_action' => 'required|string|in:hr_done_request', // Only allow 'approve' or 'reject'
+        ]);
+
+        // Retrieve the validated data from the request
+        $leaveId = $request->leave_id;
+        $leaveAction = $request->leave_action;
+
+        // Get the authenticated HR user ID
+        $activeHrId = auth()->user()->id;
+
+        // Fetch the leave request information from the database
+        $leaveRequest = LeaveManagement::findOrFail($leaveId); // Using findOrFail to throw an exception if the leave doesn't exist
+
+        // Update the leave request with the HR approval details
+        $leaveRequest->hr_approval_id = $activeHrId;
+        $leaveRequest->hr_approval_created_time = now(); // Using "created_at" is more conventional in Laravel for timestamps
+        $leaveRequest->save();
+
+        // Prepare the response data
+        $response = [
+            'leave_id' => $leaveId,
+            'leave_action' => $leaveAction,
+            'approved_by' => $activeHrId,
+            'leave_request' => $leaveRequest // Return the updated leave request data
+        ];
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Leave request successfully updated',
+            'data' => $response
+        ]);
+    }
+
 }
