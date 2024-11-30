@@ -62,31 +62,95 @@ class AssignedLeaveApprovalsController extends Controller
         return view('leaveReassigners.leave-approvals', compact('users'));
     }
 
-    public function searchAssigner(Request $request)
-    {
-        $search = $request->input('search');
-        $page = $request->input('page', 1);  // Get the current page, default to 1
+    // public function searchAssigner(Request $request)
+    // {
+    //     $search = $request->input('search');
+    //     $page = $request->input('page', 1);  // Get the current page, default to 1
 
-        // If there is no search term, return the first 10 records
-        if (!$search) {
-            $data = User::where('status', '1')
-                ->paginate(10, ['*'], 'page', $page);  // Paginate, 10 items per page
-        } else {
-            $data = User::when($search, function ($query) use ($search) {
-                return $query->where('username', 'LIKE', '%' . $search . '%');
-            })
-                ->where('status', '1')
-                ->paginate(10, ['*'], 'page', $page);
+    //     // If there is no search term, return the first 10 records
+    //     if (!$search) {
+    //         $data = User::where('status', '1')
+    //             ->paginate(10, ['*'], 'page', $page);  // Paginate, 10 items per page
+    //     } else {
+    //         $data = User::when($search, function ($query) use ($search) {
+    //             return $query->where('username', 'LIKE', '%' . $search . '%');
+    //         })
+    //             ->where('status', '1')
+    //             ->paginate(10, ['*'], 'page', $page);
+    //     }
+
+    //     return response()->json([
+    //         'data' => $data->items(),
+    //         'total' => $data->total(),
+    //         'current_page' => $data->currentPage(),
+    //         'last_page' => $data->lastPage(),
+    //     ]);
+    // }
+
+    // CUSTOM-MULTI CONTROLLER CODE.
+    public function getUsers(Request $request)
+    {
+        // Get the search term and page number
+        $searchTerm = $request->input('searchTerm', '');
+        $page = $request->input('page', 1);
+
+        // Query users with pagination and search
+        $usersQuery = User::query();
+
+        if ($searchTerm) {
+            $usersQuery->where('username', 'like', '%' . $searchTerm . '%');
         }
 
+        $users = $usersQuery->paginate(10, ['id', 'username'], 'page', $page);
+
         return response()->json([
-            'data' => $data->items(),
-            'total' => $data->total(),
-            'current_page' => $data->currentPage(),
-            'last_page' => $data->lastPage(),
+            'data' => $users->items(),
+            'last_page' => $users->lastPage(),
         ]);
     }
 
+
+    // STORE THE (ASSIGNERS) DATA IN TABLE
+    public function store(Request $request)
+    {
+        // Validate the incoming request
+        $validated = $request->validate([
+            'first_assigned_user' => 'nullable|array',  // Allow null or array
+            'second_assigned_user' => 'nullable|array', // Allow null or array
+            'leaveApprovalId' => 'required|integer', // Ensure leaveApprovalId is provided
+        ]);
+
+        // Find or create the leave approval record
+        $leaveApproval = AssignedLeaveApprovals::find($validated['leaveApprovalId']);
+
+        if (!$leaveApproval) {
+            // If no leave approval exists, create a new one
+            $leaveApproval = new AssignedLeaveApprovals();
+            $leaveApproval->leaveApprovalId = $validated['leaveApprovalId'];
+        }
+
+        // Handle first assigned user
+        if (empty($validated['first_assigned_user'])) {
+            $leaveApproval->first_assign_user_id = null;
+        } else {
+            // Ensure all elements are integers before encoding them back into JSON
+            $leaveApproval->first_assign_user_id = json_encode(array_map('intval', $validated['first_assigned_user']));
+        }
+
+        // Handle second assigned user
+        if (empty($validated['second_assigned_user'])) {
+            $leaveApproval->second_assign_user_id = null;
+        } else {
+            // Ensure all elements are integers before encoding them back into JSON
+            $leaveApproval->second_assign_user_id = json_encode(array_map('intval', $validated['second_assigned_user']));
+        }
+
+        // Save the changes
+        $leaveApproval->save();
+
+        // Return a success response
+        return response()->json(['success' => true]);
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -109,32 +173,44 @@ class AssignedLeaveApprovalsController extends Controller
 
 
 
+    // YourController.php
     public function edit($id)
     {
-        // Fetch the leave approval data by ID
-        $leaveApproval = AssignedLeaveApprovals::find($id);
+        try {
+            $leaveApproval = AssignedLeaveApprovals::find($id);
 
-        // Check if the leave approval record exists
-        if (!$leaveApproval) {
-            return response()->json(['error' => 'Leave approval not found'], 404);
+            if (!$leaveApproval) {
+                return response()->json(['error' => 'Leave approval not found'], 404);
+            }
+
+            // Log the values before decoding
+            \Log::info('First Assigned User ID: ' . $leaveApproval->first_assign_user_id);
+            \Log::info('Second Assigned User ID: ' . $leaveApproval->second_assign_user_id);
+
+            $firstAssignedUsers = User::whereIn('id', json_decode($leaveApproval->first_assign_user_id, true) ?: [])
+                ->pluck('username', 'id')
+                ->toArray();
+
+            $secondAssignedUsers = User::whereIn('id', json_decode($leaveApproval->second_assign_user_id, true) ?: [])
+                ->pluck('username', 'id')
+                ->toArray();
+
+            return response()->json([
+                'leaveApprovalId' => $leaveApproval->id,
+                'first_assigned_user' => $firstAssignedUsers,
+                'second_assigned_user' => $secondAssignedUsers,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in edit controller: ' . $e->getMessage());
+            return response()->json(['error' => 'An unexpected error occurred.'], 500);
         }
-
-        // Fetch the usernames of the assigned users
-        $firstAssignedUsers = User::whereIn('id', json_decode($leaveApproval->first_assign_user_id, true) ?: [])
-            ->pluck('username', 'id') // Retrieve the username based on user IDs
-            ->toArray();
-
-        $secondAssignedUsers = User::whereIn('id', json_decode($leaveApproval->second_assign_user_id, true) ?: [])
-            ->pluck('username', 'id') // Retrieve the username based on user IDs
-            ->toArray();
-
-        // Return the data as JSON, ensuring to decode the JSON encoded user IDs for front-end
-        return response()->json([
-            'leaveApprovalId' => $leaveApproval->id,
-            'first_assigned_user' => $firstAssignedUsers,
-            'second_assigned_user' => $secondAssignedUsers,
-        ]);
     }
+
+
+
+
+
+
 
 
     /**

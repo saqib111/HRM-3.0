@@ -1,0 +1,251 @@
+.MultiDropdown {
+    width: 100%;
+    position: relative;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 5px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-box-style {
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    padding: 5px 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 5px;
+    max-width: 100%;
+}
+
+.selected-tag {
+    background-color: #007bff;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.selected-tag span {
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.options-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: #fff;
+    z-index: 100;
+    border-radius: 0 0 4px 4px;
+    display: none;
+    box-sizing: border-box;
+}
+
+.option {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.op-disabled {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    background: #eaeaea;
+    align-items: center;
+}
+
+.option.selected {
+    background-color: #007bff;
+    color: white;
+}
+
+.option:hover {
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.custom-select {
+    position: relative;
+    width: 500px;
+}
+
+.selected-options {
+    position: relative;
+    padding: 5px;
+    min-height: 30px;
+    background: transparent;
+    color: inherit;
+    display: inline-block;
+}
+
+.placeholder {
+    color: #888;
+    font-style: italic;
+    font-size: 14px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.select-box {
+    background: #f9f9f9;
+    border: 1px solid #ced4da;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center; /* Ensure items are vertically aligned */
+    height: auto;
+    min-height: 38px;
+    padding: 0 10px;
+    cursor: pointer;
+    width: 90%;
+    border-radius: 4px;
+    max-height: 150px; /* Adjust based on desired maximum height */
+    overflow-y: auto; /* Allow scroll if too many tags are selected */
+    position: relative; /* Relative positioning for the arrow */
+}
+
+.selected-options {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping of the tags */
+    gap: 4px; /* Space between selected tags */
+    max-width: 100%;
+    padding: 5px 0; /* Adjust padding as needed */
+    min-height: 30px;
+    overflow: hidden; /* Prevent overflow from disturbing layout */
+}
+
+.tag {
+    background-color: #f2f2f2d0;
+    color: #000;
+    border-radius: 5px;
+    margin-right: 5px;
+    padding: 5px 6px;
+    align-items: center;
+}
+
+.remove-tag {
+    margin-left: 6px;
+    cursor: pointer;
+}
+
+.arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.fa-angle-down {
+    color: #404040;
+    font-size: 20px;
+}
+
+.options {
+    display: none;
+    position: absolute;
+    width: 90%;
+    background-color: #ffff;
+    border: 1px solid #ced4da;
+    border-top: none;
+    min-height: 255px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.open .options {
+    display: block;
+    height: 10px;
+    width: 90%;
+}
+
+.option-search-tags {
+    background-color: #ffff;
+    border: 1px solid #ced4da;
+    padding: 5px 0px;
+    margin: 5px;
+    height: 48px;
+    justify-content: center !important;
+}
+
+.search-tags {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 8px;
+    font-size: 14;
+    cursor: text;
+}
+
+.clear {
+    position: absolute;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0;
+    color: #000;
+    top: 26px;
+    left: auto;
+    right: 15px;
+}
+
+.option {
+    padding: 12px;
+    cursor: pointer;
+}
+
+.option.active {
+    color: #000;
+    background-color: #f2f2f2;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.tag:hover,
+.option:hover {
+    background-color: #eaeaea;
+}
+
+.no-result-message {
+    padding: 0px 0px 12px 12px;
+    font-size: 14px;
+}
+
+.error {
+    color: #ff1a2a;
+    margin-top: 8px;
+}
+
+#second-assigner-select {
+    margin-top: 20px;
+}

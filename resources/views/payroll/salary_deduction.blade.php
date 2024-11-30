@@ -49,7 +49,7 @@
 
 <form id="customizeSearch">
     <div class="col-auto my-3 d-flex justify-content-start">
-        <div class="col-md-4 text-dark">
+        <div class="col-md-2 text-dark">
             <div class="input-block mb-3 text-dark">
                 <label for="datepicker">Date Range:</label>
                 <input type="text" id="date-picker" name="start-date[]" class="form-control"
@@ -57,11 +57,10 @@
                 <input type="hidden" name="startdate" id="startdate">
             </div>
         </div>
-        <div class="col-md-4 text-dark ms-md-3">
+        <div class="col-md-2 text-dark ms-md-3">
             <div class="input-block mb-3 text-dark">
                 <label for="nationality">Nationality:</label>
-                <select select class="form-select" aria-label="Default select example" id="nationality"
-                    name="nationality">
+                <select class="form-select" aria-label="Default select example" id="nationality" name="nationality">
                     <option value="ALL">All Nationalities</option>
                     <option value="Pakistan">Pakistani</option>
                     <option value="India">Indian</option>
@@ -76,6 +75,18 @@
                     <option value="Nepal">Nepalese</option>
                     <option value="Korea">Korean</option>
                     <option value="Thailand">Thai</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2 text-dark ms-md-3">
+            <div class="input-block mb-3 text-dark">
+                <label for="office">Office:</label>
+                <select class="form-select" id="office" name="office">
+                    <option value="AllOffices">All Offices</option>
+                    <option value="Sihanoukville" selected>Sihanoukville</option>
+                    <option value="Bataan">Bataan</option>
+                    <option value="Bavet">Bavet</option>
+                    <option value="Malaysia">Malaysia</option>
                 </select>
             </div>
         </div>
@@ -138,6 +149,7 @@
                 // Append form data to the DataTable AJAX request
                 d.nationality = $('#nationality').val();
                 d.start_date = $('#startdate').val(); // Date range
+                d.office = $('#office').val(); // Date range
             },
             dataSrc: function (json) {
                 // If no data, prevent DataTable from showing rows
@@ -158,6 +170,12 @@
             { data: 'late_fine', name: 'late_fine' },
             { data: 'total_deduction', name: 'total_deduction' },
         ],
+        order: [
+            [0, 'desc'] // Default order by the first column (index)
+        ],
+        // Handle pagination
+        pageLength: 20, // Set the default number of records to show
+        lengthMenu: [10, 20, 25, 50, 100], // Options for records per page
         deferLoading: 0, // Do not load data on initialization
     });
 
