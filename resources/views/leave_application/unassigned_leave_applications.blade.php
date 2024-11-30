@@ -1,5 +1,6 @@
 @extends('layout.mainlayout')
 @section('css')
+<link href="{{ asset('assets/css/custom-multi.css') }}" rel="stylesheet">
 <style>
     .MultiDropdown {
         width: 100%;
@@ -121,69 +122,94 @@
     </div>
 </div>
 
-<!-- -- Unassigned Leave Model ---- -->
-<!-- Unassigned Leave Modal -->
-<div class="modal custom-modal fade" id="Unassign_leave" tabindex="-1" role="dialog"
-    aria-labelledby="UnassignLeaveModal" aria-hidden="true">
+
+<!-- Unassigned Leave Modal Starts -->
+<div class="modal custom-modal fade" id="assign_leave" tabindex="-1" role="dialog" aria-labelledby="assignLeaveModal"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Unassigned Leaves</h5>
+                <h5 class="modal-title">Assign Leaves</h5>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
                 <form id="assignLeaveForm">
-
-                    <div class="MultiDropdown">
-                        <label class="col-form-label" for="team_leader_ids">First Assign Name <span
-                                class="text-danger">*</span></label>
-                        <div class="search-container">
-                            <input type="text" class="search-box-style" id="searchBox"
-                                placeholder="Search and select..." autocomplete="off">
-                            <div class="selected-tags" id="selectedTags"></div>
+                    <div class="custom-select" id="first-assigner-select">
+                        <label for="select_box">First Assigner Name:</label>
+                        <div class="select-box first_select_box" id="select-box">
+                            <input type="hidden" class="tags_input" id="first_assigners_backend_field" name="tags"
+                                hidden>
+                            <div class="selected-options"></div>
+                            <div class="arrow">
+                                <i class="fa fa-angle-down first_icon"></i>
+                            </div>
                         </div>
-                        <div class="options-container" id="optionsContainer">
-                            <!-- Dynamic options will be populated here -->
+                        <div class="options">
+                            <div class="option-search-tags">
+                                <input type="text" class="search-tags" placeholder="Search Tags ..">
+                                <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                            </div>
+                            <div class="op-disabled" selected disabled>Select Users</div>
+                            <div class="no-result-message" style="display:none;">No Result Match</div>
                         </div>
-                        <input type="hidden" name="team_leader_ids[]" id="team_leader_ids">
+                        <span class="text-danger" id="first_field_error"></span>
                     </div>
-                    <div class="error_message text-danger" id="teamLeaderErrorMessage" style="display:none;"></div>
 
-
-                    <div class="MultiDropdown">
-                        <label class="col-form-label" for="manager_ids">Second Assign Name <span
-                                class="text-danger">*</span></label>
-                        <div class="search-container">
-                            <input type="text" class="search-box-style" id="searchBoxManager"
-                                placeholder="Search and select..." autocomplete="off">
-                            <div class="selected-tags" id="selectedTagsManager"></div>
+                    <div class="custom-select" id="second-assigner-select">
+                        <label for="second-select-box">Second Assigner Name:</label>
+                        <div class="select-box second_select_box" id="select-box">
+                            <input type="text" class="tags_input" id="second_assigners_backend_field" name="tags"
+                                hidden>
+                            <div class="selected-options"></div>
+                            <div class="arrow">
+                                <i class="fa fa-angle-down second_icon"></i>
+                            </div>
                         </div>
-                        <div class="options-container" id="optionsContainerManager">
-                            <!-- Dynamic options will be populated here -->
+                        <div class="options">
+                            <div class="option-search-tags">
+                                <input type="text" class="search-tags" placeholder="Search Tags ..">
+                                <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                            </div>
+                            <div class="op-disabled" selected disabled>Select Users</div>
+                            <div class="no-result-message" style="display:none;">No Result Match</div>
                         </div>
-                        <input type="hidden" name="manager_ids[]" id="manager_ids">
+                        <span class="text-danger" id="second_field_error"></span>
                     </div>
-                    <div class="error_message text-danger" id="managerErrorMessage" style="display:none;"></div>
 
                     <!-- Hidden field to store leave approval ID -->
                     <input type="hidden" id="leaveApprovalId" name="leaveApprovalId">
 
-                    <!-- Submit button -->
+                    <!-- Submit bututt -->
                     <div class="submit-section">
-                        <button type="submit" class="btn btn-primary submit-btn">Submit</button>
+                        <button type="button" class="btn btn-primary submitted-btn"
+                            id="unassigned_submit_button">Submit</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
+<!-- Unassigned Leave Modal Ends -->
+<!-- PreLoader -->
+<div id="loader" class="loader" style="display: none;">
+    <div class="loader-animation"></div>
+</div>
 @endsection
-
 @section('script-z')
+<!-- CUSTOM MULTI JS FILE -->
+<script src="{{asset('assets/js/custom-multi.js')}}"></script>
+<!-- CUSTOM MULTI JS FILE -->
+
 <script>
+    // Set up CSRF token for AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     let table;
 
     // Function to initialize the DataTable
@@ -242,15 +268,19 @@
                 { data: 'to', name: 'to', orderable: false, searchable: false },
                 { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
                 {
-                    data: 'action', // Action column with Assign button
+                    data: 'action',
                     name: 'action',
                     orderable: false,
                     searchable: false,
                     render: function (data, type, row) {
                         return `<div class="text-center">
-                      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#Unassign_leave" 
-                            onclick="UnassignLeaveApprovals(${row.id})">Assign</button>            
-                    </div>`;
+                                    <button class="btn btn-success" 
+                                            id="unassigned_btn"
+                                            data-id="${row.id}">
+                                        Assign
+                                    </button>            
+                                </div>
+                            `;
                     }
                 }
             ],
@@ -259,407 +289,246 @@
     }
 
 
-    // Function to handle the "Assign" button click and populate the modal
-    function UnassignLeaveApprovals(leaveApprovalId) {
-        // Set the leaveApprovalId in the hidden input field
-        $('#leaveApprovalId').val(leaveApprovalId);
-
-        // Open the modal
-        $('#Unassign_leave').modal('show'); // Use the correct ID here
-    }
-
-    // Initialize the DataTable when the page loads
+    // Initialize DataTable when the page loads
     $(document).ready(function () {
-        initializeDataTable();
+        initializeDataTable(); // Initialize DataTable
+        // Attach a click event handler to the dynamically created "Assign" button
+        $('#unassigned_leave_table').on('click', '#unassigned_btn', function () {
+            const leaveApprovalId = $(this).data('id'); // Get the ID from the button's data attribute
+            AssignLeaveApprovals(leaveApprovalId); // Call the function with the ID
+        });
+
+        // Handle adding/removing tags dynamically for both assigner dropdowns
+        setupTagManagement('#first-assigner-select', '#first_assigners_backend_field');
+        setupTagManagement('#second-assigner-select', '#second_assigners_backend_field');
     });
 
+    // Function to handle the "Assign" button click and populate the modal
+    function AssignLeaveApprovals(leaveApprovalId) {
+        showLoader(); // Start loader
+        $('#leaveApprovalId').val(leaveApprovalId); // Set leaveApprovalId in the hidden field
 
-</script>
+        // CLEARING VALIDATIONS
+        $("#first_field_error").html("");
+        $(".first_select_box").css("border", "");
+        $(".first_icon").css("color", "");
 
-
-
-<script>
-    $('#assignLeaveForm').submit(function (event) {
-        event.preventDefault(); // Prevent the form from submitting normally
-
-
-        // Clear any existing error messages
-        $('#teamLeaderErrorMessage').hide();
-        $('#managerErrorMessage').hide();
-
-        // Get the values of team_leader_ids and manager_ids
-        var teamLeaderUsernames = $('#team_leader_ids').val();  // This will be a comma-separated string of usernames
-        var managerUsernames = $('#manager_ids').val();        // This will be a comma-separated string of usernames
-
-        // Validate the team leader field
-        var valid = true;
-
-
-        if (!teamLeaderUsernames) {
-            // Show error message for team leader
-            $('#teamLeaderErrorMessage').text('Please select at least one "First Assign Name"').show();
-            valid = false; // Set validation flag to false
-        }
-
-        // Validate the manager field
-        if (!managerUsernames) {
-            // Show error message for manager
-            $('#managerErrorMessage').text('Please select at least one "Second Assign Name"').show();
-            valid = false; // Set validation flag to false
-        }
-
-        // If any of the fields are empty, prevent form submission
-        if (!valid) {
-            return; // Stop further processing
-        }
-
-        // Convert comma-separated usernames into arrays
-        var teamLeaderUsernamesArray = teamLeaderUsernames.split(',');
-        var managerUsernamesArray = managerUsernames.split(',');
-
-        // Now, you can make an AJAX request to send the data to the backend
+        $("#second_field_error").html("");
+        $(".second_select_box").css("border", "");
+        $(".second_icon").css("color", "");
 
         $.ajax({
-            url: '{{ route("leave.add_unassigned") }}',
-            type: 'POST',
-            data: {
-                team_leader_ids: teamLeaderUsernamesArray,
-                manager_ids: managerUsernamesArray,
-                leaveApprovalId: $('#leaveApprovalId').val(),
-                _token: '{{ csrf_token() }}'
-            },
+            url: `/edit/${leaveApprovalId}`, // Fetch data from backend
+            method: "GET",
             success: function (response) {
-                if (response.success) {
-                    $('#Unassign_leave').modal('hide'); // Close the modal
-                    // Clear the input fields and selected tags
-                    $('#team_leader_ids').val('');
-                    $('#manager_ids').val('');
-                    $('#searchBox').val('');
-                    $('#searchBoxManager').val('');
-                    $('#selectedTags').empty();
-                    $('#selectedTagsManager').empty();
-                    $('#unassigned_leave_table').DataTable().ajax.reload();
+                // Populate first assigner dropdown and UI
+                const firstAssignedUsers = {};
+                populateCustomSelect(
+                    '#first-assigner-select',
+                    '#first_assigners_backend_field',
+                    firstAssignedUsers
+                );
 
-                } else {
-                    alert('Error assigning leave. Please try again.');
-                }
+                // Populate second assigner dropdown and UI
+                const secondAssignedUsers = {};
+                populateCustomSelect(
+                    '#second-assigner-select',
+                    '#second_assigners_backend_field',
+                    secondAssignedUsers
+                );
+
+                $('#assign_leave').modal('show'); // Show the modal
+                hideLoader(); // Stop loader
             },
-            error: function (xhr, status, error) {
-                console.log(xhr.responseText); // Log the error details for debugging
-                alert('Something went wrong. Please try again later.');
+            error: function () {
+                alert('An error occurred while fetching data. Please try again.');
+                hideLoader();
             }
         });
-    });
-
-</script>
+    }
 
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchBox = document.getElementById('searchBox');
-        const optionsContainer = document.getElementById('optionsContainer');
-        const selectedTagsContainer = document.getElementById('selectedTags');
-        let selectedValues = [];
-        const userIdsMap = {};
-        let currentPage = 1;  // Keep track of the current page
-        let isLoading = false;  // Flag to prevent multiple simultaneous requests
-        let totalPages = 1;  // Track the total number of pages
+    // Helper function to populate custom select dropdown and UI
+    function populateCustomSelect(selectId, hiddenFieldId, assignedUsers) {
+        const selectedOptions = Object.entries(assignedUsers).map(([id, username]) => ({
+            id,
+            username
+        }));
 
-        // Function to update selected tags inside the search box
-        function updateSelectedTags() {
-            selectedTagsContainer.innerHTML = '';
-            selectedValues.forEach(userId => {
-                const tag = document.createElement('div');
-                tag.classList.add('selected-tag');
-                tag.textContent = userIdsMap[userId];
+        // Populate hidden field with user IDs
+        const userIds = selectedOptions.map(opt => opt.id).join(',');
+        $(hiddenFieldId).val(userIds);
 
-                const closeButton = document.createElement('span');
-                closeButton.innerHTML = '&times;';
-                closeButton.addEventListener('click', function () {
-                    removeSelectedTag(userId);
-                });
+        // Populate tags in UI
+        const tagsHTML = selectedOptions.map(opt => `
+        <span class="tag" data-value="${opt.id}">
+            ${opt.username}
+            <span class="remove-tag" data-value="${opt.id}">&times;</span>
+        </span>
+    `).join('');
+        $(`${selectId} .selected-options`).html(tagsHTML);
 
-                tag.appendChild(closeButton);
-                selectedTagsContainer.appendChild(tag);
+        // Mark options as active in dropdown
+        const optionsContainer = $(`${selectId} .options`);
+        optionsContainer.find('.option').each(function () {
+            const optionValue = $(this).data('value');
+            if (selectedOptions.some(opt => opt.id == optionValue)) {
+                $(this).addClass('active');
+            } else {
+                $(this).removeClass('active');
+            }
+        });
+    }
+
+    // Function to set up tag management for adding and removing options
+    function setupTagManagement(selectId, hiddenFieldId) {
+        // Handle adding new options
+        $(`${selectId} .options`).on('click', '.option', function () {
+            const optionId = $(this).data('value');
+            const optionText = $(this).text().trim();
+
+            // Toggle active state
+            $(this).toggleClass('active');
+
+            // Update tags and hidden field
+            const currentValues = $(`${hiddenFieldId}`).val().split(',').filter(Boolean);
+            if ($(this).hasClass('active')) {
+                if (!currentValues.includes(optionId.toString())) {
+                    currentValues.push(optionId);
+                    const tagHTML = `
+                <span class="tag" data-value="${optionId}">
+                    ${optionText}
+                    <span class="remove-tag" data-value="${optionId}">&times;</span>
+                </span>`;
+                    $(`${selectId} .selected-options`).append(tagHTML);
+                }
+            } else {
+                // Remove from selected options
+                $(`${selectId} .selected-options .tag[data-value="${optionId}"]`).remove();
+                const index = currentValues.indexOf(optionId.toString());
+                if (index > -1) currentValues.splice(index, 1);
+            }
+
+            $(`${hiddenFieldId}`).val(currentValues.join(','));
+        });
+
+        // Handle removing selected tags
+        $(`${selectId}`).on('click', '.remove-tag', function (e) {
+            e.stopPropagation();
+            const valueToRemove = $(this).data('value');
+
+            // Remove tag from UI
+            $(this).parent().remove();
+
+            // Uncheck option in dropdown
+            $(`${selectId} .options .option[data-value="${valueToRemove}"]`).removeClass('active');
+
+            // Update hidden field
+            const currentValues = $(`${hiddenFieldId}`).val().split(',').filter(Boolean);
+            const index = currentValues.indexOf(valueToRemove.toString());
+            if (index > -1) currentValues.splice(index, 1);
+            $(`${hiddenFieldId}`).val(currentValues.join(','));
+        });
+
+        // Define the function to send data
+        function storeUnassignersData() {
+
+            const firstAssigner = [];
+            const secondAssigner = [];
+
+            // Collect the selected users for both assigners
+            $("#first-assigner-select .tag").each(function () {
+                const value = $(this).data("value");
+                firstAssigner.push(value);
             });
 
-            searchBox.value = '';
-            const input = document.getElementById('team_leader_ids');
-            input.value = selectedValues.join(',');
-        }
+            $("#second-assigner-select .tag").each(function () {
+                const value = $(this).data("value");
+                secondAssigner.push(value);
+            });
 
-        // Function to remove a selected tag
-        function removeSelectedTag(userId) {
-            selectedValues = selectedValues.filter(item => item !== userId);
-            updateSelectedTags();
-        }
+            // Get the leaveApprovalId
+            const leaveApprovalId = $("#leaveApprovalId").val();
 
-        // Toggle selection state for an option
-        function toggleSelectItem(userId) {
-            if (selectedValues.includes(userId)) {
-                selectedValues = selectedValues.filter(item => item !== userId);
-            } else {
-                selectedValues.push(userId);
-            }
-            updateSelectedTags();
-        }
+            // Prepare the data to send
+            const data = {
+                team_leader_ids: firstAssigner,
+                manager_ids: secondAssigner,
+                leaveApprovalId: leaveApprovalId,
+            };
 
-        // Handle option selection (click event)
-        function handleOptionSelection(userId, username) {
-            toggleSelectItem(userId);
-            const option = document.getElementById(userId);
-            option.classList.toggle('selected');
-            const input = document.getElementById('team_leader_ids');
-            const selectedIds = selectedValues.join(',');
-            input.value = selectedIds;
-        }
-
-        // Fetch options based on the search query or for initial load
-        function fetchOptions(query = '', page = 1) {
-            if (isLoading) return;  // Prevent multiple fetches at once
-
-            isLoading = true;  // Set loading flag
-            fetch("{{ route('multiselect') }}?search=" + query + "&page=" + page)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data) {
-                        populateOptions(data.data);
-                        totalPages = data.last_page;  // Update total pages
-                        currentPage++;  // Increment the page counter after each fetch
+            // Send the data via AJAX if validation passed
+            showLoader();
+            $.ajax({
+                url: "{{route('leave.add_unassigned')}}",
+                type: "POST",
+                data: data,
+                success: function (response) {
+                    if (response.success) {
+                        hideLoader();
+                        $("#assign_leave").modal("hide");
+                        $("#unassigned_leave_table").DataTable().ajax.reload(null, false);
+                        clearCustomSelects();
+                    } else {
+                        alert("Error saving assigned users.");
                     }
-                })
-                .catch(error => console.error('Error fetching data:', error))
-                .finally(() => {
-                    isLoading = false;  // Reset loading flag
-                });
-        }
-
-        // Function to populate the dropdown with the fetched options
-        function populateOptions(data) {
-            data.forEach(user => {
-                const option = document.createElement('div');
-                option.classList.add('option');
-                option.textContent = user.username;
-                option.id = user.id;
-
-                userIdsMap[user.id] = user.username;
-
-                if (selectedValues.includes(user.id)) {
-                    option.classList.add('selected');
-                }
-
-                option.addEventListener('click', function () {
-                    handleOptionSelection(user.id, user.username);
-                });
-
-                optionsContainer.appendChild(option);
+                },
+                error: function () {
+                    hideLoader();
+                    alert("An error occurred while saving assigned users.");
+                },
             });
+
+            // Clear custom selects
+            function clearCustomSelects() {
+                $("#first-assigner-select .selected-options").html("");
+                $("#first-assigner-select .tags_input").val("");
+
+                $("#second-assigner-select .selected-options").html("");
+                $("#second-assigner-select .tags_input").val("");
+
+                selectedOptions = [];
+
+                $("#first-assigner-select").removeClass("open");
+                $("#second-assigner-select").removeClass("open");
+            }
         }
 
-        // Scroll event for lazy loading more data when reaching the bottom of the dropdown
-        optionsContainer.addEventListener('scroll', function () {
-            if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight) {
-                if (currentPage <= totalPages) {
-                    fetchOptions(searchBox.value.trim(), currentPage);  // Fetch next page if not at the last page
-                }
-            }
-        });
 
-        // Handle the search box click event to load the first set of records
-        searchBox.addEventListener('click', function () {
-            optionsContainer.style.display = 'block';
+        // Attach click event handler to the submit button
+        $("#unassigned_submit_button").click(function () {
+            let first_field = $("#first_assigners_backend_field").val();
+            let second_field = $("#second_assigners_backend_field").val();
+            let valid = true;
 
-            // If the options container is empty, load the first 10 records (search or no search)
-            if (optionsContainer.children.length === 0) {
-                fetchOptions('', 1);  // Fetch the first 10 records, no search query
-            }
-        });
-
-        // Event listener for the search box input to filter the options based on the search query
-        searchBox.addEventListener('input', function () {
-            const query = searchBox.value.trim();
-            if (query) {
-                currentPage = 1;  // Reset to page 1 for new search query
-                optionsContainer.innerHTML = '';  // Clear current options
-                fetchOptions(query);  // Fetch new options based on search query
+            // Validate first assigner field
+            if (first_field === "") {
+                $("#first_field_error").html("At least one Assigner is required");
+                $(".first_select_box").css("border", "1px solid red");
+                $(".first_icon").css("color", "red");
+                valid = false;
             } else {
-                currentPage = 1;  // Reset to page 1 when the search box is cleared
-                optionsContainer.innerHTML = '';  // Clear current options
-                fetchOptions();  // Fetch all options without search query
+                $("#first_field_error").html("");
+                $(".first_select_box").css("border", "");
+                $(".first_icon").css("color", "");
             }
-        });
 
-        // Close the options list when clicking outside of the dropdown
-        document.addEventListener('click', function (event) {
-            if (!event.target.closest('.MultiDropdown')) {
-                optionsContainer.style.display = 'none';
-            }
-        });
-
-        // Initial call to populate options when the page loads (first 10 records without search)
-        fetchOptions();
-    });
-
-
-</script>
-
-
-
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchBoxManager = document.getElementById('searchBoxManager');
-        const optionsContainerManager = document.getElementById('optionsContainerManager');
-        const selectedTagsContainerManager = document.getElementById('selectedTagsManager');
-        let selectedValuesManager = [];  // Store user IDs as integers
-        const userIdsMapManager = {};  // Map to store username -> user ID for display purposes
-        let currentPage = 1;  // Keep track of the current page
-        let isLoading = false;  // Flag to prevent multiple simultaneous requests
-        let totalPages = 1;  // Track the total number of pages
-
-        // Function to update selected tags inside the search box
-        function updateSelectedTagsManager() {
-            selectedTagsContainerManager.innerHTML = '';  // Clear current tags
-            selectedValuesManager.forEach(userId => {
-                const tag = document.createElement('div');
-                tag.classList.add('selected-tag');
-                tag.textContent = userIdsMapManager[userId]; // Display username
-
-                // Add a close icon to each tag to remove it
-                const closeButton = document.createElement('span');
-                closeButton.innerHTML = '&times;';
-                closeButton.addEventListener('click', function () {
-                    removeSelectedTagManager(userId);
-                });
-
-                tag.appendChild(closeButton);
-                selectedTagsContainerManager.appendChild(tag);
-            });
-
-            // Clear the search box (only tags will be shown, not the placeholder)
-            searchBoxManager.value = '';
-
-            // Update the hidden input with the selected user IDs
-            const input = document.getElementById('manager_ids');
-            input.value = selectedValuesManager.join(',');  // Update the hidden field with the selected user IDs (comma-separated)
-        }
-
-        // Function to remove a selected tag
-        function removeSelectedTagManager(userId) {
-            selectedValuesManager = selectedValuesManager.filter(item => item !== userId);  // Remove by userId
-            updateSelectedTagsManager();
-            updateOptionsManager();  // Refresh options after removing the tag
-        }
-
-        // Function to toggle selection of an option (using user ID)
-        function toggleSelectItemManager(userId) {
-            if (selectedValuesManager.includes(userId)) {
-                selectedValuesManager = selectedValuesManager.filter(item => item !== userId); // Deselect
+            // Validate second assigner field
+            if (second_field === "") {
+                $("#second_field_error").html("At least one Assigner is required");
+                $(".second_select_box").css("border", "1px solid red");
+                $(".second_icon").css("color", "red");
+                valid = false;
             } else {
-                selectedValuesManager.push(userId); // Select
+                $("#second_field_error").html("");
+                $(".second_select_box").css("border", "");
+                $(".second_icon").css("color", "");
             }
-            updateSelectedTagsManager();
-        }
 
-        // Event listener for search box input (filter options)
-        searchBoxManager.addEventListener('input', function () {
-            const query = searchBoxManager.value.trim();
-            currentPage = 1;  // Reset to page 1 when search input changes
-            optionsContainerManager.innerHTML = '';  // Clear the options before fetching new results
-            fetchOptionsManager(query); // Fetch options dynamically based on query
-        });
-
-        // Display options when the user clicks the search box
-        searchBoxManager.addEventListener('click', function () {
-            optionsContainerManager.style.display = 'block';
-
-            // If the options container is empty, load the first 10 records (search or no search)
-            if (optionsContainerManager.children.length === 0) {
-                fetchOptionsManager('');  // Fetch the first 10 records, no search query
+            // If valid, proceed with submission
+            if (valid) {
+                storeUnassignersData(); // Execute the AJAX call to save data
             }
         });
-
-        // Close the options list when clicking outside of the dropdown
-        document.addEventListener('click', function (event) {
-            if (!event.target.closest('.MultiDropdown')) {
-                optionsContainerManager.style.display = 'none';
-            }
-        });
-
-        // Handle option selection (store user ID instead of username)
-        function handleOptionSelectionManager(userId, username) {
-            toggleSelectItemManager(userId);
-            const option = document.getElementById(`user-manager-${userId}`);
-            option.classList.toggle('selected');
-
-            // Update the hidden input with the selected user IDs (send integer IDs)
-            const input = document.getElementById('manager_ids');
-            const selectedIds = selectedValuesManager.join(',');  // Comma-separated list of integer IDs
-            input.value = selectedIds;  // This will store the selected user IDs as integers
-        }
-
-        // Fetch data dynamically from the server (supports search or no search)
-        function fetchOptionsManager(query) {
-            if (isLoading) return;  // Prevent multiple simultaneous requests
-
-            isLoading = true;  // Set loading flag
-            fetch("{{ route('multiselect') }}?search=" + query + "&page=" + currentPage)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data) {
-                        populateOptionsManager(data.data);
-                        totalPages = data.last_page;  // Update total pages
-                        currentPage++;  // Increment the page counter after each fetch
-                    }
-                })
-                .catch(error => console.error('Error fetching data:', error))
-                .finally(() => {
-                    isLoading = false;  // Reset loading flag
-                });
-        }
-
-        // Function to populate options in the dropdown
-        function populateOptionsManager(data) {
-            data.forEach(user => {
-                const option = document.createElement('div');
-                option.classList.add('option');
-                option.textContent = user.username;  // Display username
-                option.id = `user-manager-${user.id}`;  // Use user ID to uniquely identify the option
-
-                // Store the user ID and username mapping for later display
-                userIdsMapManager[user.id] = user.username;  // Map user ID to username
-
-                // Add click event listener for selection
-                option.addEventListener('click', function () {
-                    handleOptionSelectionManager(user.id, user.username);  // Pass user ID to the handler
-                });
-
-                optionsContainerManager.appendChild(option);
-            });
-        }
-
-        // Scroll event for lazy loading more data when reaching the bottom of the dropdown
-        optionsContainerManager.addEventListener('scroll', function () {
-            if (optionsContainerManager.scrollTop + optionsContainerManager.clientHeight >= optionsContainerManager.scrollHeight) {
-                // If not on the last page, fetch more data
-                if (currentPage <= totalPages) {
-                    fetchOptionsManager(searchBoxManager.value.trim());  // Fetch next page based on search query
-                }
-            }
-        });
-
-        // New function to refresh the options after removing a tag
-        function updateOptionsManager() {
-            // Refresh the options based on the remaining selected values
-            const query = searchBoxManager.value.trim();
-            fetchOptionsManager(query);  // Re-fetch options to update the list
-        }
-
-        // Initial call to populate options when the page loads (first 10 records without search)
-        fetchOptionsManager('');
-    });
-
-</script>
-
-@endsection
+    }
+</script>@endsection

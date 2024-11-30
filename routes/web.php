@@ -157,7 +157,7 @@ Route::middleware('auth')->group(function () {
     //Route AssignLeaveApprovals Using Custom-Multi-Select
     Route::resource('leave-approvals', AssignedLeaveApprovalsController::class);
     Route::get('/searchAssigner', [AssignedLeaveApprovalsController::class, 'searchAssigner'])->name('searchAssigner');
-    Route::get('/your-endpoint-for-users', [AssignedLeaveApprovalsController::class, 'getUsers']);  //GETTING USER IN DROP DOWN.
+    Route::get('/assigned-leave-approvals/get_users', [AssignedLeaveApprovalsController::class, 'getUsers']);  //GETTING USER IN DROP DOWN.
     Route::post('/assigned-leave-approvals/store', [AssignedLeaveApprovalsController::class, 'store']);  //STORING VALUES IN TABLE.
     // Web route to fetch leave approval details by ID
     Route::get('/edit/{id}', [AssignedLeaveApprovalsController::class, 'edit']);

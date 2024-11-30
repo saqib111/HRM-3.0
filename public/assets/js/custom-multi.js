@@ -77,7 +77,7 @@ $(document).ready(function () {
             optionsContainer.append('<div class="loading">Loading...</div>');
 
             return $.ajax({
-                url: "/your-endpoint-for-users", // Replace with your actual endpoint
+                url: "/assigned-leave-approvals/get_users", // Replace with your actual endpoint
                 type: "GET",
                 data: { searchTerm, page },
                 success: function (data) {
