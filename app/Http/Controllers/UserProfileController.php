@@ -182,6 +182,9 @@ class UserProfileController extends Controller
         $updatePersonal->accomodation = $request->accomodation;
         $updatePersonal->gender = $request->gender;
         $updatePersonal->phone = $request->phone;
+        $updatePersonal->nationality = $request->nationality;
+        $updatePersonal->telegram = $request->telegram;
+        $updatePersonal->office = $request->office;
         $updatePersonal->save();
 
         return response()->json([
@@ -193,6 +196,9 @@ class UserProfileController extends Controller
                 'accomodation' => $updatePersonal->accomodation,
                 'gender' => $updatePersonal->gender,
                 'phone' => $updatePersonal->phone,
+                'nationality' => $updatePersonal->nationality,
+                'telegram' => $updatePersonal->telegram,
+                'office' => $updatePersonal->office,
                 'week_days' => $mainUser->week_days,
             ]
         ]);
@@ -223,21 +229,9 @@ class UserProfileController extends Controller
             'f_expiry_date',
         ]));
 
-        // Find the associated user profile, assuming a relationship exists
-        $userProfile = UserProfile::where('user_id', $visaInfo->user_id)->first();
-
-        // Update the user profile fields that are not part of VisaInfo
-        if ($userProfile) {
-            $userProfile->nationality = $request->input('nationality');
-            $userProfile->religion = $request->input('religion');
-            $userProfile->telegram = $request->input('telegram');
-            $userProfile->save();
-        }
-
         // Return the updated information as JSON
         return response()->json([
             'visaInfo' => $visaInfo,
-            'userProfile' => $userProfile,
         ]);
     }
 

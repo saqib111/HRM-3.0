@@ -16,6 +16,8 @@
     </div>
   </div>
 </div>
+
+
 <!-- /Page Header -->
 <div class="card mb-0">
   <div class="card-body">
@@ -77,10 +79,23 @@
 
                   <li>
                     <div class="title">Week Off Days:</div>
-                    <div class="text" id="weekDays"> {{ $mainUser->week_days == 5 ? '5 Days' : '6 Days' }}</div>
+                    <div class="text" id="weekDays">
+                      {{ $mainUser->week_days == 5 ? '5 Days' : '6 Days' }}
+                    </div>
                   </li>
 
-
+                  <li>
+                    <div class="title">Nationality:</div>
+                    <div class="text" id="nationality">{{ $profileUser->nationality }}</div>
+                  </li>
+                  <li>
+                    <div class="title">Office:</div>
+                    <div class="text" id="office">{{ $profileUser->office }}</div>
+                  </li>
+                  <li>
+                    <div class="title">Telegram:</div>
+                    <div class="text" id="telegram">{{ $profileUser->telegram }}</div>
+                  </li>
 
                 </ul>
               </div>
@@ -156,18 +171,6 @@
               <li>
                 <div class="title">Foreign Expiry Date:</div>
                 <div class="text" id="f_expiry_date">{{ $visaInfo->f_expiry_date }}</div>
-              </li>
-              <li>
-                <div class="title">Nationality:</div>
-                <div class="text" id="nationality">{{ $profileUser->nationality }}</div>
-              </li>
-              <li>
-                <div class="title">Religion:</div>
-                <div class="text" id="religion">{{ $profileUser->religion }}</div>
-              </li>
-              <li>
-                <div class="title">Telegram:</div>
-                <div class="text" id="telegram">{{ $profileUser->telegram }}</div>
               </li>
 
             </ul>
@@ -803,19 +806,25 @@
           @method('PUT')
           <input type="hidden" name="userProfileId" value="{{ $profileUser->user_id }}">
           <div class="row">
+
+            <!-- USERNAME -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">UserName</label>
                 <input type="text" class="form-control" value="{{ $mainUser->username }}" disabled name="username">
               </div>
             </div>
+
+            <!-- EMPLOYEE ID -->
             <div class="col-md-6">
               <div class="input-block mb-3">
-                <label class="col-form-label">Employee ID:</label>
+                <label class="col-form-label">Employee ID</label>
                 <input type="text" class="form-control" value="{{ $mainUser->employee_id }}" name="employee_id"
                   disabled>
               </div>
             </div>
+
+            <!-- DATE OF JOINING -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Date Of Join</label>
@@ -823,65 +832,150 @@
                   disabled>
               </div>
             </div>
+
+            <!-- REAL NAME -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Real Name</label>
                 <input type="text" class="form-control" value="{{ $profileUser->real_name }}" name="real_name">
               </div>
             </div>
+
+            <!-- EMAIL -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Email</label>
                 <input type="text" class="form-control" value="{{ $mainUser->email }}" name="email" disabled required>
               </div>
             </div>
+
+            <!-- BIRTHDAY -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Birthday</label>
                 <input type="date" class="form-control" value="{{ $profileUser->dob }}" name="dob">
               </div>
             </div>
+
+            <!-- ACCOMODATION -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Accommodation</label>
                 <input type="text" class="form-control" value="{{ $profileUser->accomodation }}" name="accomodation">
               </div>
             </div>
+
+            <!-- GENDER -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label" for="gender">Gender</label>
                 <select class="form-control" name="gender">
-                  <option value="" disabled {{ empty($profileUser->gender) ? 'selected' : '' }}>Select Gender</option>
-                  <option value="Male" {{ $profileUser->gender === 'Male' ? 'selected' : '' }}>Male</option>
-                  <option value="Female" {{ $profileUser->gender === 'Female' ? 'selected' : '' }}>Female</option>
-                  <option value="Other" {{ $profileUser->gender === 'Other' ? 'selected' : '' }}>Other</option>
+                  <option value="" disabled {{ empty($profileUser->gender) ? 'selected' : '' }}>Select
+                    Gender</option>
+                  <option value="Male" {{ $profileUser->gender === 'Male' ? 'selected' : '' }}>Male
+                  </option>
+                  <option value="Female" {{ $profileUser->gender === 'Female' ? 'selected' : '' }}>
+                    Female</option>
+                  <option value="Other" {{ $profileUser->gender === 'Other' ? 'selected' : '' }}>Other
+                  </option>
                 </select>
               </div>
             </div>
+
+            <!-- PHONE -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label">Phone Number</label>
                 <input type="text" class="form-control" value="{{ $profileUser->phone }}" name="phone">
               </div>
             </div>
+
+            <!-- WEEK OFF-DAYS -->
             <div class="col-md-6">
               <div class="input-block mb-3">
                 <label class="col-form-label" for="week_days_label">Week Off-Days</label>
                 <select class="form-select" name="week_days" id="week_days">
-                  <option disabled {{ empty($mainUser->week_days) ? 'selected' : '' }}>SELECT OPTION</option>
+                  <option disabled {{ empty($mainUser->week_days) ? 'selected' : '' }}>SELECT OPTION
+                  </option>
                   <option value="5" {{ $mainUser->week_days == 5 ? 'selected' : '' }}>5 Days</option>
                   <option value="6" {{ $mainUser->week_days == 6 ? 'selected' : '' }}>6 Days</option>
                 </select>
               </div>
             </div>
+
+            <!-- NATIONALITY -->
+            <div class="col-md-6">
+              <div class="input-block mb-3">
+                <label class="col-form-label">Nationality</label>
+                <select class="form-select" name="nationality" id="nationality">
+                  <option disabled {{ empty($profileUser->nationality) ? 'selected' : '' }}>SELECT
+                    OPTION</option>
+                  <option value="India" {{ $profileUser->nationality == 'India' ? 'selected' : '' }}>
+                    Indian</option>
+                  <option value="Bangladesh" {{ $profileUser->nationality == 'Bangladesh' ? 'selected' : '' }}>Bangladeshi
+                  </option>
+                  <option value="Pakistan" {{ $profileUser->nationality == 'Pakistan' ? 'selected' : '' }}>Pakistani
+                  </option>
+                  <option value="Vietnam" {{ $profileUser->nationality == 'Vietnam' ? 'selected' : '' }}>Vietnamese
+                  </option>
+                  <option value="Malaysia" {{ $profileUser->nationality == 'Malaysia' ? 'selected' : '' }}>Malaysian
+                  </option>
+                  <option value="Thailand" {{ $profileUser->nationality == 'Thailand' ? 'selected' : '' }}>Thai</option>
+                  <option value="Philippines" {{ $profileUser->nationality == 'Philippines' ? 'selected' : '' }}>Filipinos
+                  </option>
+                  <option value="Cambodia" {{ $profileUser->nationality == 'Cambodia' ? 'selected' : '' }}>Cambodian
+                  </option>
+                  <option value="Korea" {{ $profileUser->nationality == 'Korea' ? 'selected' : '' }}>
+                    Korean</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- OFFICE -->
+            <div class="col-md-6">
+              <div class="input-block mb-3">
+                <label class="col-form-label" for="office">Office</label>
+                <select class="form-select" name="office" id="office">
+                  <option disabled selected {{ empty($profileUser->office) ? 'selected' : '' }}>SELECT
+                    OPTION</option>
+                  <option value="Bataan" {{ $profileUser->office == 'Bataan' ? 'selected' : '' }}>
+                    Bataan</option>
+                  <option value="Sihanoukville" {{ $profileUser->office == 'Sihanoukville' ? 'selected' : '' }}>
+                    Sihanoukville
+                  </option>
+                  <option value="Bavet" {{ $profileUser->office == 'Bavet' ? 'selected' : '' }}>
+                    Bavet
+                  </option>
+                  <option value="PhnomPenh" {{ $profileUser->office == 'PhnomPenh' ? 'selected' : '' }}>
+                    Phnom Penh
+                  </option>
+                  <option value="Malaysia" {{ $profileUser->office == 'Malaysia' ? 'selected' : '' }}>
+                    Malaysia</option>
+                  <option value="Poipet" {{ $profileUser->office == 'Poipet' ? 'selected' : '' }}>
+                    Poi Pet
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- TELEGRAM -->
+            <div class="col-md-6">
+              <div class="input-block">
+                <label class="col-form-label">Telegram</label>
+                <input class="form-control" type="text" value="{{ $profileUser->telegram }}" name="telegram"
+                  id="telegram">
+              </div>
+            </div>
           </div>
-          <div class="submit-section">
-            <button type="submit" class="btn btn-primary submit-btn">Submit</button>
-          </div>
-        </form>
+
       </div>
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary submit-btn mb-3">Submit</button>
+      </div>
+      </form>
     </div>
   </div>
+</div>
 </div>
 <!-- /Profile Modal -->
 
@@ -954,25 +1048,6 @@
               <div class="input-block mb-3">
                 <label class="col-form-label">Foreign Expiry Date:<span class="text-danger">*</span></label>
                 <input class="form-control" type="date" value="{{ $visaInfo->f_expiry_date }}" name="f_expiry_date">
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="input-block mb-3">
-                <label class="col-form-label">Nationailty:<span class="text-danger">*</span></label>
-                <input class="form-control" type="text" value="{{ $profileUser->nationality }}" name="nationality">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-block mb-3">
-                <label class="col-form-label">Religion:<span class="text-danger">*</span></label>
-                <input class="form-control" type="text" value="{{ $profileUser->religion }}" name="religion">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="input-block mb-3">
-                <label class="col-form-label">Telegram:<span class="text-danger">*</span></label>
-                <input class="form-control" type="text" value="{{ $profileUser->telegram }}" name="telegram">
               </div>
             </div>
           </div>
@@ -1312,7 +1387,6 @@
 
 @section('script-z')
 <script>
-
   $(document).on('submit', 'form[id^="profileModal"]', function (e) {
     e.preventDefault();
 
@@ -1321,7 +1395,7 @@
 
     showLoader();
     $.ajax({
-      url: '{{ route('user-profile.update', ':id') }}'.replace(':id', userId),
+      url: "{{ route('user-profile.update', ':id') }}".replace(':id', userId),
       method: 'POST',
       data: formData,
       contentType: false,
@@ -1337,6 +1411,9 @@
           $('#accommodation').text(response.data.accomodation || '');
           $('#gender').text(response.data.gender || '');
           $('#phone').text(response.data.phone || '');
+          $('#nationality').text(response.data.nationality || '');
+          $('#office').text(response.data.office || '');
+          $('#telegram').text(response.data.telegram || '');
 
           // Update the weekDays text
           $('#weekDays').text(response.data.week_days == 5 ? '5 Days' : '6 Days');
@@ -1365,8 +1442,7 @@
     showLoader();
     $.ajax({
       type: 'POST',
-      url: '{{ route('update.visainfo', ':id') }}'.replace(':id',
-        userId), // Set the correct URL
+      url: "{{ route('update.visainfo', ':id')}}".replace(':id', userId), // Set the correct URL
       data: $(this).serialize(), // Serialize the form data
       success: function (response) {
         var updatedVisaInfo = response.visaInfo;
@@ -1383,9 +1459,6 @@
           $('#v_expiry_date').text(updatedVisaInfo.v_expiry_date);
           $('#foreign_no').text(updatedVisaInfo.foreign_no);
           $('#f_expiry_date').text(updatedVisaInfo.f_expiry_date);
-          $('#nationality').text(updatedUserProfile.nationality);
-          $('#religion').text(updatedUserProfile.religion);
-          $('#telegram').text(updatedUserProfile.telegram);
 
           $('#personal_info_modal').modal('hide');
           createToast('info', 'fa-solid fa-circle-check', 'Success',
@@ -1416,7 +1489,7 @@
 
     showLoader();
     $.ajax({
-      url: '{{ route('emergency.update') }}',
+      url: "{{ route('emergency.update')}}",
       method: 'POST',
       data: formData,
       contentType: false,
@@ -1461,7 +1534,7 @@
 
     showLoader();
     $.ajax({
-      url: '{{ route('dependant.update') }}',
+      url: '{{ route("dependant.update") }}',
       method: 'POST',
       data: formData,
       contentType: false,
