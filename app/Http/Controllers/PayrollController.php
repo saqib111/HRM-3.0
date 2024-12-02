@@ -115,12 +115,4 @@ class PayrollController extends Controller
             })
             ->make(true);
     }
-
-
-
-
-
-
-
-
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RolesPermissions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RolesPermissionsController extends Controller
 {
@@ -62,4 +63,28 @@ class RolesPermissionsController extends Controller
     {
         //
     }
+
+    public function getUserPermissions($userId)
+    {
+        $userPermissions = DB::table('user_permissions')->where('user_id', $userId)->first();
+
+        $permissions = $userPermissions ? explode(',', $userPermissions->permissions) : [];
+
+        return response()->json([
+            'permissions' => $permissions,
+        ]);
+    }
+
+    public function saveUserPermissions(Request $request, $userId)
+    {
+        $permissions = $request->input('permissions'); // Array of permissions
+
+        DB::table('user_permissions')->updateOrInsert(
+            ['user_id' => $userId],
+            ['permissions' => implode(',', $permissions)]
+        );
+
+        return response()->json(['message' => 'Permissions updated successfully.']);
+    }
+
 }

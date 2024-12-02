@@ -321,7 +321,7 @@ body {
 }
 .roles-container {
     display: flex;
-    gap: 90px;
+    gap: 50px;
     flex-wrap: wrap;
     justify-content: start;
 }

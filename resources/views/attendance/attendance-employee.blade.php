@@ -96,38 +96,6 @@
         display: none !important;
     }
 
-    .table tr.dayoff {
-        --bs-table-bg: #D3D3D3;
-    }
-
-    .table tr.today {
-        --bs-table-bg: #D3D3D3;
-    }
-
-    .table tr.late {
-        --bs-table-bg: rgb(243, 112, 112);
-    }
-
-    .table tr.one {
-        --bs-table-bg: #d9f7fffc;
-    }
-
-    .table tr.two {
-        --bs-table-bg: rgb(147, 231, 122);
-    }
-
-    .table tr.three {
-        --bs-table-bg: rgb(245, 143, 186);
-    }
-
-    .table tr.four {
-        --bs-table-bg: #FF574A;
-    }
-
-    .table tr.absent {
-        --bs-table-bg: #C70039;
-    }
-
     table.dataTable th.dt-type-numeric,
     table.dataTable th.dt-type-date,
     table.dataTable td.dt-type-numeric,
@@ -137,18 +105,17 @@
 
     .fa-solid,
     .fas {
-        color: #00c5fb !important;
         font-size: 20px;
-    }
-
-    .fa-times-circle lt {
-        font-size: 20px !important;
-        color: #f0f0f0 !important;
     }
 
     .fa-times-circle {
         font-size: 20px !important;
-        color: #c85757 !important;
+        color: #ff0000 !important;
+    }
+
+    i.fas.fa-check-circle::before {
+        color: #127c1f !important;
+        font-size: 20px;
     }
 
     .recent-activity .res-activity-list {
@@ -383,17 +350,28 @@
                             data: 'verify1',
                             title: 'Verify',
                             render: function (data, type, row) {
+                                let result = '';
 
-                                if (row.verify1 == "yes") { return ` <i class="fas fa-check-circle" ></i> `; }
-                                else if (row.verify1 == "cross") { return ` <i class="fa fa-times-circle wt"></i> `; }
-
-                                else {
-                                    return "No Record";
+                                if (row.verify1 == "yes") {
+                                    result = `<i class="fas fa-check-circle"></i>`;
+                                } else if (row.verify1 == "cross") {
+                                    result = `<i class="fa fa-times-circle wt"></i>`;
+                                } else {
+                                    result = "No Record";
                                 }
+                                return `<div class="text-center">${result}</div>`;
                             }
                         },
 
-                        { data: 'no', title: '#' },
+                        {
+                            data: 'DT_RowIndex',
+                            orderable: false,
+                            searchable: false,
+                            render: function (data, type, row, meta) {
+                                return meta.row + 1;
+                            },
+                            title: '#'
+                        },
                         { data: 'start_date', title: 'Start Date' },
                         { data: 'shift_in', title: 'Shift In' },
                         { data: 'end_date', title: 'End Date' },
@@ -435,7 +413,10 @@
                                     else if (row.color == '2') { return "BL"; }
                                     else if (row.color == '3') { return "ML"; }
                                     else if (row.color == '4') { return "UL"; }
-                                    else if (row.color == '5') { return "UL"; }
+                                    else if (row.color == '5') { return "HL"; }
+                                    else if (row.color == '6') { return "CL"; }
+                                    else if (row.color == '7') { return "MTL"; }
+                                    else if (row.color == '8') { return "PL"; }
                                     else if (row.absent == "Yes") { return "Absent"; }
                                     else { return data; }
                                 }
@@ -446,55 +427,141 @@
                             data: 'verify2',
                             title: 'Verify',
                             render: function (data, type, row) {
+                                let result = '';
 
-                                if (row.verify2 == "yes") { return ` <i class="fas fa-check-circle" ></i> `; }
-                                else if (row.verify2 == "cross") { return ` <i class="fa fa-times-circle wt"></i> `; }
-
-                                else {
-                                    return "No Record";
+                                if (row.verify2 === "yes") {
+                                    result = `<i class="fas fa-check-circle"></i>`;
+                                } else if (row.verify2 === "cross") {
+                                    result = `<i class="fa fa-times-circle wt"></i>`;
+                                } else {
+                                    result = "No Record";
                                 }
+
+                                return `<div class="text-center">${result}</div>`;
                             }
+
                         },
 
                     ], order: [],
                     createdRow: function (row, data, dataIndex) {
 
+                        const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
                         if (data.dayoff === "Yes") {
-                            $(row).addClass("dayoff");
-
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#767D83',   //Grey
+                                    'color': 'white'
+                                });
+                            });
                         }
 
+                        else if (data.color === '1') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#1B7EC1', //Blue
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
+                        else if (data.color === '2') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#138744', //Green
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
-                        else {
-                            if (data.color == '1') { $(row).addClass("one"); }
-                            else if (data.color == '2') { $(row).addClass("two"); }
-                            else if (data.color == '3') { $(row).addClass("three"); }
-                            else if (data.color == '4') { $(row).addClass("four"); }
-                            else if (data.color == '5') { $(row).addClass("one"); }
-                            else {
-                                if (data.absent == "Yes") { $(row).addClass("absent"); }
+                        else if (data.color === '3') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#E3005F', //Pink
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
-                                else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
+                        else if (data.color === '4') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#FF002E', //LightRed
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
-                                    if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                        else if (data.color === '5') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#b5a202', // Yellow
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
-                                        $(row).addClass("late");
-                                    }
-                                    else {
-                                        $(row).addClass("today");
-                                    }
-                                }
-                                else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                        else if (data.color === '6') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#b5a202', //
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
-                                    $(row).addClass("late");
-                                }
+                        else if (data.color === '7') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#b5a202',
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
+                        else if (data.color === '8') {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#b5a202',
+                                    'color': 'white'
+                                });
+                            });
+                        }
 
+                        else if (data.absent === "Yes") {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#870501',
+                                    'color': 'white'
+                                });
+                            });
+                            $(row).addClass("absent");
+                        }
+
+                        else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff !== "Yes") {
+                            if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#A90500',
+                                        'color': 'white'
+                                    });
+                                });
+                                $(row).addClass("late");
                             }
-
+                            else {
+                                $(row).addClass("today");
+                            }
                         }
 
+                        else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                            leaveColumns.forEach(function (colIndex) {
+                                $(row).find('td').eq(colIndex).css({
+                                    'background-color': '#A90500',
+                                    'color': 'white'
+                                });
+                            });
+                            $(row).addClass("late");
+                        }
                     },
 
                 });
@@ -553,17 +620,28 @@
                                 data: 'verify1',
                                 title: 'Verify',
                                 render: function (data, type, row) {
+                                    let result = '';
 
-                                    if (row.verify1 == "yes") { return ` <i class="fas fa-check-circle" ></i> `; }
-                                    else if (row.verify1 == "cross") { return ` <i class="fa fa-times-circle"></i> `; }
-
-                                    else {
-                                        return "No Record";
+                                    if (row.verify1 == "yes") {
+                                        result = `<i class="fas fa-check-circle"></i>`;
+                                    } else if (row.verify1 == "cross") {
+                                        result = `<i class="fa fa-times-circle wt"></i>`;
+                                    } else {
+                                        result = "No Record";
                                     }
+                                    return `<div class="text-center">${result}</div>`;
                                 }
                             },
 
-                            { data: 'no', title: '#' },
+                            {
+                                data: 'DT_RowIndex',
+                                orderable: false,
+                                searchable: false,
+                                render: function (data, type, row, meta) {
+                                    return meta.row + 1;
+                                },
+                                title: '#'
+                            },
                             { data: 'start_date', title: 'Start Date' },
                             { data: 'shift_in', title: 'Shift In' },
                             { data: 'end_date', title: 'End Date' },
@@ -604,6 +682,10 @@
                                         else if (row.color == '2') { return "BL"; }
                                         else if (row.color == '3') { return "ML"; }
                                         else if (row.color == '4') { return "UL"; }
+                                        else if (row.color == '5') { return "HL"; }
+                                        else if (row.color == '6') { return "CL"; }
+                                        else if (row.color == '7') { return "MTL"; }
+                                        else if (row.color == '8') { return "PL"; }
                                         else if (row.absent == "Yes") { return "Absent"; }
                                         else { return data; }
                                     }
@@ -614,52 +696,141 @@
                                 data: 'verify2',
                                 title: 'Verify',
                                 render: function (data, type, row) {
-                                    if (row.verify2 == "yes") {
-                                        if (row.shift_in < row.check_in) { return ` <i class="fas fa-check-circle" ></i> `; }
-                                        else if (row.verify2 == "cross") { return ` <i class="fa fa-times-circle"></i> `; }
-                                        else { return ` <i class="fas fa-check-circle" ></i> `; }
+                                    let result = '';
+
+                                    if (row.verify2 === "yes") {
+                                        result = `<i class="fas fa-check-circle"></i>`;
+                                    } else if (row.verify2 === "cross") {
+                                        result = `<i class="fa fa-times-circle wt"></i>`;
                                     } else {
-                                        return "No Record";
+                                        result = "No Record";
                                     }
+
+                                    return `<div class="text-center">${result}</div>`;
                                 }
                             },
+
 
                         ], order: [],
                         createdRow: function (row, data, dataIndex) {
 
-                            if (data.dayoff === "Yes") {
-                                $(row).addClass("dayoff");
+                            const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+                            if (data.dayoff === "Yes") {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#767D83',   //Grey
+                                        'color': 'white'
+                                    });
+                                });
                             }
 
+                            else if (data.color === '1') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#1B7EC1', //Blue
+                                        'color': 'white'
+                                    });
+                                });
+                            }
 
+                            else if (data.color === '2') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#138744', //Green
+                                        'color': 'white'
+                                    });
+                                });
+                            }
 
-                            else {
-                                if (data.color == '1') { $(row).addClass("one"); }
-                                else if (data.color == '2') { $(row).addClass("two"); }
-                                else if (data.color == '3') { $(row).addClass("three"); }
-                                else if (data.color == '4') { $(row).addClass("four"); }
+                            else if (data.color === '3') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#E3005F', //Pink
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.color === '4') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#FF002E', //LightRed
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.color === '5') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#b5a202', // Yellow
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.color === '6') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#b5a202', //
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.color === '7') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#b5a202',
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.color === '8') {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#b5a202',
+                                        'color': 'white'
+                                    });
+                                });
+                            }
+
+                            else if (data.absent === "Yes") {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#870501',
+                                        'color': 'white'
+                                    });
+                                });
+                                $(row).addClass("absent");
+                            }
+
+                            else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff !== "Yes") {
+                                if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                                    leaveColumns.forEach(function (colIndex) {
+                                        $(row).find('td').eq(colIndex).css({
+                                            'background-color': '#A90500',
+                                            'color': 'white'
+                                        });
+                                    });
+                                    $(row).addClass("late");
+                                }
                                 else {
-                                    if (data.absent == "Yes") { $(row).addClass("absent"); }
-                                    else if (Date.parse(data.start_date) == Date.parse(format) && data.dayoff != "Yes") {
-                                        if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
-
-                                            $(row).addClass("late");
-                                        }
-                                        else {
-                                            $(row).addClass("today");
-                                        }
-
-
-                                    }
-                                    else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
-
-                                        $(row).addClass("late");
-                                    }
-
+                                    $(row).addClass("today");
                                 }
                             }
 
+                            else if (data.shift_in < data.check_in || data.shift_out > data.check_out) {
+                                leaveColumns.forEach(function (colIndex) {
+                                    $(row).find('td').eq(colIndex).css({
+                                        'background-color': '#A90500',
+                                        'color': 'white'
+                                    });
+                                });
+                                $(row).addClass("late");
+                            }
                         },
 
                     });

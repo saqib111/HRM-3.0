@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LeaderEmployee;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 use App\Models\{
 
     User,
@@ -38,44 +39,39 @@ class LeaderEmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        // Get the leader_id and employee_id as arrays
         $leader_id = explode(',', $request->leader_id);
-        ;
         $employee_id = explode(',', $request->employee_id);
 
+        // Check if any of the leaders already exist in the leader_employees table
+        $existingLeaders = DB::table('leader_employees')
+            ->whereIn('Leader_id', $leader_id)
+            ->pluck('Leader_id'); // Get the ids of leaders that already exist
 
-        if (count($leader_id) > 0) {
-
-
-            foreach ($leader_id as $ld) {
-
-                $leaderCheck = DB::table('leader_employees')
-                    ->select('id')
-                    ->where('Leader_id', $ld)
-                    ->first();
-                if ($leaderCheck != null) {
-                    return response()->json([
-                        'message' => 'Team Leader already Exist!'
-                    ], 300);
-                } else {
-                    if (count($employee_id) > 0) {
-                        foreach ($employee_id as $ei) {
-                            $insert = new LeaderEmployee();
-                            $insert->Leader_id = $ld;
-                            $insert->employee_id = $ei;
-                            $insert->save();
-
-
-
-                        }
-                    }
-                }
-
-            }
+        // If any of the leaders already exist, return an error response
+        if ($existingLeaders->count() > 0) {
             return response()->json([
-                'message' => 'Team created successfully!'
-            ], 200);
+                'message' => 'Leader already exists!'
+            ], 409); // Conflict status code
         }
+
+        // Proceed with saving the new leaders and employees (remove this part if you only need to check leader existence)
+        foreach ($leader_id as $ld) {
+            foreach ($employee_id as $ei) {
+                $insert = new LeaderEmployee();
+                $insert->Leader_id = $ld;
+                $insert->employee_id = $ei;
+                $insert->save();
+            }
+        }
+
+        // Return success message after saving
+        return response()->json([
+            'message' => 'Team created successfully!'
+        ], 200);
     }
+
+
 
     /**
      * Display the specified resource.
@@ -158,19 +154,17 @@ class LeaderEmployeeController extends Controller
     }
     public function teamDatatable()
     {
+        // Get the data from the database
         $collection = DB::table('leader_employees as le')
             ->join('users as u', 'u.id', '=', 'le.Leader_id')
             ->select('u.username as name', 'le.Leader_id as lid')
+            ->distinct('le.Leader_id');
 
-            ->distinct('le.Leader_id')
-            ->get();
-
-        return response()->json([
-
-            'leaders' => $collection,
-        ], 200);
-
+        return DataTables::of($collection)
+            ->addIndexColumn()
+            ->make(true);
     }
+
     public function teamDelete($id)
     {
         $delInfo = DB::table('leader_employees')
@@ -191,6 +185,7 @@ class LeaderEmployeeController extends Controller
 
     public function teamEdit($id)
     {
+
         $info = DB::table('leader_employees as le')
             ->join('users as u', 'u.id', '=', 'le.employee_id')
             ->select('u.username as name', 'le.employee_id as eid')

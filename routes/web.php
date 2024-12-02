@@ -177,9 +177,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', 'index')->name('user.settings');
         Route::post('/settings/update-image', 'updateImage')->name('settings.updateImage');
         Route::post('/update-password', [SettingController::class, 'updatePassword'])->name('update.password');
-
-
     });
+
+
+    // Permission Routes
+    Route::get('/user-permissions/{userId}', [RolesPermissionsController::class, 'getUserPermissions'])->name('get.user.permissions');
+    Route::post('/user-permissions/{userId}', [RolesPermissionsController::class, 'saveUserPermissions'])->name('save.user.permissions');
+
 });
 
 require __DIR__ . '/auth.php';

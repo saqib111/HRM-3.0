@@ -387,6 +387,37 @@
 </div>
 <!-- End Password Modal -->
 
+<!-- Edit Permission Modal -->
+<div id="edit_permisson_modal" class="modal custom-modal fade" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-xl" style="min-width: 1500px;">
+        <div class="modal-content column-container">
+            <div class="modal-header">
+                <h4 class="modal-title text-decoration-underline ml-5" style="font-size: 27px; margin-left: 40%;"
+                    id="permission_modal_heading">Assign & Edit
+                    Permission
+                </h4>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="permission_form">
+                <!-- Add a hidden field for userId -->
+                <input type="hidden" id="user_id" name="user_id" value="">
+
+                <div class="modal-body">
+                    <div id="permissions-container" class="main-container">
+                        <!-- Permissions will be dynamically loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> -->
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End Permission Modal -->
+
+
 <!-- PreLoader -->
 <div id="loader" class="loader" style="display: none;">
     <div class="loader-animation"></div>
@@ -449,7 +480,8 @@
                     searchable: false,
                     render: function (data, type, row) {
                         return `<div class="text-center">
-                            <button class="btn btn-success" onclick="PasswordEditModal(${row.id})"><i class="fa-solid fa-key fa-1x"></i></button>
+                            <button class="btn btn-success" onclick="PermissonEditModal(${row.id})"><i class="fa-solid fa-key fa-1x"></i></button>
+                             <button class="btn btn-warning" onclick="PasswordEditModal(${row.id})"><i class="fa-solid fa-lock fa-1x"></i></button>
                             <button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
                             <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button></div>`;
                     }
@@ -677,6 +709,95 @@
             }
         });
     }
+
+
+    // Function to open the permission edit modal
+    function PermissonEditModal(userId) {
+        // Set the user ID in the hidden field
+        $('#user_id').val(userId);
+
+        // Fetch and display permissions
+        $.ajax({
+            url: `/user-permissions/${userId}`,
+            type: 'GET',
+            success: function (response) {
+                const permissions = response.permissions;
+
+                const permissionGroups = {
+                    'Manage Employee': ['Create_User', 'Show_Users', 'Update_User', 'Delete_User',
+                        'Change_Password', 'Update_Status'
+                    ],
+                    'Manage Team': ['Create_Team', 'Show_Teams', 'Update_Team', 'Delete_Team'],
+                    'Manage Shift': ['Create_Schedule', 'Update_Schedule', 'Delete_Schedule'],
+                };
+
+                let html = '';
+                for (const [group, perms] of Object.entries(permissionGroups)) {
+                    html +=
+                        `<div class="card card-role py-4 px-4"><h3 class="mb-3" style= color:#009dc8>${group}</h3><div class="roles-container">`;
+
+                    perms.forEach((perm) => {
+                        const checked = permissions.includes(perm) ? 'checked' : '';
+                        html += `
+                        <div class="check-role">
+                            <div class="checkbox-role">
+                                <label class="custom_check">
+                                    <input type="checkbox" name="permissions[]" value="${perm}" ${checked}>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="permissions-one">
+                                <h5>${perm.replace('_', ' ')}</h5>
+                            </div>
+                        </div>`;
+                    });
+
+                    html += `</div></div>`;
+                }
+
+                $('#permissions-container').html(html);
+                $('#edit_permisson_modal').modal('show');
+            },
+            error: function () {
+                alert('Error fetching permissions.');
+            },
+        });
+    }
+
+
+    // Handle Permission submission form
+    $('#permission_form').on('submit', function (e) {
+        e.preventDefault();
+        showLoader();
+
+        const userId = $('#user_id').val(); // Get user ID from hidden field
+        const permissions = [];
+        $('input[name="permissions[]"]:checked').each(function () {
+            permissions.push($(this).val());
+        });
+
+        $.ajax({
+            url: `/user-permissions/${userId}`,
+            type: 'POST',
+            data: {
+                permissions: permissions,
+                _token: "{{ csrf_token() }}",
+            },
+            success: function (response) {
+                hideLoader();
+                createToast('info', 'fa-solid fa-circle-check', 'Success', response.message);
+                $('#edit_permisson_modal').modal('hide');
+                table.ajax.reload(); // Reload the DataTable
+            },
+            error: function () {
+                hideLoader();
+                alert('Error saving permissions.');
+            },
+        });
+    });
+
+
+
 
     // Handle password form submission with AJAX
     $('#edit_password_form').on('submit', function (event) {

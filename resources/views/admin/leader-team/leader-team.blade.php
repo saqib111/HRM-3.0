@@ -1,235 +1,109 @@
 @extends('layout.mainlayout')
 @section('css')
-<!-- Litepicker CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-
-
-<style>
-    <style>body {
-        font-family: "Arial", sans-serif;
-        background-color: #eaeaea;
-        padding: 20px;
-    }
-
-    .container {
-        max-width: 600px;
-        height: 100px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        border-color: green;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .selection {
-        display: none;
-    }
-
-    .dt-column-order {
-        display: none !important;
-    }
-
-    .dt-type-numeric {}
-</style>
+<link href="{{ asset('assets/css/custom-multi.css') }}" rel="stylesheet">
 @endsection
 @section('content')
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="page-header">
-    <div class="row align-items-center">
+    <div class="row align-items-center justify-content-between">
         <div class="col-md-4">
-            <h3 class="page-title">Create Team </h3>
+            <h3 class="page-title">Create Team</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">Create team</li>
+                <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Create Team</li>
             </ul>
         </div>
-
+        <div class="col-md-8 float-end ms-auto">
+            <div class="d-flex title-head">
+                <a href="#" class="btn_added" data-bs-toggle="modal" data-bs-target="#add_team"><i
+                        class="la la-plus-circle"></i> Add Team</a>
+            </div>
+        </div>
     </div>
+
 </div>
-<div class="col-auto ms-auto mb-3">
-    <ul class="split-head">
-        <li>
-            <button class="btn add-btn text-white" onclick="groupAdd()">
-                <i class="fa fa-plus"></i> Create Team</button>
-        </li>
-    </ul>
-</div>
-
-
-
 <div class="row">
     <div class="col-md-12">
         <div class="table-responsive">
-            <table class="table table-striped text-left" id="groupTable">
-                <thead class="text-left">
-
+            <table class="table table-striped custom-table" id="groupTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Leader Name</th>
+                        <th>Employee Name</th>
+                        <th class="text-center">Action</th>
+                    </tr>
                 </thead>
-                <tbody id="group-list">
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
 </div>
-<div id="create-group" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+
+<!-- Add Team Modal Starts -->
+<div class="modal custom-modal fade" id="add_team" tabindex="-1" role="dialog" aria-labelledby="addTeamModal"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Create Team</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
                 </button>
             </div>
             <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data" id="team-submit">
+                <form id="AddTeamForm" method="POST">
                     @csrf
-                    <div class="row">
-                        <div class="input-block mb-3">
-
-                            <div class="input-block mb-3">
-                                <label for="selectLeader">Leader Name <span class="text-danger">*</span></label>
-                                <select class="form-select" name="leader_id[]" id="selectLeader" multiple>
-
-                                </select>
+                    <div class="custom-select" id="first-leader-select">
+                        <label for="select_box">Leader Name:</label>
+                        <div class="select-box first_select_box" id="select-box">
+                            <input type="hidden" class="tags_input tags" id="leader_id" name="leader_id">
+                            <div class="selected-options"></div>
+                            <div class="arrow">
+                                <i class="fa fa-angle-down first_icon"></i>
                             </div>
-
                         </div>
+                        <div class="options">
+                            <div class="option-search-tags">
+                                <input type="text" class="search-tags" placeholder="Search Tags ..">
+                                <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                            </div>
+                            <div class="op-disabled" selected disabled>Select Users</div>
+                            <div class="no-result-message" style="display:none;">No Result Match</div>
+                        </div>
+                        <span class="text-danger" id="first_field_error"></span>
                     </div>
 
-                    <!-- Multiple Select With Search -->
-                    <div class="col-sm-12">
-                        <div class="input-block mb-3">
-                            <label for="selectEmployee">Select Employee <span class="text-danger">*</span></label>
-                            <select class="form-select" name="employee_id[]" id="selectEmployee" multiple>
-
-                            </select>
-
+                    <div class="custom-select" id="second-employee-select">
+                        <label for="second-select-box">Employees Name:</label>
+                        <div class="select-box second_select_box" id="select-box">
+                            <input type="hidden" class="tags_input tags" id="employee_id" name="employee_id">
+                            <div class="selected-options"></div>
+                            <div class="arrow">
+                                <i class="fa fa-angle-down second_icon"></i>
+                            </div>
                         </div>
+                        <div class="options">
+                            <div class="option-search-tags">
+                                <input type="text" class="search-tags" placeholder="Search Tags ..">
+                                <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                            </div>
+                            <div class="op-disabled" selected disabled>Select Users</div>
+                            <div class="no-result-message" style="display:none;">No Result Match</div>
+                        </div>
+                        <span class="text-danger" id="second_field_error"></span>
                     </div>
-                    <!-- Multiple Select With Search End-->
+
                     <div class="submit-section">
-                        <button class="btn btn-primary">Submit</button>
+                        <button type="button" class="btn btn-primary submitted-btn" id="team_submit_btn">Submit</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-
-<!-- Edit Modal -->
-<div id="edit-team" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Team</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data" id="team-update">
-                    @csrf
-                    <div class="row">
-                        <div class="input-block mb-3">
-
-                            <div class="input-block mb-3">
-                                <label for="edit-leader">Leader Name <span class="text-danger">*</span></label>
-                                <select class="form-select" name="leader_id[]" id="edit-leader" multiple>
-
-                                </select>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- Multiple Select With Search -->
-                    <div class="col-sm-12">
-                        <div class="input-block mb-3">
-                            <label for="selectEmployee">Select Employee <span class="text-danger">*</span></label>
-                            <select class="form-select" name="employee_id[]" id="edit-emp" multiple>
-
-                            </select>
-
-                        </div>
-                    </div>
-                    <!-- Multiple Select With Search End-->
-                    <div class="submit-section">
-                        <button class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End -->
-<!--Delete Modal -->
-<div class="modal fade" id="deleteGroup" tabindex="-1" aria-labelledby="exampleModalScrollable2" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="modalTitle">Delete Confirmation</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this Team Leader? This action cannot be undone.</p>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--dDelete Modal End -->
-
-
-<!-- The Modal -->
-<div class="modal fade" id="employeeList" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <!-- Modal Header -->
-
-            <div class="modal-header ">
-
-                <h4 class="modal-title">Group Details </h4>
-                <button type="button" class="close" data-bs-dismiss="modal" style="margin-left:300px;">&times;</button>
-            </div>
-            <div class="row mt-2" style="margin-left:10px;" id="groupInfo">
-
-            </div>
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr class="text-center">
-                            <th>Employee Name</th>
-                            <th>Group Name</th>
-
-                        </tr>
-                    </thead>
-                    <tbody id="employeeData">
-
-
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-
-
+<!-- Add Team Modal Ends -->
 
 
 <!-- PreLoader -->
@@ -237,476 +111,250 @@
     <div class="loader-animation"></div>
 </div>
 @endsection
-@section('script-z')  
-<!-- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
-
-
+@section('script-z')
+<!-- CUSTOM MULTI JS FILE -->
+<script src="{{asset('assets/js/manage_team_custom_multi.js')}}"></script>
+<!-- CUSTOM MULTI JS FILE -->
 
 <script>
-
-    $(document).ready(function () {
-
-        $('#selectEmployee').select2({
-            placeholder: 'Search Employees',
-            allowClear: true,
-            width: '100%',
-            closeOnSelect: false,
-            multiple: true
-        });
-        $('#selectLeader').select2({
-            placeholder: 'Search Employees',
-            allowClear: true,
-            width: '100%',
-            closeOnSelect: false,
-
-        });
-
-        tableInfo();
+    // Set up CSRF token for AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
     });
 
-    function tableInfo() {
+    let table;
 
+    function initializeDataTable() {
+        if (table) {
+            table.destroy(); // Destroy the previous DataTable instance before reinitializing
+        }
 
-        $.ajax({
-            url: "{{ route('data.datatable') }}",
-            type: 'GET',
-
-            success: function (data) {
-                console.log(data);
-
-
-                $('#groupTable').DataTable({
-                    destroy: true,
-                    data: data.leaders,
-
-                    columns: [
-                        { data: 'lid', title: 'Leader Id' },
-                        { data: 'name', title: 'Leader Name' },
-                        {
-                            data: 'action',
-                            title: 'action',
-                            orderable: false,
-                            searchable: false,
-                            render: function (data, type, row) {
-                                return `
-                             
-                            <button class="btn btn-primary" onclick="editTeam(${row.lid})">
+        table = $('#groupTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('data.datatable') }}", // The correct route URL
+                type: 'GET',
+            },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'lid', title: 'Leader Id' },
+                { data: 'name', title: 'Leader Name' },
+                {
+                    data: 'action',
+                    title: 'Action',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `
+                            <button class="btn btn-primary" id="editTeamBtn"
+                                            data-id="${row.lid}">
                                 <i class="fa fa-edit fa-1x"></i>
                             </button>
                             <button class="btn btn-danger" onclick="deleteTeam(${row.lid})">
                                 <i class="fa fa-trash fa-1x"></i>
                             </button>`;
-                            }
-                        }
-
-
-
-                    ]
-                });
-
-
-
-            },
-        });
-
-    }
-
-
-    function loadEmployees() {
-        $.ajax({
-            url: '{{ route('team.data') }}',
-            type: 'GET',
-            success: function (response) {
-
-                console.log(response)
-
-
-                var select = $('#selectEmployee');
-                var leader = $('#selectLeader');
-                select.empty();
-                leader.empty();
-                $.each(response.employees, function (key, value) {
-                    select.append('<option value="' + value.id + '">' + value.username + '</option>');
-                    leader.append('<option value="' + value.id + '">' + value.username + '</option>');
-
-                });
-
-                if (!select.data('multiselect-initialized')) {
-                    new MultiSelectTag("selectEmployee", {
-                        rounded: true,
-                        shadow: false,
-                        placeholder: "Search",
-                        tagColor: {
-                            textColor: "#327b2c",
-                            borderColor: "#92e681",
-                            bgColor: "#eaffe6"
-                        }
-                    });
-                    select.data('multiselect-initialized', true);
-                }
-                if (!leader.data('multiselect-initialized')) {
-                    new MultiSelectTag("selectLeader", {
-                        rounded: true,
-                        shadow: false,
-                        placeholder: "Search",
-                        tagColor: {
-                            textColor: "#327b2c",
-                            borderColor: "#92e681",
-                            bgColor: "#eaffe6"
-
-                        }
-                    });
-                    leader.data('multiselect-initialized', true);
-                }
-            },
-            error: function (err) {
-                createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error loading employees.');
-            }
-        });
-    }
-
-
-
-    function groupAdd() {
-
-        clearValidationStates();
-        loadEmployees();
-
-        $('#create-group').modal('show').on('shown.bs.modal', function () {
-
-            if (!$('#selectLeader').hasClass("select2-hidden-accessible")) {
-                $('#selectLeader').select2({
-                    placeholder: 'Search Employees',
-                    allowClear: true,
-                    width: '100%',
-                    closeOnSelect: false,
-
-                });
-            }
-            if (!$('#selectEmployee').hasClass("select2-hidden-accessible")) {
-                $('#selectEmployee').select2({
-                    placeholder: 'Search Employees',
-                    allowClear: true,
-                    width: '100%',
-                    closeOnSelect: false,
-                    multiple: false
-                });
-            }
-
-        });
-
-    }
-
-    $('#create-group').on('hidden.bs.modal', function () {
-        $('#selectEmployee').val(null).trigger('change');
-        $('#selectLeader').val(null).trigger('change');
-    });
-
-    $('#team-submit').on('submit', function (event) {
-        event.preventDefault();
-        $('.select').select2();
-        var formData = new FormData();
-
-
-        var selectedEmployee = $('#selectEmployee').val();
-        var selectedLeader = $('#selectLeader').val();
-        formData.append('employee_id', selectedEmployee);
-        formData.append('leader_id', selectedLeader);
-
-        console.log(formData.leader_id)
-        var isValid = true;
-        clearValidationStates();
-        if (!validateEmployee(selectedEmployee)) isValid = false;
-        if (!validateLeader(selectedLeader)) isValid = false;
-        if (isValid) {
-            showLoader();
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            $.ajax({
-                url: "{{ route('team.store') }}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    hideLoader();
-                    $('#create-group').modal('hide');
-                    tableInfo();
-                    createToast('info', 'fa-solid fa-circle-check', 'info', 'Team created successfully.');
-
-
-                },
-                error: function (data) {
-                    hideLoader();
-                    $('#create-group').modal('hide');
-                    var errors = data.responseJSON;
-                    createToast('info', 'fa-solid fa-circle-uncheck', 'Fail', 'Team Leader Exist.Edit please');
-                }
-            });
-        }
-    });
-
-    function clearValidationStates() {
-        $('.form-control').removeClass('is-invalid is-valid');
-        $('.text-danger').remove();
-
-    }
-    function valdateCancel() {
-
-        $('#selectEmployee').removeClass('is-invalid is-valid');
-        $('#groupName').removeClass('is-invalid is-valid');
-
-        $('.text-danger').remove();
-    }
-    function validateEmployee(selectedEmployee) {
-        let parent = $('#selectEmployee').closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!selectedEmployee || selectedEmployee.length === 0) {
-            $('#assign_label').addClass('is-invalid');
-            parent.append('<span class="text-danger">Please select at least one Employee.</span>');
-            return false;
-        } else {
-            $('#assign_label').removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
-
-    function validateLeader(selectedLeader) {
-        let parent = $('#selectLeader').closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!selectedLeader || selectedLeader.length === 0) {
-            $('#assign_label').addClass('is-invalid');
-            parent.append('<span class="text-danger">Please select at least one Leader.</span>');
-            return false;
-        } else {
-            $('#assign_label').removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
-
-
-
-    $('#confirmDelete').on('click', function () {
-
-        if (leaderId) {
-
-            $.ajax({
-                url: "{{route('delete.team', '')}}" + "/" + leaderId,
-                type: 'Get',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function (result) {
-
-
-                    tableInfo();
-                    $('#deleteGroup').modal('hide');
-
-                    createToast('info', 'fa-solid fa-circle-check', 'info', 'Team deleted successfully.');
-                },
-                error: function (err) {
-                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error deleting .');
-                }
-            });
-        }
-    });
-    function deleteTeam(id) {
-        leaderId = id;
-
-        $('#deleteGroup').modal('show');
-    }
-
-    function editTeam(id) {
-
-        valdateCancel();
-
-        $.ajax({
-            url: "{{route('edit.team', '')}}" + "/" + id,
-            type: 'GET',
-            success: function (response) {
-                var select = $('#edit-emp');
-                var leader = $('#edit-leader');
-                select.empty();
-                leader.empty();
-                $.each(response.employee, function (key, value) {
-                    res = "false";
-
-                    $.each(response.info, function (key, evalue) {
-
-                        if (value['id'] == evalue['eid']) {
-                            $("#edit-emp").append('<option value="' + evalue['eid'] + '" selected>' + evalue['name'] +
-                                '</option>');
-                            res = "true";
-                        }
-
-
-                    });
-
-                    leader.empty();
-                    $.each(response.leader, function (key, lvalue) {
-
-                        if (value['id'] == lvalue['id']) {
-                            $("#edit-leader").append('<option value="' + lvalue['id'] + '" selected>' + lvalue['username'] +
-                                '</option>');
-                            res = "true";
-                        }
-                        col = "true";
-
-                    });
-                    if (res == "false") {
-                        $("#edit-emp").append('<option value="' + value['id'] + '" >' + value['username'] +
-                            '</option>');
-
                     }
+                }
+            ],
+            order: [[0, 'desc']] // Default order by the first column (Leader Id)
+        });
+    }
+
+    $(document).ready(function () {
+        initializeDataTable();
+    });
 
 
-                });
+    function storeTeamData() {
+        const firstAssigner = []; // Store the selected leader
+        const secondAssigner = []; // Store the selected employees
 
-                $.each(response.employee, function (key, value) {
-                    col = "false";
+        // Collect the selected leader (only one leader can be selected)
+        $("#first-leader-select .tag").each(function () {
+            const value = $(this).data("value");
+            firstAssigner.push(value);  // Add selected leader to the array
+        });
 
-                    $.each(response.leader, function (key, lvalue) {
+        // Collect selected employees for the second assigner
+        $("#second-employee-select .tag").each(function () {
+            const value = $(this).data("value");
+            secondAssigner.push(value);  // Add selected employees to the array
+        });
 
-                        if (value['id'] == lvalue['id']) {
-                            $("#edit-leader").append('<option value="' + value['id'] + '" selected>' + value['username'] +
-                                '</option>');
+        // Prepare the data to send
+        const data = {
+            leader_id: firstAssigner.join(','),  // Leader ID (comma-separated)
+            employee_id: secondAssigner.join(',') // Employee IDs (comma-separated)
+        };
 
-                            col = "true";
+        // Send the data via AJAX to store it in the database
+        showLoader();
+        $.ajax({
+            url: "{{ route('team.store') }}",  // Adjust with your route
+            type: "POST",
+            data: data,
+            success: function (response) {
+                console.log(response); // Log the full response object
 
-                        }
-
-
-                    });
-
-                    if (col == "false") {
-                        $("#edit-leader").append('<option value="' + value['id'] + '" >' + value['username'] +
-                            '</option>');
-
+                if (response && response.message) {
+                    // Show success toast if the team is created
+                    if (response.message === "Team created successfully!") {
+                        hideLoader();
+                        $("#add_team").modal("hide");
+                        $("#groupTable").DataTable().ajax.reload(null, false); // Reload the DataTable
+                        clearCustomSelects(); // Clear the selects
+                        createToast('info', 'fa-solid fa-circle-check', 'Success', response.message);
+                    } else if (response.message === "leaders already exist!") {
+                        hideLoader();
+                        $("#add_team").modal("hide");
+                        clearCustomSelects();
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', response.message);
+                    } else {
+                        // Show other error messages
+                        hideLoader();
+                        $("#add_team").modal("hide");
+                        clearCustomSelects();
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', response.message);
                     }
+                } else {
+                    // Handle unexpected response
+                    hideLoader();
+                    $("#add_team").modal("hide");
+                    clearCustomSelects();
+                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', response.message);
 
-                });
-
-
-                if (!select.data('multiselect-initialized')) {
-                    new MultiSelectTag("edit-emp", {
-                        rounded: true,
-                        shadow: false,
-                        placeholder: "Search",
-                        tagColor: {
-                            textColor: "#327b2c",
-                            borderColor: "#92e681",
-                            bgColor: "#eaffe6"
-                        }
-                    });
-                    select.data('multiselect-initialized', true);
                 }
-                if (!leader.data('multiselect-initialized')) {
-                    new MultiSelectTag("edit-leader", {
-                        rounded: true,
-                        shadow: false,
-                        placeholder: "Search",
-                        tagColor: {
-                            textColor: "#327b2c",
-                            borderColor: "#92e681",
-                            bgColor: "#eaffe6"
-                        }
-                    });
-                    leader.data('multiselect-initialized', true);
-                }
-
-                $('#edit-team').modal('show');
             },
-            error: function (error) {
-                alert('Error fetching employee details.');
+
+            error: function (xhr, status, error) {
+                // Show error toast for AJAX error
+                hideLoader();
+                $("#add_team").modal("hide");
+                clearCustomSelects();
+                createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'An error occurred: ' + xhr.responseText);
+
             }
         });
     }
 
-    $('#team-update').on('submit', function (event) {
-        event.preventDefault();
 
+    // Function to clear the custom select dropdowns and tags
+    function clearCustomSelects() {
+        $("#first-leader-select .selected-options").html("");  // Clear leader selection
+        $("#first-leader-select .tags_input").val("");  // Clear leader input field
 
-        valdateCancel();
-        var formData = new FormData();
-        var isValid = true;
+        $("#second-employee-select .selected-options").html("");  // Clear employee selection
+        $("#second-employee-select .tags_input").val("");  // Clear employee input field
 
-        var leader_id = $('#edit-leader').val();
+        selectedOptions = [];  // Clear selected options array
 
-        var employee_id = $('#edit-emp').val();
-        formData.append('employee_id', employee_id);
-        formData.append('leader_id', leader_id);
+        $("#first-leader-select").removeClass("open");  // Close the leader select box
+        $("#second-employee-select").removeClass("open");  // Close the employee select box
+    }
 
+    // Handle adding/removing tags dynamically for both assigner dropdowns
+    setupTagManagement('#first-leader-select', '#leader_id');
+    setupTagManagement('#second-employee-select', '#employee_id');
 
-        if (!validateeEmployee(employee_id)) isValid = false;
-        if (!validateeLeader(leader_id)) isValid = false;
+    // Function to set up tag management for adding and removing options
+    function setupTagManagement(selectId, hiddenFieldId) {
+        // Handle adding new options
+        $(`${selectId} .options`).on('click', '.option', function () {
+            const optionId = $(this).data('value');
+            const optionText = $(this).text().trim();
 
+            // Toggle active state
+            $(this).toggleClass('active');
 
-        if (isValid) {
-
-            showLoader();
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            // Update tags and hidden field
+            const currentValues = $(`${hiddenFieldId}`).val().split(',').filter(Boolean);
+            if ($(this).hasClass('active')) {
+                if (!currentValues.includes(optionId.toString())) {
+                    currentValues.push(optionId);
+                    const tagHTML = ` 
+                    <span class="tag" data-value="${optionId}">
+                        ${optionText}
+                        <span class="remove-tag" data-value="${optionId}">&times;</span>
+                    </span>`;
+                    $(`${selectId} .selected-options`).append(tagHTML);
                 }
-            });
-            $.ajax({
-                url: "{{route('update.team')}}",
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
+            } else {
+                // Remove from selected options
+                $(`${selectId} .selected-options .tag[data-value="${optionId}"]`).remove();
+                const index = currentValues.indexOf(optionId.toString());
+                if (index > -1) currentValues.splice(index, 1);
+            }
 
-                    hideLoader();
-                    $('#edit-team').modal('hide');
-                    createToast('info', 'fa-solid fa-circle-check', 'Success', 'Team Updated successfully.');
-                    tableInfo();
-                },
-                error: function (error) {
-                    hideLoader();
-                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error Updating Team.');
-                }
-            });
+            $(`${hiddenFieldId}`).val(currentValues.join(','));
+        });
 
+        // Handle removing selected tags
+        $(`${selectId}`).on('click', '.remove-tag', function (e) {
+            e.stopPropagation();
+            const valueToRemove = $(this).data('value');
+
+            // Remove tag from UI
+            $(this).parent().remove();
+
+            // Uncheck option in dropdown
+            $(`${selectId} .options .option[data-value="${valueToRemove}"]`).removeClass('active');
+
+            // Update hidden field
+            const currentValues = $(`${hiddenFieldId}`).val().split(',').filter(Boolean);
+            const index = currentValues.indexOf(valueToRemove.toString());
+            if (index > -1) currentValues.splice(index, 1);
+            $(`${hiddenFieldId}`).val(currentValues.join(','));
+        });
+    }
+
+    // Submit the form when the submit button is clicked
+    $("#team_submit_btn").click(function () {
+        let first_field = $("#leader_id").val();
+        let second_field = $("#employee_id").val();
+        let valid = true;
+
+        // Reset previous validation error messages
+        $("#first_field_error").html(""); // Clear previous error messages
+        $("#second_field_error").html(""); // Clear previous error messages
+
+        $(".first_select_box").css("border", ""); // Reset the border color
+        $(".first_icon").css("color", ""); // Reset the icon color
+
+        $(".second_select_box").css("border", ""); // Reset the border color
+        $(".second_icon").css("color", ""); // Reset the icon color
+
+        // Validate first assigner field
+        if (first_field === "") {
+            $("#first_field_error").html("Leader Name is required");
+            $(".first_select_box").css("border", "1px solid red");
+            $(".first_icon").css("color", "red");
+            valid = false;
+        } else {
+            $("#first_field_error").html("");
+            $(".first_select_box").css("border", "");
+            $(".first_icon").css("color", "");
         }
 
+        // Validate second assigner field
+        if (second_field === "") {
+            $("#second_field_error").html("At least one employee is required");
+            $(".second_select_box").css("border", "1px solid red");
+            $(".second_icon").css("color", "red");
+            valid = false;
+        } else {
+            $("#second_field_error").html("");
+            $(".second_select_box").css("border", "");
+            $(".second_icon").css("color", "");
+        }
 
-
+        // If valid, proceed with submission
+        if (valid) {
+            storeTeamData(); // Execute the AJAX call to save data
+        }
     });
-
-    function validateeEmployee(selectedEmployee) {
-        let parent = $('#edit-emp').closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!selectedEmployee || selectedEmployee.length === 0) {
-            $('#assign_label').addClass('is-invalid');
-            parent.append('<span class="text-danger">Please select at least one Employee.</span>');
-            return false;
-        } else {
-            $('#assign_label').removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
-
-    function validateeLeader(selectedLeader) {
-        let parent = $('#edit-leader').closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!selectedLeader || selectedLeader.length === 0) {
-            $('#assign_label').addClass('is-invalid');
-            parent.append('<span class="text-danger">Please select at least one Leader.</span>');
-            return false;
-        } else {
-            $('#assign_label').removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
-
 </script>
+
 @endsection

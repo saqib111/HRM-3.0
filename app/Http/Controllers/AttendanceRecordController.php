@@ -213,7 +213,7 @@ class AttendanceRecordController extends Controller
                 }
 
                 if (!empty($closestPunchIn)) {
-                    $finger_print1 = date('Y-m-d H:i:s', strtotime($c1->fingerprint_in));
+                    $finger_print1 = date('Y-m-d H:i:s', strtotime($closestPunchIn->fingerprint_in));
                     $fp1 = Carbon::parse($finger_print1);
                     $checkIn1 = date('Y-m-d H:i:s', strtotime($d->check_in));
                     $ch1 = Carbon::parse($checkIn1);
@@ -283,7 +283,7 @@ class AttendanceRecordController extends Controller
                 $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
             } else {
                 // Default value if check-in or check-out is missing
-                $duty_hours = "00:00:00";
+                $duty_hours = "";
             }
 
 
@@ -458,7 +458,7 @@ class AttendanceRecordController extends Controller
                     $ch1 = Carbon::parse($checkIn1);
                     $min_dif1 = $fp1->diffInMinutes($ch1);
 
-                    if ($min_dif1 <= 10) {
+                    if (abs($min_dif1) <= 10) {
                         $v1 = "yes";
                     } else {
                         $v1 = "cross";
@@ -533,7 +533,7 @@ class AttendanceRecordController extends Controller
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
                     $co = Carbon::parse($checkout);
                     $min_dif2 = $fp2->diffInMinutes($co);
-                    if ($min_dif2 <= 10) {
+                    if (abs($min_dif2) <= 10) {
                         $v2 = "yes";
                     } else {
                         $v2 = "cross";
@@ -599,7 +599,7 @@ class AttendanceRecordController extends Controller
                 }
             } else {
 
-                $duty_hours = "00:00:00";
+                $duty_hours = "";
             }
 
 
@@ -1098,7 +1098,7 @@ class AttendanceRecordController extends Controller
                     $ch1 = Carbon::parse($checkIn1);
                     $min_dif1 = $fp1->diffInMinutes($ch1);
 
-                    if ($min_dif1 <= 10) {
+                    if (abs($min_dif1) <= 10) {
                         $v1 = "yes";
                     } else {
                         $v1 = "cross";
@@ -1126,7 +1126,7 @@ class AttendanceRecordController extends Controller
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
                     $co = Carbon::parse($checkout);
                     $min_dif2 = $fp2->diffInMinutes($co);
-                    if ($min_dif2 <= 10) {
+                    if (abs($min_dif2) <= 10) {
                         $v2 = "yes";
                     } else {
                         $v2 = "cross";
@@ -1162,7 +1162,7 @@ class AttendanceRecordController extends Controller
                 $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
             } else {
                 // Default value if check-in or check-out is missing
-                $duty_hours = "00:00:00";
+                $duty_hours = "";
             }
 
 
@@ -1651,7 +1651,7 @@ class AttendanceRecordController extends Controller
                     $ch1 = Carbon::parse($checkIn1);
                     $min_dif1 = $fp1->diffInMinutes($ch1);
 
-                    if ($min_dif1 <= 10) {
+                    if (abs($min_dif1) <= 10) {
                         $v1 = "yes";
                     } else {
                         $v1 = "cross";
@@ -1726,7 +1726,7 @@ class AttendanceRecordController extends Controller
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
                     $co = Carbon::parse($checkout);
                     $min_dif2 = $fp2->diffInMinutes($co);
-                    if ($min_dif2 <= 10) {
+                    if (abs($min_dif2) <= 10) {
                         $v2 = "yes";
                     } else {
                         $v2 = "cross";
@@ -1738,62 +1738,33 @@ class AttendanceRecordController extends Controller
             }
 
             $name = $d->name;
-            $start_date = date('d F Y', strtotime($d->shift_in));
-            $end_date = date('d F Y', strtotime($d->shift_out));
+
             $shift_in = Carbon::parse($d->shift_in);
             $shift_out = Carbon::parse($d->shift_out);
-            if ($d->check_in != null) {
-                $in_date = date('d F Y', strtotime($d->check_in));
-            } else {
-                $in_date = "";
-            }
-            if ($d->check_out != null) {
-                $out_date = date('d F Y', strtotime($d->check_out));
-            } else {
-                $out_date = "";
-            }
             $scheduled_duration = $shift_in->diffInSeconds($shift_out);
-            $total_working_duration = $scheduled_duration;
 
             if ($d->check_in && $d->check_out) {
                 $check_in = Carbon::parse($d->check_in);
                 $check_out = Carbon::parse($d->check_out);
 
+                // Calculate effective check-in and check-out within shift boundaries
+                $effective_check_in = $check_in->lt($shift_in) ? $shift_in : $check_in;
+                $effective_check_out = $check_out->gt($shift_out) ? $shift_out : $check_out;
 
-                $scheduled_duration = $shift_in->diffInSeconds($shift_out);
-                $total_working_duration = $scheduled_duration;
+                // Calculate the working duration in seconds
+                $working_duration = $effective_check_in->diffInSeconds($effective_check_out);
 
+                // Convert the working duration into hours, minutes, and seconds
+                $hours = floor($working_duration / 3600);
+                $minutes = floor(($working_duration % 3600) / 60);
+                $seconds = $working_duration % 60;
 
-                if ($check_in <= $shift_in && $check_out >= $shift_out) {
-                    $duty_hours = gmdate("H:i:s", $scheduled_duration);
-                } else {
-
-                    if ($shift_out->diffInHours($check_out, false) > 6) {
-                        $duty_hours = "00:00:00";
-                    } else {
-
-                        if ($check_in > $shift_in) {
-                            $late_duration = $shift_in->diffInSeconds($check_in);
-                            $total_working_duration -= $late_duration;
-                        }
-
-                        if ($check_out < $shift_out) {
-                            $early_checkout_duration = $check_out->diffInSeconds($shift_out);
-                            $total_working_duration -= $early_checkout_duration;
-                        }
-
-
-                        $hours = floor($total_working_duration / 3600);
-                        $minutes = floor(($total_working_duration % 3600) / 60);
-                        $seconds = $total_working_duration % 60;
-
-                        $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
-                    }
-                }
+                $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
             } else {
-
-                $duty_hours = "00:00:00";
+                // Default value if check-in or check-out is missing
+                $duty_hours = "";
             }
+
 
 
             $info[] = [
