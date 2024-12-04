@@ -318,7 +318,7 @@
             success: function (response) {
                 hideLoader();
                 $('#deleteConfirmationModal').modal('hide');
-                table.ajax.reload();
+                $('#groupTable').DataTable().ajax.reload(null, false); // Reload DataTable
                 createToast('error', 'fa-solid fa-circle-check', 'Success', response.message);
             },
             error: function () {
@@ -611,7 +611,7 @@
                 success: function (response) {
                     hideLoader();
                     $('#edit_team').modal('hide');
-                    table.ajax.reload();
+                    $('#groupTable').DataTable().ajax.reload(null, false); // Reload DataTable
                     createToast('info', 'fa-solid fa-circle-check', 'Success', response.message);
                     clearEditSelects();
                 },

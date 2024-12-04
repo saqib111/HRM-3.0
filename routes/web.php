@@ -78,6 +78,20 @@ Route::middleware('auth')->group(function () {
             ->name('delete.team')
             ->defaults('permission', 'delete_team');
 
+        // AL Balance Routes
+        Route::prefix('annual-leaves')->name('annual-leaves.')->group(function () {
+            Route::get('/', [AnnualLeavesController::class, 'index'])
+                ->name('index')
+                ->defaults('permission', 'show_al_balance');
+
+            Route::get('{annualLeave}/edit', [AnnualLeavesController::class, 'edit'])
+                ->name('edit')
+                ->defaults('permission', 'update_al_balance');
+
+            Route::put('{annualLeave}', [AnnualLeavesController::class, 'update'])
+                ->name('update')
+                ->defaults('permission', 'update_al_balance');
+        });
     });
 
 
@@ -201,7 +215,7 @@ Route::middleware('auth')->group(function () {
 
     // Single Routes 
     Route::resource('roles-permissions', RolesPermissionsController::class);
-    Route::resource('annual-leaves', AnnualLeavesController::class);
+    // Route::resource('annual-leaves', AnnualLeavesController::class);
     Route::resource('expired-visa-information', ExpiredVisaInfoController::class);
 
     //user profile image and password update route group

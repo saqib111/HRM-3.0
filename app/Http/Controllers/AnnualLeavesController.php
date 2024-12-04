@@ -15,11 +15,29 @@ class AnnualLeavesController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
-                ->select(['annual_leaves.id', 'users.username as username', 'annual_leaves.leave_type', 'annual_leaves.leave_balance', 'annual_leaves.last_year_balance']);
+            $user = auth()->user();
 
-            return DataTables::of($data)->make(true);
+            // Fetch user permissions
+            $permissions = getUserPermissions($user);
+            $canUpdateLeaveBalance = $user->role == 1 || in_array('update_al_balance', $permissions);
+
+            $data = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
+                ->select([
+                    'annual_leaves.id',
+                    'users.username as username',
+                    'annual_leaves.leave_type',
+                    'annual_leaves.leave_balance',
+                    'annual_leaves.last_year_balance'
+                ]);
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('can_update', function () use ($canUpdateLeaveBalance) {
+                    return $canUpdateLeaveBalance; // Include permission flag in response
+                })
+                ->make(true);
         }
+
         return view('annualLeaveBalance.annual-leaves');
     }
 

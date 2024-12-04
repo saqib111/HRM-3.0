@@ -113,10 +113,12 @@
                         </a>
                     </li>
                 @endif
-                <li class="{{ request()->routeIs('annual-leaves.index') ? 'active' : '' }}">
-                    <a href="{{route('annual-leaves.index')}}"><i class="fa fa-user-clock"></i> <span>AL Balance</span>
-                    </a>
-                </li>
+                @if($user->role == 1 || in_array('show_al_balance', $permissions))
+                    <li class="{{ request()->routeIs('annual-leaves.index') ? 'active' : '' }}">
+                        <a href="{{route('annual-leaves.index')}}"><i class="fa fa-user-clock"></i> <span>AL Balance</span>
+                        </a>
+                    </li>
+                @endif
                 <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
                     <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
                     </a>

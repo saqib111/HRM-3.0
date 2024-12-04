@@ -632,7 +632,7 @@
                     success: function (response) {
                         hideLoader();
                         $('#add_employee').modal('hide');
-                        $('#users_table').DataTable().ajax.reload();
+                        $('#users_table').DataTable().ajax.reload(null, false);
                         createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee added successfully.');
                     },
                     error: function (data) {
@@ -766,6 +766,7 @@
                     ],
                     'Manage Team': ['create_team', 'show_teams', 'update_team', 'delete_team'],
                     'Manage Shift': ['create_schedule', 'update_schedule', 'delete_schedule'],
+                    'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
                 };
 
                 let html = '';
@@ -823,7 +824,7 @@
                 hideLoader();
                 createToast('info', 'fa-solid fa-circle-check', 'Success', response.message);
                 $('#edit_permisson_modal').modal('hide');
-                table.ajax.reload(); // Reload the DataTable
+                $('#users_table').DataTable().ajax.reload(null, false);
             },
             error: function () {
                 hideLoader();
@@ -992,7 +993,7 @@
                 },
                 success: function (result) {
                     // Reload the DataTable after deletion
-                    $('#users_table').DataTable().ajax.reload();
+                    $('#users_table').DataTable().ajax.reload(null, false);
                     $('#deleteConfirmationModal').modal('hide'); // Hide the modal
                     // Trigger custom success toaster
                     createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee deleted successfully.');
@@ -1116,7 +1117,7 @@
                     $('#edit_employee').modal('hide');
                     hideLoader();
                     createToast('info', 'fa-solid fa-circle-check', 'Success', 'Employee Updated successfully.');
-                    $('#users_table').DataTable().ajax.reload();
+                    $('#users_table').DataTable().ajax.reload(null, false);
                 },
                 error: function (error) {
                     hideLoader();
