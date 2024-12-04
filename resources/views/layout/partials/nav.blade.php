@@ -59,10 +59,12 @@
                 <li class="menu-title">
                     <span>Employees</span>
                 </li>
-                <li class="{{ request()->routeIs('all.employees') ? 'active' : '' }}">
-                    <a href="{{route('all.employees')}}"><i class="la la-key"></i> <span>Employee Info</span>
-                    </a>
-                </li>
+                @if($user->role == 1 || in_array('show_all_employee_info', $permissions))
+                    <li class="{{ request()->routeIs('all.employees') ? 'active' : '' }}">
+                        <a href="{{route('all.employees')}}"><i class="la la-key"></i> <span>Employee Info</span>
+                        </a>
+                    </li>
+                @endif
                 <li class="submenu">
                     <a href="#"><i class="fa fa-user"></i> <span> Departments</span> <span
                             class="menu-arrow"></span></a>

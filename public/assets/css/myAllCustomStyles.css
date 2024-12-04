@@ -98,6 +98,7 @@ a.btn_added:hover {
     width: 30px; /* Adjust size as needed */
     height: 30px; /* Adjust size as needed */
     border: none;
+    outline: none;
     background: transparent;
     position: relative;
     cursor: pointer;

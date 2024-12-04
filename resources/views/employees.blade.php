@@ -411,7 +411,7 @@
 
 <!-- Edit Permission Modal -->
 <div id="edit_permisson_modal" class="modal custom-modal fade" role="dialog">
-    <div class="modal-dialog modal-dialog-centered modal-xl" style="min-width: 1500px;">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" style="min-width: 70%;">
         <div class="modal-content column-container">
             <div class="modal-header">
                 <h4 class="modal-title text-decoration-underline ml-5" style="font-size: 27px; margin-left: 40%;"
@@ -424,7 +424,7 @@
                 <!-- Add a hidden field for userId -->
                 <input type="hidden" id="user_id" name="user_id" value="">
 
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <div id="permissions-container" class="main-container">
                         <!-- Permissions will be dynamically loaded here -->
                     </div>
@@ -767,6 +767,8 @@
                     'Manage Team': ['create_team', 'show_teams', 'update_team', 'delete_team'],
                     'Manage Shift': ['create_schedule', 'update_schedule', 'delete_schedule'],
                     'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
+                    'Fingerprint Record': ['show_fingerprint_record', 'update_fingerprint_status', 'delete_fingerprint_record'],
+                    'Employee Info': ['show_all_employee_info', 'update_employee_info'],
                 };
 
                 let html = '';

@@ -15,70 +15,6 @@ class FingerprintController extends Controller
     /**
      * Display a listing of the resource.
      */
-
-    // public function index(Request $request)
-    // {
-    //     if ($request->ajax()) {
-    //         $userId = $request->input('user_id');  // Get the user_id from the request
-    //         // Cast userId to an integer for proper comparison
-    //         $userId = (int) $userId;
-
-    //         $startDate = $request->input('start_date');  // Get the start date from the request
-    //         $endDate = $request->input('end_date');  // Get the end date from the request
-
-    //         dd($startDate, $endDate);
-
-    //         // If no date range is provided, set the date range to the current month
-    //         if (!$startDate || !$endDate) {
-    //             $startDate = Carbon::now()->startOfMonth()->toDateString();
-    //             $endDate = Carbon::now()->endOfMonth()->toDateString();
-    //         }
-
-    //         // Fetch user data using the user_id (which corresponds to users.id)
-    //         $usersData = User::where('id', '=', $userId)->first();
-    //         if (!$usersData) {
-    //             return response()->json(['data' => []]); // If no user found, return empty data
-    //         }
-
-    //         // Extract the numeric part from the employee_id (e.g., AHNV00315 -> 315)
-    //         $employee_ID = $usersData->employee_id;
-    //         preg_match('/[1-9][0-9]*/', $employee_ID, $actual_id);
-    //         $employee_id = (int) $actual_id[0]; // Cast to integer
-
-    //         // Debugging: Check the extracted employee_id
-    //         // dd($employee_id);
-
-    //         // Fetch fingerprint records where user_id in check_verify matches the numeric part of employee_id
-    //         $data = Fingerprint::join('users', function ($join) use ($employee_id) {
-    //             $join->on(DB::raw('CAST(SUBSTRING(users.employee_id, -5) AS UNSIGNED)'), '=', DB::raw('?'))
-    //                 ->addBinding($employee_id, 'select');
-    //         })
-    //             ->select(
-    //                 'check_verify.id',
-    //                 'check_verify.user_id',
-    //                 'check_verify.type',
-    //                 'check_verify.fingerprint_in',
-    //                 'check_verify.last_processed_timestamp',
-    //                 'users.employee_id',
-    //                 'users.username',
-    //                 'check_verify.created_at',
-    //                 'check_verify.updated_at'
-    //             )
-    //             ->whereBetween('check_verify.fingerprint_in', [$startDate, $endDate])  // Filter by date range
-    //             ->get();
-
-    //         // Return the filtered data to DataTables
-    //         return DataTables::of($data)
-    //             ->addIndexColumn()
-    //             ->make(true);
-    //     }
-
-    //     // Return the main view if it's not an AJAX request
-    //     return view('fingerprint.fingerprint-record');
-    // }
-
-
-
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -144,6 +80,43 @@ class FingerprintController extends Controller
     }
 
 
+    // public function searchUsers(Request $request)
+    // {
+    //     $search = $request->input('search');
+    //     $page = $request->input('page', 1);  // Get the current page, default to 1
+
+    //     // Check if the user is an admin or not (role == 1)
+    //     if (auth()->user()->role == 1) {
+    //         // If role is 1, return all active users
+    //         $data = User::when($search, function ($query) use ($search) {
+    //             return $query->where('username', 'LIKE', '%' . $search . '%');
+    //         })
+    //             ->where('status', '1')
+    //             ->paginate(10, ['*'], 'page', $page);
+    //     } else {
+    //         // If role is not 1, fetch users from the team based on leader_employees table
+    //         $leaderId = auth()->user()->id;  // Get the logged-in user's ID
+
+    //         // Get the active users that belong to this leader (where leader_id matches)
+    //         $data = User::when($search, function ($query) use ($search) {
+    //             return $query->where('username', 'LIKE', '%' . $search . '%');
+    //         })
+    //             ->where('status', '1')
+    //             ->whereIn('id', function ($query) use ($leaderId) {
+    //                 $query->select('employee_id')
+    //                     ->from('leader_employees')
+    //                     ->where('leader_id', $leaderId);  // Filter by the logged-in user's leader_id
+    //             })
+    //             ->paginate(10, ['*'], 'page', $page);
+    //     }
+
+    //     return response()->json([
+    //         'data' => $data->items(),
+    //         'total' => $data->total(),
+    //         'current_page' => $data->currentPage(),
+    //         'last_page' => $data->lastPage(),
+    //     ]);
+    // }
 
 
 
@@ -152,16 +125,40 @@ class FingerprintController extends Controller
         $search = $request->input('search');
         $page = $request->input('page', 1);  // Get the current page, default to 1
 
-        // If there is no search term, return the first 10 records
-        if (!$search) {
-            $data = User::where('status', '1')
-                ->paginate(10, ['*'], 'page', $page);  // Paginate, 10 items per page
-        } else {
+        // Check if the user is an admin or not (role == 1)
+        if (auth()->user()->role == 1) {
+            // If role is 1, return all active users
             $data = User::when($search, function ($query) use ($search) {
                 return $query->where('username', 'LIKE', '%' . $search . '%');
             })
                 ->where('status', '1')
                 ->paginate(10, ['*'], 'page', $page);
+        } else {
+            // If role is not 1, fetch users from the team based on leader_employees table
+            $leaderId = auth()->user()->id;  // Get the logged-in user's ID
+
+            // Get the active users that belong to this leader (where leader_id matches)
+            $data = User::when($search, function ($query) use ($search) {
+                return $query->where('username', 'LIKE', '%' . $search . '%');
+            })
+                ->where('status', '1')
+                ->whereIn('id', function ($query) use ($leaderId) {
+                    $query->select('employee_id')
+                        ->from('leader_employees')
+                        ->where('leader_id', $leaderId);  // Filter by the logged-in user's leader_id
+                })
+                ->paginate(10, ['*'], 'page', $page);
+        }
+
+        // Check if no data was found
+        if ($data->isEmpty()) {
+            return response()->json([
+                'message' => 'No users found',
+                'data' => [],
+                'total' => 0,
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+            ]);
         }
 
         return response()->json([
@@ -171,6 +168,7 @@ class FingerprintController extends Controller
             'last_page' => $data->lastPage(),
         ]);
     }
+
 
 
 

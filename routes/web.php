@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Middleware\CheckUserProfilePermission;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\{
@@ -26,7 +27,7 @@ use App\Http\Controllers\{
     FingerprintController,
     SettingController
 };
-use App\Http\Middleware\CheckPermission;
+
 Route::get('/', function () {
     return view('index');
 });
@@ -78,6 +79,12 @@ Route::middleware('auth')->group(function () {
             ->name('delete.team')
             ->defaults('permission', 'delete_team');
 
+        // All Employee Info Routes
+
+        Route::get('all-employees', [UserProfileController::class, 'allEmployee'])
+            ->name('all.employees')
+            ->defaults('permission', 'show_all_employee_info');
+
         // AL Balance Routes
         Route::prefix('annual-leaves')->name('annual-leaves.')->group(function () {
             Route::get('/', [AnnualLeavesController::class, 'index'])
@@ -91,7 +98,44 @@ Route::middleware('auth')->group(function () {
             Route::put('{annualLeave}', [AnnualLeavesController::class, 'update'])
                 ->name('update')
                 ->defaults('permission', 'update_al_balance');
+
         });
+
+        // Fingerprint Record Routes
+        // Route::resource('fingerprint-record', FingerprintController::class);
+        Route::prefix('fingerprint-record')->name('fingerprint-record.')->group(function () {
+            Route::get('/', [FingerprintController::class, 'index'])
+                ->name('index')
+                ->defaults('permission', 'show_fingerprint_record');
+
+            Route::get('{fingerprint-record}', [FingerprintController::class, 'show'])
+                ->name('show')
+                ->defaults('permission', 'show_fingerprint_record');
+
+            Route::get('{fingerprint-record}/edit', [FingerprintController::class, 'edit'])
+                ->name('edit')
+                ->defaults('permission', 'update_fingerprint_status');
+
+            Route::put('{fingerprint-record}', [FingerprintController::class, 'update'])
+                ->name('update')
+                ->defaults('permission', 'update_fingerprint_status');
+
+            Route::delete('{fingerprint-record}', [FingerprintController::class, 'destroy'])
+                ->name('destroy')
+                ->defaults('permission', 'delete_fingerprint_record');
+        });
+        Route::get('/search-users', [FingerprintController::class, 'searchUsers'])
+            ->name('search.users')
+            ->defaults('permission', 'show_fingerprint_record');
+
+    });
+
+    // ROUTES FOR USER PROFILE
+    Route::middleware(['auth', 'check_user_permission'])->group(function () {
+        Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails')->defaults('permission', 'update_employee_info');
+        Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo')->defaults('permission', 'update_employee_info');
+        Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update')->defaults('permission', 'update_employee_info');
+        Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update')->defaults('permission', 'update_employee_info');
     });
 
 
@@ -164,11 +208,11 @@ Route::middleware('auth')->group(function () {
 
     // User Profile Routes
     Route::resource('user-profile', UserProfileController::class);
-    Route::get('all-employees', [UserProfileController::class, 'allEmployee'])->name('all.employees');
-    Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails');
-    Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo');
-    Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update');
-    Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update');
+    // Route::get('all-employees', [UserProfileController::class, 'allEmployee'])->name('all.employees');
+    // Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails');
+    // Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo');
+    // Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update');
+    // Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update');
 
 
     // Dynamic Department Routes
@@ -210,8 +254,8 @@ Route::middleware('auth')->group(function () {
 
 
     // Define route for Fingerprint records
-    Route::resource('fingerprint-record', FingerprintController::class);
-    Route::get('/search-users', [FingerprintController::class, 'searchUsers'])->name('search.users');
+    // Route::resource('fingerprint-record', FingerprintController::class);
+    // Route::get('/search-users', [FingerprintController::class, 'searchUsers'])->name('search.users');
 
     // Single Routes 
     Route::resource('roles-permissions', RolesPermissionsController::class);
