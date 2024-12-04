@@ -14,6 +14,21 @@
         background: #00c5fb;
     }
 </style>
+
+@php
+    $user = auth()->user();
+    $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
+    // Check if the user has at least one of the required permissions or is a superadmin
+
+    $hasActionPermission = $user->role == 1 ||
+        in_array('show_users', $permissions) ||
+        in_array('update_user', $permissions) ||
+        in_array('change_password', $permissions) ||
+        in_array('delete_user', $permissions) ||
+        in_array('manage_permissions', $permissions);
+@endphp
+
+
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-inner slimscroll">
@@ -22,20 +37,25 @@
                 <li class="menu-title">
                     <span>Main</span>
                 </li>
-                <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <a href="{{route('dashboard')}}"><i class="fa fa-home"></i> <span> Dashboard</span> </a>
+                {{-- Show "Add Employee" if the user has the "create_user" permission or is Superadmin --}}
+                @if($user->role == 1 || in_array('dashboard', $permissions))
+                    <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <a href="{{route('dashboard')}}"><i class="fa fa-home"></i> <span> Dashboard</span> </a>
+                    </li>
+                @endif
+                {{-- Show "Add Employee" if the user has the "create_user" permission or is Superadmin --}}
+                @if($user->role == 1 || in_array('show_users', $permissions))
+                    <li class="{{ request()->routeIs('list.employee') ? 'active' : '' }}">
+                        <a href="{{route('list.employee')}}"><i class="fa fa-user"></i> <span> Manage Employee</span> </a>
+                    </li>
+                @endif
 
-                </li>
-                <li class="{{ request()->routeIs('list.employee') ? 'active' : '' }}">
-                    <a href="{{route('list.employee')}}"><i class="fa fa-user"></i> <span> Manage Employee</span> </a>
-
-                </li>
-                <li class="{{ request()->routeIs('roles-permissions.index') ? 'active' : '' }}">
-                    <a href="{{route('roles-permissions.index')}}"><i class="fa fa-user-lock"></i> <span> Manage
-                            Role</span>
+                <li class="{{ request()->routeIs('attendanceemployee.record') ? 'active' : '' }}">
+                    <a href="{{route('attendanceemployee.record')}}"><i class="fa fa-user-check"></i>
+                        <span>Attendance</span>
                     </a>
-
                 </li>
+
                 <li class="menu-title">
                     <span>Employees</span>
                 </li>
@@ -87,21 +107,16 @@
                     </ul>
                 </li>
 
-                <li class="{{ request()->routeIs('create.team') ? 'active' : '' }}">
-                    <a href="{{route('create.team')}}"><i class="fa fa-people-group"></i> <span>Manage Team</span>
-                    </a>
-                </li>
+                @if($user->role == 1 || in_array('show_teams', $permissions))
+                    <li class="{{ request()->routeIs('create.team') ? 'active' : '' }}">
+                        <a href="{{route('create.team')}}"><i class="fa fa-people-group"></i> <span>Manage Team</span>
+                        </a>
+                    </li>
+                @endif
                 <li class="{{ request()->routeIs('annual-leaves.index') ? 'active' : '' }}">
                     <a href="{{route('annual-leaves.index')}}"><i class="fa fa-user-clock"></i> <span>AL Balance</span>
                     </a>
                 </li>
-
-                <li class="{{ request()->routeIs('attendanceemployee.record') ? 'active' : '' }}">
-                    <a href="{{route('attendanceemployee.record')}}"><i class="fa fa-user-check"></i>
-                        <span>Attendance</span>
-                    </a>
-                </li>
-
                 <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
                     <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
                     </a>

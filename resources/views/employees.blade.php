@@ -1,14 +1,31 @@
 @extends('layout.mainlayout')
 @section('content')
+
+@php
+    $user = auth()->user();
+    $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
+    // Check if the user has at least one of the required permissions or is a superadmin
+    $hasActionPermission = $user->role == 1 ||
+        in_array('update_user', $permissions) ||
+        in_array('change_password', $permissions) ||
+        in_array('delete_user', $permissions) ||
+        in_array('manage_permissions', $permissions);
+@endphp
+
 <div class="col-auto ms-auto mb-3">
     <ul class="c_Employee">
         <li>
-            <a href="#" class="btn_employee" data-bs-toggle="modal" data-bs-target="#add_employee">
-                <i class="fa fa-plus"></i> Add Employee</a>
+            {{-- Show "Add Employee" if the user has the "create_user" permission or is Superadmin --}}
+            @if($user->role == 1 || in_array('create_user', $permissions))
+                <a href="#" class="btn_employee" data-bs-toggle="modal" data-bs-target="#add_employee">
+                    <i class="fa fa-plus"></i> Add Employee
+                </a>
+            @endif
         </li>
 
+
         <li>
-            @if(auth()->user()->role === "1")
+            @if(auth()->user()->role === "1" || !empty($company))
                 <div class="d-flex justify-content-end">
                     @foreach($company as $index => $item)
                         <button class="btn btn-outline-primary mx-1 company-btn {{ $index === 0 ? 'active' : '' }}"
@@ -21,7 +38,6 @@
         </li>
     </ul>
 </div>
-
 
 
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
@@ -39,9 +55,15 @@
                         <th>Company</th>
                         <th>Department</th>
                         <th>Designation</th>
-                        <th>Status</th>
+                        {{-- Show "Status" column if the user has "update_status" permission or is Superadmin --}}
+                        @if($user->role == 1 || in_array('update_status', $permissions))
+                            <th>Status</th>
+                        @endif
                         <th>Image</th>
-                        <th class="text-center">Action</th>
+                        {{-- Show "Action" column if the user has the necessary permission or is Superadmin --}}
+                        @if($hasActionPermission)
+                            <th class="text-center">Action</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody id="employee-list">
@@ -429,8 +451,62 @@
 
     let table;
 
-    // Function to initialize the DataTable
     function initializeDataTable(companyName) {
+        const hasActionPermission = @json($hasActionPermission);
+        const canUpdateStatus = @json($user->role == 1 || in_array('update_status', $permissions));
+
+        const columns = [
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'employee_id', name: 'employee_id', orderable: false },
+            { data: 'username', name: 'username', orderable: false },
+            { data: 'email', name: 'email', orderable: false },
+            { data: 'joining_date', name: 'joining_date', orderable: false },
+            { data: 'company_name', name: 'company_name', orderable: false },
+            { data: 'department_name', name: 'department_name', orderable: false },
+            { data: 'designation_name', name: 'designation_name', orderable: false },
+        ];
+
+        // Add the "Status" column if the user has permission
+        if (canUpdateStatus) {
+            columns.push({
+                data: 'status',
+                name: 'status',
+                orderable: false,
+                render: function (data, type, row) {
+                    let checked = (data === '1') ? 'checked' : '';
+                    return `
+                    <div class="status-toggle-container" style="display:flex;">
+                        <div class="status-toggle">
+                            <input type="checkbox" id="staff_module_${row.id}" class="check" ${checked} onchange="toggleStatus(${row.id}, this)">
+                            <label for="staff_module_${row.id}" class="checktoggle">checkbox</label>
+                        </div>
+                    </div>`;
+                }
+            });
+        }
+
+        columns.push({
+            data: 'image',
+            name: 'image',
+            orderable: false,
+            render: function (data) {
+                return `<img width="50px" height="50px" src="uploads/${data}" onclick="showProfileImageModal('${data}')" alt="Profile Picture">`;
+            }
+        });
+
+        // Add the "Action" column if the user has permission
+        if (hasActionPermission) {
+            columns.push({
+                data: 'action',
+                name: 'action',
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return data ? data : ''; // Return data or empty string
+                }
+            });
+        }
+
         table = $('#users_table').DataTable({
             processing: true,
             serverSide: true,
@@ -439,59 +515,14 @@
                 type: 'GET',
                 data: { company: companyName } // Pass the selected company name
             },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'employee_id', name: 'employee_id', orderable: false },
-                { data: 'username', name: 'username', orderable: false },
-                { data: 'email', name: 'email', orderable: false },
-                { data: 'joining_date', name: 'joining_date', orderable: false },
-                { data: 'company_name', name: 'company_name', orderable: false },
-                { data: 'department_name', name: 'department_name', orderable: false },
-                { data: 'designation_name', name: 'designation_name', orderable: false },
-                {
-                    data: 'status',
-                    name: 'status',
-                    orderable: false,
-                    render: function (data, type, row) {
-                        let checked = (data === '1') ? 'checked' : '';
-                        return `
-                        <div class="status-toggle-container" style="display:flex;">
-                            <div class="status-toggle">
-                                <input type="checkbox" id="staff_module_${row.id}" class="check" ${checked} onchange="toggleStatus(${row.id}, this)">
-                                <label for="staff_module_${row.id}" class="checktoggle">checkbox</label>
-                            </div>
-                        </div>
-                    `;
-                    }
-                },
-                {
-                    data: 'image',
-                    name: 'image',
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, row) {
-                        return `<img width="50px" height="50px" src="uploads/${data}" onclick="showProfileImageModal('${data}')" alt="Profile Picture">`;
-                    }
-                },
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, row) {
-                        return `<div class="text-center">
-                            <button class="btn btn-success" onclick="PermissonEditModal(${row.id})"><i class="fa-solid fa-key fa-1x"></i></button>
-                             <button class="btn btn-warning" onclick="PasswordEditModal(${row.id})"><i class="fa-solid fa-lock fa-1x"></i></button>
-                            <button class="btn btn-primary" onclick="EmployeeEditModal(${row.id})"><i class="fa fa-edit fa-1x"></i></button>
-                            <button class="btn btn-danger" onclick="showDeleteModal(${row.id})"><i class="fa fa-trash fa-1x"></i></button></div>`;
-                    }
-                }
-            ],
+            columns: columns, // Use the dynamically defined columns
             order: [],
             pageLength: 14, // Set the default number of records to show
             lengthMenu: [10, 14, 25, 50, 100] // Options for records per page
         });
     }
+
+
 
     // Function to filter data by company
     function filterByCompany(companyName) {
@@ -716,6 +747,12 @@
         // Set the user ID in the hidden field
         $('#user_id').val(userId);
 
+        // Helper function to capitalize the first letter of each word
+        function capitalizeFirstLetter(str) {
+            return str.replace(/_/g, ' ') // Replace underscores with spaces
+                .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize each word's first letter
+        }
+
         // Fetch and display permissions
         $.ajax({
             url: `/user-permissions/${userId}`,
@@ -724,11 +761,11 @@
                 const permissions = response.permissions;
 
                 const permissionGroups = {
-                    'Manage Employee': ['Create_User', 'Show_Users', 'Update_User', 'Delete_User',
-                        'Change_Password', 'Update_Status'
+                    'Manage Employee': ['create_user', 'show_users', 'update_user', 'delete_user',
+                        'change_password', 'manage_permissions', 'update_status'
                     ],
-                    'Manage Team': ['Create_Team', 'Show_Teams', 'Update_Team', 'Delete_Team'],
-                    'Manage Shift': ['Create_Schedule', 'Update_Schedule', 'Delete_Schedule'],
+                    'Manage Team': ['create_team', 'show_teams', 'update_team', 'delete_team'],
+                    'Manage Shift': ['create_schedule', 'update_schedule', 'delete_schedule'],
                 };
 
                 let html = '';
@@ -747,11 +784,10 @@
                                 </label>
                             </div>
                             <div class="permissions-one">
-                                <h5>${perm.replace('_', ' ')}</h5>
+                            <h5>${capitalizeFirstLetter(perm)}</h5>
                             </div>
-                        </div>`;
+                            </div>`;
                     });
-
                     html += `</div></div>`;
                 }
 
@@ -969,7 +1005,6 @@
     });
 
     function EmployeeEditModal(id) {
-        // $("#old").empty();
 
         valdateCancel();
 

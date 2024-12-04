@@ -152,8 +152,11 @@ class AdminController extends Controller
         $department = Department::all();
 
         if ($request->ajax()) {
+            $user = auth()->user();
 
-            // Join users with companies table
+            // Fetch permissions for the logged-in user
+            $permissions = getUserPermissions($user);
+
             $employees = User::join('companies', 'users.company_id', '=', 'companies.id')
                 ->join('departments', 'users.department_id', '=', 'departments.id')
                 ->join('designations', 'users.designation_id', '=', 'designations.id')
@@ -163,9 +166,9 @@ class AdminController extends Controller
                     'users.username',
                     'users.email',
                     'users.joining_date',
-                    'companies.name as company_name',  // Selecting company name
-                    'departments.name as department_name',  // Department Name
-                    'designations.name as designation_name',  // Designation Name
+                    'companies.name as company_name',
+                    'departments.name as department_name',
+                    'designations.name as designation_name',
                     'users.status',
                     'users.image'
                 ]);
@@ -177,21 +180,40 @@ class AdminController extends Controller
 
             return DataTables::of($employees)
                 ->addIndexColumn()
-                // Make company_name searchable using the "whereHas" filter for joined fields
                 ->filterColumn('company_name', function ($query, $keyword) {
                     $query->where('companies.name', 'LIKE', "%{$keyword}%");
                 })
-                // Make department_name searchable
                 ->filterColumn('department_name', function ($query, $keyword) {
                     $query->where('departments.name', 'LIKE', "%{$keyword}%");
                 })
-                // Make designation_name searchable
                 ->filterColumn('designation_name', function ($query, $keyword) {
                     $query->where('designations.name', 'LIKE', "%{$keyword}%");
                 })
-                ->addColumn('action', function ($row) {
-                    $btn = '<button class="btn btn-danger" onclick="deleteUser(' . $row->id . ')"><i class="fa fa-trash"></i></button>';
-                    return $btn;
+                ->addColumn('action', function ($row) use ($permissions, $user) {
+                    if ($user->role == 1) {
+                        // Superadmin sees all buttons
+                        return $this->renderAllButtons($row->id);
+                    }
+
+                    // Dynamically render buttons based on permissions
+                    $buttons = '<div class="text-center">';
+                    if (in_array('change_password', $permissions)) {
+                        $buttons .= '<button class="btn btn-warning" onclick="PasswordEditModal(' . $row->id . ')"><i class="fa-solid fa-lock fa-1x"></i></button> ';
+                    }
+                    if (in_array('manage_permissions', $permissions)) {
+                        $buttons .= '<button class="btn btn-success" onclick="PermissonEditModal(' . $row->id . ')"><i class="fa-solid fa-key fa-1x"></i></button> ';
+                    }
+                    if (in_array('update_user', $permissions)) {
+                        $buttons .= '<button class="btn btn-primary" onclick="EmployeeEditModal(' . $row->id . ')"><i class="fa fa-edit fa-1x"></i></button> ';
+                    }
+                    if (in_array('delete_user', $permissions)) {
+                        $buttons .= '<button class="btn btn-danger" onclick="showDeleteModal(' . $row->id . ')"><i class="fa fa-trash"></i></button> ';
+                    }
+
+                    // Close the text-center div
+                    $buttons .= '</div>';
+
+                    return $buttons ?: null; // Return null if no buttons to hide the column
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -199,6 +221,20 @@ class AdminController extends Controller
 
         return view('employees', ['company' => $company, 'brand' => $brand, 'department' => $department]);
     }
+
+    // Helper function to render all buttons for Superadmin
+    protected function renderAllButtons($id)
+    {
+        return '
+        <div class="text-center">
+        <button class="btn btn-warning" onclick="PasswordEditModal(' . $id . ')"><i class="fa-solid fa-lock fa-1x"></i></button>
+        <button class="btn btn-success" onclick="PermissonEditModal(' . $id . ')"><i class="fa-solid fa-key fa-1x"></i></button>
+        <button class="btn btn-primary" onclick="EmployeeEditModal(' . $id . ')"><i class="fa fa-edit fa-1x"></i></button>
+        <button class="btn btn-danger" onclick="showDeleteModal(' . $id . ')"><i class="fa fa-trash"></i></button>
+        </div>
+    ';
+    }
+
 
 
     public function deleteEmployee($id)

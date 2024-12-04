@@ -17,6 +17,18 @@ use Illuminate\Support\Facades\{
     DB,
 };
 
+function getUserPermissions($user)
+{
+    if ($user->role == 1) {
+        return []; // Superadmin has unrestricted access
+    }
+
+    $permissions = \DB::table('user_permissions')
+        ->where('user_id', $user->id)
+        ->value('permissions');
+
+    return $permissions ? explode(',', $permissions) : [];
+}
 
 function createUser($username, $email, $password, $brand)
 {

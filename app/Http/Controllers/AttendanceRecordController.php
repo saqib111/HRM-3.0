@@ -143,12 +143,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
                         ]);
                         $color = "";
                         break;
@@ -388,12 +390,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
                         ]);
                         $color = "";
                         break;
@@ -817,12 +821,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_out)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
                         ]);
                         $color = "";
                         break;
@@ -1022,12 +1028,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_out)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
                         ]);
                         $color = "";
                         break;
@@ -1367,12 +1375,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
                         ]);
                         $color = "";
                     } else {
@@ -1573,12 +1583,14 @@ class AttendanceRecordController extends Controller
                     $date = Carbon::parse($app->date);
                     if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
                         $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift = $chdate . $app->end_time;
+                        $shift_in = $chdate . $app->start_time;
+                        $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift))
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
                         ]);
                         $color = "";
                         break;

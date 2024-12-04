@@ -24,12 +24,34 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-
+        // Authenticate the user
         $request->authenticate();
 
+        // Regenerate the session to prevent session fixation
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Check the user's role and redirect accordingly
+        $user = auth()->user();
+
+        if ($user->role === "1") {
+            // Redirect to dashboard for admin or role 1
+            return redirect()->intended(route('dashboard'));
+        } elseif ($user->role === "2") {
+            // Redirect to attendance record page for employee role 5
+            return redirect()->intended(route('attendanceemployee.record'));
+        } elseif ($user->role === "3") {
+            // Redirect to attendance record page for employee role 5
+            return redirect()->intended(route('attendanceemployee.record'));
+        } elseif ($user->role === "4") {
+            // Redirect to attendance record page for employee role 5
+            return redirect()->intended(route('attendanceemployee.record'));
+        } elseif ($user->role === "5") {
+            // Redirect to attendance record page for employee role 5
+            return redirect()->intended(route('attendanceemployee.record'));
+        }
+
+        // Optionally, handle cases where the role is neither 1 nor 5
+        return redirect()->route('login')->withErrors(['role' => 'Unauthorized role']);
     }
 
     /**

@@ -51,7 +51,7 @@ class LeaderEmployeeController extends Controller
         // If any of the leaders already exist, return an error response
         if ($existingLeaders->count() > 0) {
             return response()->json([
-                'message' => 'Leader already exists!'
+                'message' => 'Team Leader already exists!'
             ], 409); // Conflict status code
         }
 
@@ -154,16 +154,36 @@ class LeaderEmployeeController extends Controller
     }
     public function teamDatatable()
     {
-        // Get the data from the database
+        $user = auth()->user();
+
+        // Fetch user permissions
+        $permissions = getUserPermissions($user);
+        $canUpdateTeam = $user->role == 1 || in_array('update_team', $permissions);
+        $canDeleteTeam = $user->role == 1 || in_array('delete_team', $permissions);
+
+        // Get data from the database
         $collection = DB::table('leader_employees as le')
             ->join('users as u', 'u.id', '=', 'le.Leader_id')
-            ->select('u.username as name', 'le.Leader_id as lid')
-            ->distinct('le.Leader_id');
+            ->join('users as emp', 'emp.id', '=', 'le.employee_id')
+            ->select(
+                'u.username as name',
+                'le.Leader_id as lid',
+                DB::raw('GROUP_CONCAT(emp.username SEPARATOR ", ") as employee_names')
+            )
+            ->groupBy('le.Leader_id', 'u.username')
+            ->orderBy('le.Leader_id', 'asc');
 
         return DataTables::of($collection)
             ->addIndexColumn()
+            ->addColumn('action', function ($row) use ($canUpdateTeam, $canDeleteTeam) {
+                return [
+                    'edit' => $canUpdateTeam,
+                    'delete' => $canDeleteTeam,
+                ];
+            })
             ->make(true);
     }
+
 
     public function teamDelete($id)
     {

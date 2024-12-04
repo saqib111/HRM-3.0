@@ -26,7 +26,7 @@ use App\Http\Controllers\{
     FingerprintController,
     SettingController
 };
-
+use App\Http\Middleware\CheckPermission;
 Route::get('/', function () {
     return view('index');
 });
@@ -40,15 +40,47 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    // Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/employees', [AdminController::class, 'showEmployee'])->name('employees');
     Route::get('/employees-list', [AdminController::class, 'showEmployeeList'])->name('employees-list');
-    Route::post('/add-employee', [AdminController::class, 'addEmployee'])->name('add.employee');
-    Route::get('/manage-employees', [AdminController::class, 'getEmployee'])->name('list.employee');
+    // Route::post('/add-employee', [AdminController::class, 'addEmployee'])->name('add.employee');
+    // Route::get('/manage-employees', [AdminController::class, 'getEmployee'])->name('list.employee');
     Route::get('/get-employee/{id}', [AdminController::class, 'editEmployee'])->name('edit.employee');
     Route::post('/update-employee', [AdminController::class, 'updateEmployee'])->name('update.employee');
     Route::delete('/delete-employee/{id}', [AdminController::class, 'deleteEmployee'])->name('delete.employee');
     Route::get('/check-designation/{id}', [AdminController::class, 'checkDesignation'])->name('check.designation');
+
+    // Routes for managing employees
+    Route::middleware(['auth', 'check_permission'])->group(function () {
+
+        Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
+            ->name('dashboard')
+            ->defaults('permission', 'dashboard');
+
+        Route::post('/add-employee', [AdminController::class, 'addEmployee'])
+            ->name('add.employee')
+            ->defaults('permission', 'create_user');
+
+        Route::get('/manage-employees', [AdminController::class, 'getEmployee'])
+            ->name('list.employee')
+            ->defaults('permission', 'show_users'); // Set 'permission' in the route defaults
+
+        // Show "Manage Team" Table --------------------------------------------------------
+        Route::get('create-team', [AdminController::class, 'createTeam'])
+            ->name('create.team')
+            ->defaults('permission', 'show_teams');
+
+        Route::post('team-store', [LeaderEmployeeController::class, 'store'])
+            ->name('team.store')
+            ->defaults('permission', 'create_team');
+
+        Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])
+            ->name('delete.team')
+            ->defaults('permission', 'delete_team');
+
+    });
+
+
     //Schedule Start
     Route::get('schedule-list', [ScheduleController::class, 'index'])->name('schedule');
     Route::resource('schedule', ScheduleController::class);
@@ -89,11 +121,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/punch-out', [AttendanceRecordController::class, 'punchOut'])->name('punch.out');
     Route::get('/statistics', [AttendanceRecordController::class, 'statistics'])->name('statistics');
 
-    Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team');
+    // Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team');
 
-    Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store');
+    // Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store');
     Route::get('team-data-datatable', [LeaderEmployeeController::class, 'teamDatatable'])->name('data.datatable');
-    Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team');
+    // Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team');
     Route::get('team-edit/{id}', [LeaderEmployeeController::class, 'teamEdit'])->name('edit.team');
     Route::post('team-update', [LeaderEmployeeController::class, 'update'])->name('update.team');
     Route::get('test/{id}', [ScheduleController::class, 'test']);

@@ -13,7 +13,7 @@ class RolesPermissionsController extends Controller
      */
     public function index()
     {
-        return view('roles-permissions');
+        //
     }
 
     /**
