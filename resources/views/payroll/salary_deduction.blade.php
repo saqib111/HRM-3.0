@@ -92,7 +92,13 @@
         </div>
         <div class="col-md-1 text-dark ms-md-3">
             <div class="input-block mb-3 text-dark d-flex flex-column">
-                <button class="btn btn-primary mt-4" style="padding: 8px;">Filter</button>
+                <button class="btn btn-primary mt-4" id="filter_btn" style="padding: 8px;">Filter</button>
+            </div>
+        </div>
+        <div class="col-md-2 text-dark ms-md-3">
+            <div class="input-block mb-3 text-dark d-flex flex-column">
+                <button id="export-btn" class="btn btn-success mt-4" style="padding: 8px;">Download in
+                    Excel</button>
             </div>
         </div>
     </div>
@@ -185,21 +191,101 @@
         table.ajax.reload(); // Reload the DataTable with filter data
     });
 
+</script>
 
-    const timeInput = document.getElementById("time-input");
-    const endTime = document.getElementById("end-time");
+<script>
+    $(document).ready(function () {
+        // Initially, disable the Filter button and hide the Export button
+        $('#filter_btn').prop('disabled', true);  // Filter button initially disabled
+        $('#export-btn').hide();  // Hide Export button initially
 
-    const datePicker = flatpickr("#date-picker", {
-        mode: "range",
-        dateFormat: "Y-m-d",
-        onChange: function (selectedDates) {
-            if (selectedDates.length === 2) {
-                // Use flatpickr's formatDate method to ensure consistent formatting
-                const startDate = flatpickr.formatDate(selectedDates[0], "Y-m-d");
-                const endDate = flatpickr.formatDate(selectedDates[1], "Y-m-d");
-                $('#startdate').val(`${startDate},${endDate}`);
+        const timeInput = document.getElementById("time-input");
+        const endTime = document.getElementById("end-time");
+        // Initialize the flatpickr for the date range
+        const datePicker = flatpickr("#date-picker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function (selectedDates) {
+                // When dates are selected, update the hidden input field with the formatted date range
+                if (selectedDates.length === 2) {
+                    const startDate = flatpickr.formatDate(selectedDates[0], "Y-m-d");
+                    const endDate = flatpickr.formatDate(selectedDates[1], "Y-m-d");
+                    $('#startdate').val(`${startDate},${endDate}`);
+                } else {
+                    $('#startdate').val('');  // If no valid date is selected, reset the hidden input
+                }
+                checkFilters();  // Check filters when date range changes
             }
-        },
+        });
+
+        // Listen for changes in other filter inputs and check the filters
+        $('#nationality, #office').on('change', function () {
+            checkFilters();
+        });
+
+        // Check if all filters are selected
+        function checkFilters() {
+            const nationality = $('#nationality').val();
+            const startDate = $('#startdate').val();  // Get the value of the hidden input field
+            const office = $('#office').val();
+
+            // Enable the Filter button only if all fields are filled
+            if (nationality && startDate && office) {
+                $('#filter_btn').prop('disabled', false);  // Enable Filter button
+            } else {
+                $('#filter_btn').prop('disabled', true);  // Disable Filter button if any field is empty
+            }
+        }
+
+        // Handle the filter form submission
+        $('#customizeSearch').on('submit', function (e) {
+            e.preventDefault();  // Prevent the default form submission
+
+            // Reload the DataTable with the current filter data
+            table.ajax.reload(function (json) {
+                // Check if any data is returned
+                if (json.data && json.data.length > 0) {
+                    // Data exists, enable and show the Export button
+                    $('#export-btn').prop('disabled', false);  // Enable Export button
+                    $('#export-btn').show();  // Show Export button
+                } else {
+                    // No data, disable and hide the Export button
+                    $('#export-btn').prop('disabled', true);  // Disable Export button
+                    $('#export-btn').hide();  // Hide Export button
+                }
+            });
+        });
+
+        // Handle Export button click
+        $('#export-btn').on('click', function () {
+            // Get the filter values
+            const nationality = $('#nationality').val();
+            const startDate = $('#startdate').val();
+            const office = $('#office').val();
+
+            // Proceed with export if all filters are selected
+            if (nationality && startDate && office) {
+                const filters = {
+                    nationality: nationality,
+                    start_date: startDate,
+                    office: office
+                };
+
+                // Construct the query string with the filters
+                let queryString = $.param(filters);
+
+                // Redirect to the export route with the query parameters
+                window.location.href = "{{ route('payroll.export') }}?" + queryString;
+            } else {
+                alert("Please fill in all filter fields before exporting.");
+            }
+        });
+
+        // Ensure initial state when the page is loaded
+        checkFilters();  // Call it on document load to check the initial state
     });
 </script>
+
+
+
 @endsection

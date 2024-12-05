@@ -31,26 +31,26 @@ class AttendanceRecordController extends Controller
     public function index()
     {
 
-        $id = auth()->user()->id;
-        $fourMonth = Carbon::now()->subMonths(4)->startOfMonth();
-        $data = DB::table('attendance_records as ar')
-            ->join('users as u', 'u.id', '=', 'ar.user_id')
-            ->select(
-                'u.username as name',
-                'ar.user_id as user_id',
-                'ar.shift_in as shift_in',
-                'ar.id as id',
-                'ar.shift_out as shift_out',
-                'ar.duty_hours as duty_hours',
-                'ar.check_in as check_in',
-                'ar.check_out as check_out',
-                'ar.dayoff as dayoff'
-            )
-            ->where('ar.leader_id', $id)
-            ->where('ar.shift_in', '>=', $fourMonth)
-            ->get()
-            ->groupBy('ar.user_id');
-        dd($data);
+        // $id = auth()->user()->id;
+        // $fourMonth = Carbon::now()->subMonths(4)->startOfMonth();
+        // $data = DB::table('attendance_records as ar')
+        //     ->join('users as u', 'u.id', '=', 'ar.user_id')
+        //     ->select(
+        //         'u.username as name',
+        //         'ar.user_id as user_id',
+        //         'ar.shift_in as shift_in',
+        //         'ar.id as id',
+        //         'ar.shift_out as shift_out',
+        //         'ar.duty_hours as duty_hours',
+        //         'ar.check_in as check_in',
+        //         'ar.check_out as check_out',
+        //         'ar.dayoff as dayoff'
+        //     )
+        //     ->where('ar.leader_id', $id)
+        //     ->where('ar.shift_in', '>=', $fourMonth)
+        //     ->get()
+        //     ->groupBy('ar.user_id');
+        // dd($data);
 
     }
 

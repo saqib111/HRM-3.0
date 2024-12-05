@@ -159,7 +159,6 @@ Route::middleware('auth')->group(function () {
     Route::post('change-group', [GroupController::class, 'changeGroupData'])->name('changegroup.data');
     Route::get('group-member/{id}', [GroupController::class, 'groupMember'])->name('group.member');
     Route::get('get-employee', [ScheduleController::class, 'getEmolyee'])->name('employee.get');
-    Route::get('manage-attendance', [AttendanceRecordController::class, 'index'])->name('attendance.manage');
     Route::get('attendance-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.record');
     Route::get('groupuser-data', [ScheduleController::class, 'groupNameData'])->name('groupname.data');
     // Schedule Ends
@@ -241,7 +240,7 @@ Route::middleware('auth')->group(function () {
     // Route for Payrolls
     Route::get('/salary_deduction', [PayrollController::class, 'salary_deduction_index'])->name('payroll.salary_deduction');
     Route::get('/salary_deduction_data', [PayrollController::class, 'salary_deduction_dynamic_data'])->name('payroll.dynamic_data');
-
+    Route::get('/payroll/export', [PayrollController::class, 'export'])->name('payroll.export');
 
 
     //Route AssignLeaveApprovals Using Custom-Multi-Select

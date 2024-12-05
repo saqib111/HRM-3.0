@@ -69,10 +69,10 @@
                     <a href="#"><i class="fa fa-user"></i> <span> Departments</span> <span
                             class="menu-arrow"></span></a>
                     <ul>
-                        <li>
+                        <!-- <li>
                             <a href="{{ route('company.index')}}"
                                 class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
-                        </li>
+                        </li> -->
                         <li>
                             <a href="{{ route('brand.index')}}"
                                 class="{{ request()->routeIs('brand.index') ? 'active' : '' }}">Brand</a>
@@ -104,8 +104,6 @@
                                 href="{{route('add.holiday')}}">Assign Offday</a></li>
                         <li><a class="{{ request()->routeIs('schedule.manage') ? 'active' : '' }}"
                                 href="{{route('schedule.manage')}}">Manage Schedule</a></li>
-                        <li><a class="{{ request()->routeIs('attendance.manage') ? 'active' : '' }}"
-                                href="{{route('attendance.manage')}}">Manage Attendance</a></li>
                     </ul>
                 </li>
 
