@@ -96,7 +96,7 @@
                                         <div class="d-flex justify-content-end">
                                             <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                             @php
-                                                $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'];
+                                                $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected', 'revoked' => 'Revoked'];
                                             @endphp
 
                                             @foreach($statuses as $status => $label)
@@ -230,6 +230,16 @@
                                                         id="hr_approval_name">Test</span></span>
                                                 <span class="fw-semibold">Date & Time: <span
                                                         id="hr_created_time">12/02/2024
+                                                        08:00:00</span></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2"
+                                                id="revoked_container">
+                                                <span class="fw-semibold">Status: <span
+                                                        id="revoked_status">Revoked</span></span>
+                                                <span class="fw-semibold">Approval Name: <span
+                                                        id="revoked_approval_name">Test</span></span>
+                                                <span class="fw-semibold">Date & Time: <span
+                                                        id="revoked_created_time">12/02/2024
                                                         08:00:00</span></span>
                                             </div>
                                         </div>
@@ -440,6 +450,8 @@
                     updateApprovalStatus('#second_status', '#second_approval_name', '#second_created_time', data.status_2, data.second_approval_id, data.second_approval_created_time);
                     // Update HR Step Information
                     updateApprovalStatus('#hr_status', '#hr_approval_name', '#hr_created_time', data.hr_approval_id, data.hr_approval_id, data.hr_approval_created_time);
+
+                    updateApprovalStatus('#revoked_status', '#revoked_approval_name', '#revoked_created_time', data.revoked, data.revoked_by, data.revoked_created_time);
                     // Show or hide action buttons based on status
                     const actionButtons = $('#action_buttons');
 
@@ -465,6 +477,12 @@
                     else {
                         $('#approval_btn, #rejection_btn').prop('disabled', true); // Disable buttons
                         actionButtons.addClass("hideBlock");
+                    }
+
+                    if (data.revoked === "0") {
+                        $('#revoked_container').addClass('hideBlock');
+                    } else if (data.revoked === "1") {
+                        $('#revoked_container').removeClass('hideBlock');
                     }
 
                     // Separate off-days from leave details
@@ -507,7 +525,11 @@
                 statusElement.text("Pending").removeClass().addClass("fw-semibold yellowText");
                 nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold yellowText");
                 timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold yellowText");
-            } else if (status !== 'Null') {
+            } else if (status === '1') { // Check if status is '1' (Revoked)
+                statusElement.text("Revoked").removeClass().addClass("fw-semibold redText");
+                nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold redText");
+                timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold redText");
+            } else {
                 statusElement.text("Done").removeClass().addClass("fw-semibold greenText");
                 nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold greenText");
                 timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold greenText");
@@ -778,195 +800,3 @@
     });
 </script>
 @endsection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- 
-
-function populateLeaveSection(leaveDetails, offDays) {
-            const leaveSections = document.querySelector('.leave-sections');
-            leaveSections.innerHTML = ''; // Clear previous content
-
-            let totalLeaveDays = 0;
-            let totalAnnualLeaveDays = 0;
-            let totalOffDaysInAnnualLeave = 0;
-            let totalOffDays = offDays.length; // Already filtered off days
-
-            // Group leaves by type and month
-            const groupedLeaves = {};
-
-            leaveDetails.forEach(leave => {
-                const leaveTypeId = parseInt(leave.leave_type_id, 10);
-
-                // Define leave type and corresponding color
-                let leaveType = '';
-                let bgColorClass = '';
-
-                switch (leaveTypeId) {
-                    case 1:
-                        leaveType = leave.type === 'full_day' ? 'Annual Leave (Full Day)' : 'Annual Leave (Half Day)';
-                        bgColorClass = 'bg-light-blue';
-                        break;
-                    case 2:
-                        leaveType = 'Birthday Leave';
-                        bgColorClass = 'bg-light-green';
-                        break;
-                    case 3:
-                        leaveType = 'Marriage Leave';
-                        bgColorClass = 'bg-light-pink';
-                        break;
-                    case 4:
-                        leaveType = 'Unpaid Leave';
-                        bgColorClass = 'bg-light-red';
-                        break;
-                    default:
-                        bgColorClass = 'bg-light-gray'; // Fallback color
-                        leaveType = 'Other Leave'; // Default type
-                }
-
-                // Process leaves by grouping them by type and then by month
-                const startDate = new Date(leave.start_date);
-                const endDate = new Date(leave.end_date);
-                let leaveDaysCount = (endDate - startDate) / (1000 * 3600 * 24) + 1; // Days count for full-day leaves
-
-                // If it's a half-day leave, count as 0.5 days
-                if (leave.type === 'half_day') {
-                    leaveDaysCount = 0.5;
-                }
-
-                // Add leave days to total leave days
-                totalLeaveDays += leaveDaysCount;
-
-                // Add only annual leave days to total annual leave days
-                if (leaveTypeId === 1) {
-                    let currentAnnualLeaveDays = 0;
-                    let currentDate = new Date(startDate);
-
-                    while (currentDate <= endDate) {
-                        const formattedDate = currentDate.toISOString().split('T')[0];
-
-                        // Check if the current date is an off day
-                        if (!offDays.includes(formattedDate)) {
-                            currentAnnualLeaveDays++;
-                        } else {
-                            totalOffDaysInAnnualLeave++; // Count only off days within annual leave
-                        }
-
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
-
-                    totalAnnualLeaveDays += currentAnnualLeaveDays;
-                }
-
-
-                let currentDate = new Date(startDate);
-
-                while (currentDate <= endDate) {
-                    const formattedDate = currentDate.toISOString().split('T')[0];
-                    const monthName = currentDate.toLocaleString('default', { month: 'long' });
-
-                    // Initialize groupings if they don't exist
-                    if (!groupedLeaves[leaveType]) {
-                        groupedLeaves[leaveType] = {};
-                    }
-
-                    if (!groupedLeaves[leaveType][monthName]) {
-                        groupedLeaves[leaveType][monthName] = [];
-                    }
-
-                    // Add date to the corresponding type and month
-                    groupedLeaves[leaveType][monthName].push({
-                        date: currentDate.getDate(),
-                        fullDate: formattedDate,
-                        bgColorClass: isOffDay(formattedDate, offDays) ? 'bg-light-gray' : bgColorClass,
-                        leaveType: leaveType, // Pass the leaveType into the grouping
-                    });
-
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-            });
-
-            // Now render each type and its respective months
-            for (let leaveType in groupedLeaves) {
-                for (let month in groupedLeaves[leaveType]) {
-                    const section = document.createElement('div');
-                    section.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
-
-                    const firstLeaveDay = groupedLeaves[leaveType][month][0].fullDate;
-                    const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
-
-                    // Display the date range for the leave type
-                    section.innerHTML = `
-                <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span>
-                <div>
-                    <span class="text-muted">From:</span>
-                    <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
-                </div>
-                <div>
-                    <span class="text-muted">To:</span>
-                    <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
-                </div>
-                <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-            `;
-
-                    const dateRow = section.querySelector('.d-flex.flex-wrap');
-
-                    // Add the dates for this month
-                    groupedLeaves[leaveType][month].forEach(leave => {
-                        const dateCircle = document.createElement('div');
-                        dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1');
-
-                        if (leave.bgColorClass && leave.bgColorClass.trim() !== '') {
-                            dateCircle.classList.add(leave.bgColorClass);
-                        } else {
-                            console.error(`Error: Empty bgColorClass for leave on ${leave.fullDate}`);
-                        }
-
-                        dateCircle.innerText = leave.date;
-                        dateRow.appendChild(dateCircle);
-                    });
-
-                    // Append each month row to the section
-                    leaveSections.appendChild(section);
-                }
-            }
-
-            // Handle half-day leaves separately after full-day processing
-            leaveDetails.forEach(leave => {
-                if (leave.type === 'half_day') {
-                    displayHalfDayLeave(leave);
-                }
-            });
-
-            // Update totals in the modal
-            document.getElementById('total_leave_days').textContent = `${totalLeaveDays} days`;
-            document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays} days`;
-            document.getElementById('total_off_days').textContent = `${totalOffDays} days`;
-        } -->

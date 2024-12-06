@@ -25,7 +25,8 @@ use App\Http\Controllers\{
     LeaderEmployeeController,
     PayrollController,
     FingerprintController,
-    SettingController
+    SettingController,
+    RevokedLeaveController
 };
 
 Route::get('/', function () {
@@ -50,188 +51,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/update-employee', [AdminController::class, 'updateEmployee'])->name('update.employee');
     Route::delete('/delete-employee/{id}', [AdminController::class, 'deleteEmployee'])->name('delete.employee');
     Route::get('/check-designation/{id}', [AdminController::class, 'checkDesignation'])->name('check.designation');
-
-    // Routes for managing employees
-    Route::middleware(['auth', 'check_permission'])->group(function () {
-
-        Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])
-            ->name('dashboard')
-            ->defaults('permission', 'dashboard');
-
-        Route::post('/add-employee', [AdminController::class, 'addEmployee'])
-            ->name('add.employee')
-            ->defaults('permission', 'create_user');
-
-        Route::get('/manage-employees', [AdminController::class, 'getEmployee'])
-            ->name('list.employee')
-            ->defaults('permission', 'show_users'); // Set 'permission' in the route defaults
-
-        // Show "Manage Team" Table --------------------------------------------------------
-        Route::get('create-team', [AdminController::class, 'createTeam'])
-            ->name('create.team')
-            ->defaults('permission', 'show_teams');
-
-        Route::post('team-store', [LeaderEmployeeController::class, 'store'])
-            ->name('team.store')
-            ->defaults('permission', 'create_team');
-
-        Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])
-            ->name('delete.team')
-            ->defaults('permission', 'delete_team');
-
-        // All Employee Info Routes
-
-        Route::get('all-employees', [UserProfileController::class, 'allEmployee'])
-            ->name('all.employees')
-            ->defaults('permission', 'show_all_employee_info');
-
-        // AL Balance Routes
-        Route::prefix('annual-leaves')->name('annual-leaves.')->group(function () {
-            Route::get('/', [AnnualLeavesController::class, 'index'])
-                ->name('index')
-                ->defaults('permission', 'show_al_balance');
-
-            Route::get('{annualLeave}/edit', [AnnualLeavesController::class, 'edit'])
-                ->name('edit')
-                ->defaults('permission', 'update_al_balance');
-
-            Route::put('{annualLeave}', [AnnualLeavesController::class, 'update'])
-                ->name('update')
-                ->defaults('permission', 'update_al_balance');
-
-        });
-
-        // Fingerprint Record Routes
-        // Route::resource('fingerprint-record', FingerprintController::class);
-        Route::prefix('fingerprint-record')->name('fingerprint-record.')->group(function () {
-            Route::get('/', [FingerprintController::class, 'index'])
-                ->name('index')
-                ->defaults('permission', 'show_fingerprint_record');
-
-            Route::get('{fingerprint-record}', [FingerprintController::class, 'show'])
-                ->name('show')
-                ->defaults('permission', 'show_fingerprint_record');
-
-            Route::get('{fingerprint-record}/edit', [FingerprintController::class, 'edit'])
-                ->name('edit')
-                ->defaults('permission', 'update_fingerprint_status');
-
-            Route::put('{fingerprint-record}', [FingerprintController::class, 'update'])
-                ->name('update')
-                ->defaults('permission', 'update_fingerprint_status');
-
-            Route::delete('{fingerprint-record}', [FingerprintController::class, 'destroy'])
-                ->name('destroy')
-                ->defaults('permission', 'delete_fingerprint_record');
-        });
-        Route::get('/search-users', [FingerprintController::class, 'searchUsers'])
-            ->name('search.users')
-            ->defaults('permission', 'show_fingerprint_record');
-
-        // Brand Record Routes
-        Route::prefix('brand')->name('brand.')->group(function () {
-            Route::get('/', [BrandController::class, 'index'])
-                ->name('index')
-                ->defaults('permission', 'show_brands');
-
-            Route::get('{brand}', [BrandController::class, 'show'])
-                ->name('show')
-                ->defaults('permission', 'show_brands');
-
-            Route::post('/', [BrandController::class, 'store'])
-                ->name('store')
-                ->defaults('permission', 'create_brand');
-
-            Route::get('{brand}/edit', [BrandController::class, 'edit'])
-                ->name('edit')
-                ->defaults('permission', 'update_brand');
-
-            Route::put('{brand}', [BrandController::class, 'update'])
-                ->name('update')
-                ->defaults('permission', 'update_brand');
-
-            Route::delete('{brand}', [BrandController::class, 'destroy'])
-                ->name('destroy')
-                ->defaults('permission', 'delete_brand');
-        });
-
-        // Department Record Routes
-        Route::prefix('department')->name('department.')->group(function () {
-            Route::get('/', [DepartmentController::class, 'index'])
-                ->name('index')
-                ->defaults('permission', 'show_departments');
-
-            Route::get('{department}', [DepartmentController::class, 'show'])
-                ->name('show')
-                ->defaults('permission', 'show_departments');
-
-            Route::post('/', [DepartmentController::class, 'store'])
-                ->name('store')
-                ->defaults('permission', 'create_department');
-
-            Route::get('{department}/edit', [DepartmentController::class, 'edit'])
-                ->name('edit')
-                ->defaults('permission', 'update_department');
-
-            Route::put('{department}', [DepartmentController::class, 'update'])
-                ->name('update')
-                ->defaults('permission', 'update_department');
-
-            Route::delete('{department}', [DepartmentController::class, 'destroy'])
-                ->name('destroy')
-                ->defaults('permission', 'delete_department');
-        });
-
-        // Designation Record Routes
-        Route::prefix('designation')->name('designation.')->group(function () {
-            Route::get('/', [DesignationController::class, 'index'])
-                ->name('index')
-                ->defaults('permission', 'show_designations');
-
-            Route::get('{designation}', [DesignationController::class, 'show'])
-                ->name('show')
-                ->defaults('permission', 'show_designations');
-
-            Route::post('/', [DesignationController::class, 'store'])
-                ->name('store')
-                ->defaults('permission', 'create_designation');
-
-            Route::get('{designation}/edit', [DesignationController::class, 'edit'])
-                ->name('edit')
-                ->defaults('permission', 'update_designation');
-
-            Route::put('{designation}', [DesignationController::class, 'update'])
-                ->name('update')
-                ->defaults('permission', 'update_designation');
-
-            Route::delete('{designation}', [DesignationController::class, 'destroy'])
-                ->name('destroy')
-                ->defaults('permission', 'delete_designation');
-        });
-    });
-
-    // ROUTES FOR USER PROFILE
-    Route::middleware(['auth', 'check_user_permission'])->group(function () {
-        Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails')->defaults('permission', 'update_employee_info');
-        Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo')->defaults('permission', 'update_employee_info');
-        Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update')->defaults('permission', 'update_employee_info');
-        Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update')->defaults('permission', 'update_employee_info');
-    });
-
-    //  Route For View Employees for Manage Shift
-    Route::middleware(['auth', 'check_permission'])->group(function () {
-        Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list')->defaults('permission', 'view_manage_shift');
-        Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete')->defaults('permission', 'bulk_delete_attendance_schedule');
-        Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single')->defaults('permission', 'delete_attendance_schedule');
-    });
-
-    Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(function () {
-        Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page')->defaults('permission', 'view_attendance');
-        Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance')->defaults('permission', 'view_attendance');
-    });
-
-
-
 
     //Schedule Start
     Route::get('schedule-list', [ScheduleController::class, 'index'])->name('schedule');
@@ -310,9 +129,6 @@ Route::middleware('auth')->group(function () {
 
     // Dynamic Department Routes
     Route::resource('company', CompanyController::class);
-    // Route::resource('brand', BrandController::class);
-    // Route::resource('department', DepartmentController::class);
-    // Route::resource('designation', DesignationController::class);
 
     // Leave Application Frontend Route
     Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');
@@ -353,7 +169,6 @@ Route::middleware('auth')->group(function () {
     // Single Routes 
     Route::resource('roles-permissions', RolesPermissionsController::class);
     // Route::resource('annual-leaves', AnnualLeavesController::class);
-    Route::resource('expired-visa-information', ExpiredVisaInfoController::class);
 
     //user profile image and password update route group
     Route::controller(SettingController::class)->group(function () {
@@ -367,6 +182,116 @@ Route::middleware('auth')->group(function () {
     Route::get('/user-permissions/{userId}', [RolesPermissionsController::class, 'getUserPermissions'])->name('get.user.permissions');
     Route::post('/user-permissions/{userId}', [RolesPermissionsController::class, 'saveUserPermissions'])->name('save.user.permissions');
 
+
+
+    //Revoked Route
+    Route::get('/revoked_application', [RevokedLeaveController::class, 'getRevokedLeave'])->name('revoked_leave.index');
+    Route::post('/revoked_application', [RevokedLeaveController::class, 'RevokedLeaveBtn'])->name('revoked_leave.btn');
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Routes for managing employees
+Route::middleware(['auth', 'check_permission'])->group(function () {
+
+    Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('dashboard')->defaults('permission', 'dashboard');
+    Route::post('/add-employee', [AdminController::class, 'addEmployee'])->name('add.employee')->defaults('permission', 'create_user');
+    Route::get('/manage-employees', [AdminController::class, 'getEmployee'])->name('list.employee')->defaults('permission', 'show_users'); // Set 'permission' in the route defaults
+
+    // Show "Manage Team" Table -----------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team')->defaults('permission', 'show_teams');
+    Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store')->defaults('permission', 'create_team');
+    Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team')->defaults('permission', 'delete_team');
+
+    // All Employee Info Routes -----------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::get('all-employees', [UserProfileController::class, 'allEmployee'])->name('all.employees')->defaults('permission', 'show_all_employee_info');
+
+    // AL Balance Routes ------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('annual-leaves')->name('annual-leaves.')->group(function () {
+        Route::get('/', [AnnualLeavesController::class, 'index'])->name('index')->defaults('permission', 'show_al_balance');
+        Route::get('{annualLeave}/edit', [AnnualLeavesController::class, 'edit'])->name('edit')->defaults('permission', 'update_al_balance');
+        Route::put('{annualLeave}', [AnnualLeavesController::class, 'update'])->name('update')->defaults('permission', 'update_al_balance');
+    });
+
+    // Fingerprint Record Routes ----------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('fingerprint-record')->name('fingerprint-record.')->group(function () {
+        Route::get('/', [FingerprintController::class, 'index'])->name('index')->defaults('permission', 'show_fingerprint_record');
+        Route::get('{fingerprint-record}', [FingerprintController::class, 'show'])->name('show')->defaults('permission', 'show_fingerprint_record');
+        Route::get('{fingerprint-record}/edit', [FingerprintController::class, 'edit'])->name('edit')->defaults('permission', 'update_fingerprint_status');
+        Route::put('{fingerprint-record}', [FingerprintController::class, 'update'])->name('update')->defaults('permission', 'update_fingerprint_status');
+        Route::delete('{fingerprint-record}', [FingerprintController::class, 'destroy'])->name('destroy')->defaults('permission', 'delete_fingerprint_record');
+    });
+    // Fingerprint Search Users
+    Route::get('/search-users', [FingerprintController::class, 'searchUsers'])->name('search.users')->defaults('permission', 'show_fingerprint_record');
+
+    // Brand Record Routes ----------------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('brand')->name('brand.')->group(function () {
+        Route::get('/', [BrandController::class, 'index'])->name('index')->defaults('permission', 'show_brands');
+        Route::get('{brand}', [BrandController::class, 'show'])->name('show')->defaults('permission', 'show_brands');
+        Route::post('/', [BrandController::class, 'store'])->name('store')->defaults('permission', 'create_brand');
+        Route::get('{brand}/edit', [BrandController::class, 'edit'])->name('edit')->defaults('permission', 'update_brand');
+        Route::put('{brand}', [BrandController::class, 'update'])->name('update')->defaults('permission', 'update_brand');
+        Route::delete('{brand}', [BrandController::class, 'destroy'])->name('destroy')->defaults('permission', 'delete_brand');
+    });
+
+    // Department Record Routes -----------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('department')->name('department.')->group(function () {
+        Route::get('/', [DepartmentController::class, 'index'])->name('index')->defaults('permission', 'show_departments');
+        Route::get('{department}', [DepartmentController::class, 'show'])->name('show')->defaults('permission', 'show_departments');
+        Route::post('/', [DepartmentController::class, 'store'])->name('store')->defaults('permission', 'create_department');
+        Route::get('{department}/edit', [DepartmentController::class, 'edit'])->name('edit')->defaults('permission', 'update_department');
+        Route::put('{department}', [DepartmentController::class, 'update'])->name('update')->defaults('permission', 'update_department');
+        Route::delete('{department}', [DepartmentController::class, 'destroy'])->name('destroy')->defaults('permission', 'delete_department');
+    });
+
+    // Designation Record Routes ----------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('designation')->name('designation.')->group(function () {
+        Route::get('/', [DesignationController::class, 'index'])->name('index')->defaults('permission', 'show_designations');
+        Route::get('{designation}', [DesignationController::class, 'show'])->name('show')->defaults('permission', 'show_designations');
+        Route::post('/', [DesignationController::class, 'store'])->name('store')->defaults('permission', 'create_designation');
+        Route::get('{designation}/edit', [DesignationController::class, 'edit'])->name('edit')->defaults('permission', 'update_designation');
+        Route::put('{designation}', [DesignationController::class, 'update'])->name('update')->defaults('permission', 'update_designation');
+        Route::delete('{designation}', [DesignationController::class, 'destroy'])->name('destroy')->defaults('permission', 'delete_designation');
+    });
+
+    // Route for Expired Visa -------------------------------------------------------------------------------------------------------------------------------------------------------
+    Route::prefix('expired-visa-information')->name('expired-visa-information.')->group(function () {
+        Route::get('/', [ExpiredVisaInfoController::class, 'index'])->name('index')->defaults('permission', 'expired_visa');
+    });
+});
+
+// ROUTES FOR USER PROFILE
+Route::middleware(['auth', 'check_user_permission'])->group(function () {
+    Route::get('/view-user-profile/{id}', [UserProfileController::class, 'profileShow'])->name('user-profile.customDetails')->defaults('permission', 'update_employee_info');
+    Route::post('/updateVisaInfo', [UserProfileController::class, 'updateVisaInfo'])->name('update.visainfo')->defaults('permission', 'update_employee_info');
+    Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update')->defaults('permission', 'update_employee_info');
+    Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update')->defaults('permission', 'update_employee_info');
+});
+
+//  Route For View Employees for Manage Shift
+Route::middleware(['auth', 'check_permission'])->group(function () {
+    Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list')->defaults('permission', 'view_manage_shift');
+    Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete')->defaults('permission', 'bulk_delete_attendance_schedule');
+    Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single')->defaults('permission', 'delete_attendance_schedule');
+});
+
+Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(function () {
+    Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page')->defaults('permission', 'view_attendance');
+    Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance')->defaults('permission', 'view_attendance');
 });
 
 require __DIR__ . '/auth.php';

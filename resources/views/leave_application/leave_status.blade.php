@@ -245,6 +245,17 @@
                                                         id="hr_created_time">12/02/2024
                                                         08:00:00</span></span>
                                             </div>
+
+                                            <div class="d-flex justify-content-between align-items-center py-2"
+                                                id="revoked_container">
+                                                <span class="fw-semibold">Status: <span
+                                                        id="revoked_status">Revoked</span></span>
+                                                <span class="fw-semibold">Approval Name: <span
+                                                        id="revoked_approval_name"></span></span>
+                                                <span class="fw-semibold">Date & Time: <span
+                                                        id="revoked_created_time"></span></span>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -317,20 +328,23 @@
                 { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
                 {
                     data: 'status_2',
-                    render: function (data) {
+                    render: function (data, type, row) {
                         var buttonClass = '';
                         var buttonText = '';
 
-                        // Determine button class and text based on status_2 value
-                        if (data === 'pending') {
-                            buttonClass = 'btn-yellow';
-                            buttonText = 'Pending';
+                        // Check if the revoked value is '1' in the row
+                        if (data === 'approved' && row.revoked === '1' && row.hr_approved_id !== 'Null') {
+                            buttonClass = 'btn-red';  // Set button to red color
+                            buttonText = 'Revoked';   // Set button text to 'Revoked'
+                        } else if (data === 'pending') {
+                            buttonClass = 'btn-yellow'; // Set button to yellow color
+                            buttonText = 'Pending';     // Set button text to 'Pending'
                         } else if (data === 'approved') {
-                            buttonClass = 'btn-green';
-                            buttonText = 'Approved';
+                            buttonClass = 'btn-green';  // Set button to green color
+                            buttonText = 'Approved';    // Set button text to 'Approved'
                         } else if (data === 'rejected') {
-                            buttonClass = 'btn-red';
-                            buttonText = 'Rejected';
+                            buttonClass = 'btn-red';    // Set button to red color
+                            buttonText = 'Rejected';    // Set button text to 'Rejected'
                         }
 
                         // Return the button HTML with dynamic class and text
@@ -384,6 +398,8 @@
                 // Update HR Step Information
                 updateApprovalStatus('#hr_status', '#hr_approval_name', '#hr_created_time', data.hr_approval_id, data.hr_approval_id, data.hr_approval_created_time);
 
+                updateApprovalStatus('#revoked_status', '#revoked_approval_name', '#revoked_created_time', data.revoked, data.revoked_by, data.revoked_created_time);
+
                 // Show or hide action buttons based on status
                 const actionButtons = $('#action_buttons');
 
@@ -396,6 +412,13 @@
                 // If both steps are completed, hide buttons
                 else {
                     $('#hr_task_done').prop('disabled', true); // Disable buttons
+                    actionButtons.addClass("hideBlock");
+                }
+
+                if (data.revoked === "0") {
+                    $('#revoked_container').addClass('hideBlock');
+                } else if (data.revoked === "1") {
+                    $('#revoked_container').removeClass('hideBlock');
                     actionButtons.addClass("hideBlock");
                 }
 
@@ -439,7 +462,11 @@
             statusElement.text("Pending").removeClass().addClass("fw-semibold yellowText");
             nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold yellowText");
             timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold yellowText");
-        } else if (status !== 'Null') {
+        } else if (status === '1') { // Check if status is '1' (Revoked)
+            statusElement.text("Revoked").removeClass().addClass("fw-semibold redText");
+            nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold redText");
+            timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold redText");
+        } else {
             statusElement.text("Done").removeClass().addClass("fw-semibold greenText");
             nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold greenText");
             timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold greenText");

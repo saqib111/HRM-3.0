@@ -239,7 +239,7 @@ class LeaveController extends Controller
 
             // Get all leave data for the authenticated user without filtering by status
             $leaves = LeaveManagement::with('user')
-                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance', 'status_1', 'status_2', 'hr_approval_id'])
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance', 'status_1', 'status_2', 'hr_approval_id', 'revoked', 'revoked_by', 'revoked_created_time'])
                 ->where('user_id', $authId) // Filter by authenticated user
                 ->get();
 
@@ -383,12 +383,14 @@ class LeaveController extends Controller
                             // Only status_1 is approved, status_2 is pending (not yet processed)
                             $subQuery->where('status_1', 'approved')
                                 ->where('status_2', 'pending')  // status_2 is pending, indicating it's not yet processed
+                                ->where('revoked', '=', '0')
                                 ->whereJsonContains('team_leader_ids', $authId); // Show for first step assigners (team leader)
                         })
                             ->orWhere(function ($subQuery) use ($authId) {
                             // Both status_1 and status_2 are approved, and the user should be in either team_leader_ids or manager_ids
                             $subQuery->where('status_1', 'approved')
                                 ->where('status_2', 'approved')
+                                ->where('revoked', '=', '0')
                                 ->where(function ($innerSubQuery) use ($authId) {
                                 // Allow the user to be in either team_leader_ids or manager_ids
                                 $innerSubQuery->whereJsonContains('team_leader_ids', $authId)
@@ -418,6 +420,26 @@ class LeaveController extends Controller
                             $subQuery->where('status_1', 'approved')
                                 ->where('status_2', 'rejected')
                                 ->whereJsonContains('manager_ids', $authId);
+                        });
+                    } elseif ($status === 'revoked') {
+                        // Query for approved leaves where status_1 is approved and status_2 is either pending or approved
+                        $query->where(function ($subQuery) use ($authId) {
+                            // Only status_1 is approved, status_2 is pending (not yet processed)
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'pending')  // status_2 is pending, indicating it's not yet processed
+                                ->where('revoked', '=', '1')
+                                ->whereJsonContains('team_leader_ids', $authId); // Show for first step assigners (team leader)
+                        })
+                            ->orWhere(function ($subQuery) use ($authId) {
+                            // Both status_1 and status_2 are approved, and the user should be in either team_leader_ids or manager_ids
+                            $subQuery->where('status_1', 'approved')
+                                ->where('status_2', 'approved')
+                                ->where('revoked', '=', '1')
+                                ->where(function ($innerSubQuery) use ($authId) {
+                                // Allow the user to be in either team_leader_ids or manager_ids
+                                $innerSubQuery->whereJsonContains('team_leader_ids', $authId)
+                                    ->orWhereJsonContains('manager_ids', $authId);
+                            });
                         });
                     }
 
@@ -499,6 +521,7 @@ class LeaveController extends Controller
         $first_approval_username = getUser($leave->first_approval_id);
         $second_approval_username = getUser($leave->second_approval_id);
         $hr_approval_username = getUser($leave->hr_approval_id);
+        $revoked_approval_username = getUser($leave->revoked_by);
         $formattedLeaveBalance = rtrim(rtrim($leave->leave_balance, '0'), '.');
 
         return response()->json([
@@ -520,6 +543,11 @@ class LeaveController extends Controller
             // Get HR ID
             'hr_approval_id' => $hr_approval_username ?? "Null",
             'hr_approval_created_time' => $leave->hr_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
+            //Get Revoked ID
+            'revoked' => $leave->revoked,
+            'revoked_by' => $revoked_approval_username ?? "Null",
+            'revoked_created_time' => $leave->revoked_created_time ?? "YYYY-MM-DD HH:MM:SS",
+
 
         ]);
     }
@@ -899,6 +927,7 @@ class LeaveController extends Controller
                     // Approved requests: Both status_1 and status_2 are approved
                     $query->where('status_1', 'approved')
                         ->where('status_2', 'approved')
+                        ->where('revoked', '=', '0')
                         ->whereNull('hr_approval_id');
                 })
                 ->when($status === 'rejected', function ($query) {
@@ -912,8 +941,16 @@ class LeaveController extends Controller
                     // Completed requests: Both status_1 and status_2 are approved and hr_approval_id exists
                     $query->where('status_1', 'approved')
                         ->where('status_2', 'approved')
+                        ->where('revoked', '=', '0')
                         ->whereNotNull('hr_approval_id');
                 })
+                ->when($status === 'revoked', function ($query) {
+                    // Completed requests: Both status_1 and status_2 are approved and hr_approval_id exists
+                    $query->where('status_1', 'approved')
+                        ->where('status_2', 'approved')
+                        ->where('revoked', '=', '1');
+                })
+
                 ->get();
 
             // Return the leaves data as Datatables

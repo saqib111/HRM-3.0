@@ -772,6 +772,7 @@
                     'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
                     'Fingerprint Record': ['show_fingerprint_record', 'update_fingerprint_status', 'delete_fingerprint_record'],
                     'Employee Info': ['show_all_employee_info', 'update_employee_info'],
+                    'Visa Documents': ['expired_visa'],
                 };
 
                 let html = '';

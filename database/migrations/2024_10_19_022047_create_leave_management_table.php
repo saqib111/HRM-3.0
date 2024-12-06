@@ -34,7 +34,9 @@ return new class extends Migration {
             $table->timestamp('second_approval_created_time')->nullable(); // Timestamp for the second approval
             $table->foreignId('hr_approval_id')->nullable()->constrained('users'); // ID of the HR approver
             $table->timestamp('hr_approval_created_time')->nullable(); // Timestamp for the HR approval
-
+            $table->enum('revoked', ['0', '1'])->default('0');
+            $table->integer('revoked_by')->nullable();
+            $table->timestamp('revoked_created_time')->nullable();
             $table->timestamps(); // Timestamps for created_at and updated_at
         });
     }

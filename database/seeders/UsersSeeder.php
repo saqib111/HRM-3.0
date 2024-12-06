@@ -14,6 +14,6 @@ class UsersSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10000)->withRelatedModels()->create();  // Creates 10 users with related models
+        User::factory(50000)->withRelatedModels()->create();  // Creates 10 users with related models
     }
 }

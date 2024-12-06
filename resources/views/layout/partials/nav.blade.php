@@ -71,9 +71,9 @@
                                 class="menu-arrow"></span></a>
                         <ul>
                             <!-- <li>
-                                                        <a href="{{ route('company.index')}}"
-                                                            class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
-                                                    </li> -->
+                                                                        <a href="{{ route('company.index')}}"
+                                                                            class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
+                                                                    </li> -->
                             @if($user->role == 1 || in_array('show_brands', $permissions))
                                 <li>
                                     <a href="{{ route('brand.index')}}"
@@ -168,6 +168,11 @@
                             HR Work
                             (Leaves)</span> </a>
                 </li>
+                <li class="{{ request()->routeIs('revoked_leave.index') ? 'active' : '' }}">
+                    <a href="{{route('revoked_leave.index')}}"><i class="fa fa-users-cog"></i> <span>
+                            Revoked
+                            (Leaves)</span> </a>
+                </li>
                 <li class="{{ request()->routeIs('leave-approvals.index') ? 'active' : '' }}">
                     <a href="{{route('leave-approvals.index')}}"><i class="fa fa-person-circle-check"></i> <span>Leave
                             Approvals</span>
@@ -182,15 +187,16 @@
                     </a>
                 </li>
 
-                <li class="menu-title">
-                    <span>Visa Documents</span>
-                </li>
-                <li class="{{ request()->routeIs('expired-visa-information.index') ? 'active' : '' }}">
-                    <a href="{{route('expired-visa-information.index')}}"><i class="fa fa-passport"></i> <span>Expired
-                            Visa</span>
-                    </a>
-                </li>
-
+                @if($user->role == 1 || in_array('expired_visa', $permissions))
+                    <li class="menu-title">
+                        <span>Visa Documents</span>
+                    </li>
+                    <li class="{{ request()->routeIs('expired-visa-information.index') ? 'active' : '' }}">
+                        <a href="{{route('expired-visa-information.index')}}"><i class="fa fa-passport"></i> <span>Expired
+                                Visa</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
 
         </div>

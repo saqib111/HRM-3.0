@@ -96,7 +96,7 @@
                                         <div class="d-flex justify-content-end">
                                             <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                             @php
-                                                $statuses = ['pending' => 'All Pending', 'approved' => 'HR Task', 'rejected' => 'All Rejected', 'completed' => 'All Completed'];
+                                                $statuses = ['pending' => 'All Pending', 'approved' => 'HR Task', 'rejected' => 'All Rejected', 'completed' => 'All Completed', 'revoked' => 'Revoked'];
                                             @endphp
 
                                             @foreach($statuses as $status => $label)
@@ -230,6 +230,16 @@
                                                         id="hr_approval_name">Test</span></span>
                                                 <span class="fw-semibold">Date & Time: <span
                                                         id="hr_created_time">12/02/2024
+                                                        08:00:00</span></span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center py-2"
+                                                id="revoked_container">
+                                                <span class="fw-semibold">Status: <span
+                                                        id="revoked_status">Revoked</span></span>
+                                                <span class="fw-semibold">Approval Name: <span
+                                                        id="revoked_approval_name">Test</span></span>
+                                                <span class="fw-semibold">Date & Time: <span
+                                                        id="revoked_created_time">12/02/2024
                                                         08:00:00</span></span>
                                             </div>
                                         </div>
@@ -410,6 +420,9 @@
                     // Update HR Step Information
                     updateApprovalStatus('#hr_status', '#hr_approval_name', '#hr_created_time', data.hr_approval_id, data.hr_approval_id, data.hr_approval_created_time);
 
+                    updateApprovalStatus('#revoked_status', '#revoked_approval_name', '#revoked_created_time', data.revoked, data.revoked_by, data.revoked_created_time);
+
+
                     // Show or hide action buttons based on status
                     const actionButtons = $('#action_buttons');
 
@@ -422,6 +435,13 @@
                     // If both steps are completed, hide buttons
                     else {
                         $('#hr_task_done').prop('disabled', true); // Disable buttons
+                        actionButtons.addClass("hideBlock");
+                    }
+
+                    if (data.revoked === "0") {
+                        $('#revoked_container').addClass('hideBlock');
+                    } else if (data.revoked === "1") {
+                        $('#revoked_container').removeClass('hideBlock');
                         actionButtons.addClass("hideBlock");
                     }
 
@@ -465,7 +485,11 @@
                 statusElement.text("Pending").removeClass().addClass("fw-semibold yellowText");
                 nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold yellowText");
                 timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold yellowText");
-            } else if (status !== 'Null') {
+            } else if (status === '1') { // Check if status is '1' (Revoked)
+                statusElement.text("Revoked").removeClass().addClass("fw-semibold redText");
+                nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold redText");
+                timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold redText");
+            } else {
                 statusElement.text("Done").removeClass().addClass("fw-semibold greenText");
                 nameElement.text(approverName || 'N/A').removeClass().addClass("fw-semibold greenText");
                 timeElement.text(approvalTime || 'N/A').removeClass().addClass("fw-semibold greenText");
