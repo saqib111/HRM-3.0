@@ -353,10 +353,12 @@ class AttendanceRecordController extends Controller
         $info = [];
         $i = 0;
         $total_late_minutes = 0;
+        $stotal_late_minutes = 0;
         $total_penalty = 0.0;
 
         $fine = 0.0;
         $late_minutes = 0;
+        $slate_minutes = 0;
         $data = DB::table('attendance_records as ar')
             ->join('users as u', 'u.id', '=', 'ar.user_id')
             ->select(
@@ -505,12 +507,12 @@ class AttendanceRecordController extends Controller
                     }
 
                     if ($check_out->lessThan($shift_out)) {
-                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
                         $i++;
                     }
 
                     $total_late_minutes += $late_minutes;
-
+                    $stotal_late_minutes += $late_minutes;
                 }
 
             }
@@ -628,8 +630,8 @@ class AttendanceRecordController extends Controller
             ];
         }
 
-        $hours = floor($late_minutes / 60);
-        $minutes = $late_minutes % 60;
+        $hours = floor(($late_minutes + $slate_minutes) / 60);
+        $minutes = ($late_minutes + $slate_minutes) % 60;
 
 
 
@@ -641,6 +643,12 @@ class AttendanceRecordController extends Controller
                 $range_index = ceil(($late_minutes - 15) / 15);
                 $total_penalty += 0.125 * $range_index;
             }
+            if ($slate_minutes > 0 && $slate_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
+                $srange_index = ceil(($slate_minutes - 15) / 15);
+                $total_penalty += 0.125 * $srange_index;
+            }
 
         }
         if (auth()->user()->week_days == "5") {
@@ -649,6 +657,12 @@ class AttendanceRecordController extends Controller
             } elseif ($late_minutes > 15 && $late_minutes <= 540) {
                 $range_index = ceil(($late_minutes - 15) / 15);
                 $total_penalty += 0.25 * $range_index;
+            }
+            if ($slate_minutes > 0 && $slate_minutes <= 15) {
+                $total_penalty += 0.25;
+            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
+                $srange_index = ceil(($slate_minutes - 15) / 15);
+                $total_penalty += 0.25 * $srange_index;
             }
         }
 
@@ -777,12 +791,14 @@ class AttendanceRecordController extends Controller
 
         $color = "";
         $total_late_minutes = 0;
+        $stotal_late_minutes = 0;
         $total_penalty = 0.0;
         $i = 0;
         $c_in = "";
         $c_out = "";
         $fine = 0.0;
         $late_minutes = 0;
+        $slate_minutes = 0;
         $today = Carbon::today();
         $datetoday = date('Y-m-d', strtotime($today));
         $chj = DB::table('attendance_records')
@@ -827,7 +843,7 @@ class AttendanceRecordController extends Controller
 
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_out)),
+                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
                             $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
                         ]);
                         $color = "";
@@ -891,7 +907,7 @@ class AttendanceRecordController extends Controller
                     }
 
                     if ($check_out->lessThan($shift_out)) {
-                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
                         $i++;
                     }
 
@@ -899,16 +915,14 @@ class AttendanceRecordController extends Controller
                     // $total_penalty += $penalty;
 
                     $total_late_minutes += $late_minutes;
-
+                    $stotal_late_minutes += $slate_minutes;
                 }
 
             }
         }
 
-
-        $hour = floor($late_minutes / 60);
-        $minute = $late_minutes % 60;
-
+        $hours = floor(($late_minutes + $slate_minutes) / 60);
+        $minutes = ($late_minutes + $slate_minutes) % 60;
 
         if (auth()->user()->week_days == "6") {
             if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
@@ -917,17 +931,29 @@ class AttendanceRecordController extends Controller
                 $range_index = ceil(($total_late_minutes - 15) / 15);
                 $total_penalty += 0.125 * $range_index;
             }
+            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
+                $srange_index = ceil(($stotal_late_minutes - 15) / 15);
+                $total_penalty += 0.125 * $srange_index;
+            }
 
         }
         if (auth()->user()->week_days == "5") {
             if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
                 $total_penalty += 0.25;
+
             } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
                 $range_index = ceil(($total_late_minutes - 15) / 15);
                 $total_penalty += 0.25 * $range_index;
             }
+            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
+                $total_penalty += 0.25;
+            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
+                $srange_index = ceil(($total_late_minutes - 15) / 15);
+                $total_penalty += 0.25 * $srange_index;
+            }
         }
-
 
         $deduction = $total_penalty + $fine;
         if ($chj) {
@@ -948,8 +974,8 @@ class AttendanceRecordController extends Controller
 
         $info[] = [
             'day' => $i,
-            'hour' => $hour,
-            'minute' => $minute,
+            'hour' => $hours,
+            'minute' => $minutes,
             'deduction' => $deduction,
             'check_in' => $c_in,
             'check_out' => $c_out
@@ -989,6 +1015,9 @@ class AttendanceRecordController extends Controller
 
     public function ediAtttendanceRecord($id)
     {
+        $user = auth()->user();
+        $permissions = getUserPermissions($user);
+
         $color = "";
         $info = [];
         $i = 0;
@@ -1201,6 +1230,10 @@ class AttendanceRecordController extends Controller
         return response()->json([
 
             'data' => $info,
+            'permissions' => [
+                'can_edit' => in_array('update_attendance_schedule', $permissions),
+                'can_delete' => in_array('delete_attendance_schedule', $permissions),
+            ],
         ], 200);
 
     }
@@ -1257,42 +1290,41 @@ class AttendanceRecordController extends Controller
         ]);
     }
 
-    public function attendanceRecordEdit()
+    public function attendanceRecordEdit(Request $request)
     {
+        $id = auth()->user()->id;
+        if (auth()->user()->role == "1") {
+            $query = DB::table('users as u')
+                ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department');
 
-        $currentMonthStart = Carbon::now()->startOfMonth();
-        $currentMonthEnd = Carbon::now()->endOfMonth();
-
-        $employeeIds = DB::table('attendance_records')
-            ->whereBetween('shift_in', [$currentMonthStart, $currentMonthEnd])
-            ->pluck('user_id')
-            ->unique();
-
-        $users = DB::table('users as u')
-            ->join('departments as d', 'd.id', '=', 'u.department_id')
-            ->select('u.id as id', 'u.employee_id as emp_id', 'u.username as username', 'd.name as department')
-            ->whereIn('u.id', $employeeIds)
-            ->paginate(10);
-
-
-
-        $data = [];
-        foreach ($users as $user) {
-            $data[] = [
-                'id' => $user->id,
-                'emp_id' => $user->emp_id,
-                'name' => $user->username,
-                'department' => $user->department,
-
-            ];
+        } else {
+            $query = DB::table('users as u')
+                ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->join('leader_employees as ld', 'ld.employee_id', '=', 'u.id')
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
+                ->where('ld.leader_id', '=', $id);
         }
 
+        if ($request->has('search') && $request->input('search')['value']) {
+            $search = $request->input('search')['value'];
+            $query->where('name', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%");
+        }
+
+
+
+        $perPage = $request->input('length', 10);
+        $currentPage = ($request->input('start', 0) / $perPage) + 1;
+
+        $users = $query->paginate($perPage, ['*'], 'page', $currentPage);
+
         return response()->json([
-            'data' => $data,
+            'draw' => $request->input('draw'),
             'recordsTotal' => $users->total(),
             'recordsFiltered' => $users->total(),
+            'data' => $users->items(),
         ]);
-
     }
     public function empployeeList()
     {
@@ -1330,12 +1362,14 @@ class AttendanceRecordController extends Controller
 
         $color = "";
         $total_late_minutes = 0;
+        $stotal_late_minutes = 0;
         $total_penalty = 0.0;
         $i = 0;
         $c_in = "";
         $c_out = "";
         $fine = 0.0;
         $late_minutes = 0;
+        $slate_minutes = 0;
         $today = Carbon::today();
         $datetoday = date('Y-m-d', strtotime($today));
         $chj = DB::table('attendance_records')
@@ -1444,7 +1478,7 @@ class AttendanceRecordController extends Controller
                     }
 
                     if ($check_out->lessThan($shift_out)) {
-                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
                         $i++;
                     }
 
@@ -1452,6 +1486,7 @@ class AttendanceRecordController extends Controller
                     // $total_penalty += $penalty;
 
                     $total_late_minutes += $late_minutes;
+                    $stotal_late_minutes += $slate_minutes;
 
                 }
 
@@ -1462,27 +1497,40 @@ class AttendanceRecordController extends Controller
             ->where('id', $id)
             ->first();
 
-        $hour = floor($late_minutes / 60);
-        $minute = $late_minutes % 60;
 
+        $hours = floor(($late_minutes + $slate_minutes) / 60);
+        $minutes = ($late_minutes + $slate_minutes) % 60;
 
-        if ($week_days == "6") {
+        if (auth()->user()->week_days == "6") {
             if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
                 $total_penalty += 0.125;
             } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
                 $range_index = ceil(($total_late_minutes - 15) / 15);
                 $total_penalty += 0.125 * $range_index;
             }
+            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
+                $srange_index = ceil(($stotal_late_minutes - 15) / 15);
+                $total_penalty += 0.125 * $srange_index;
+            }
 
         }
-        if ($week_days == "5") {
+        if (auth()->user()->week_days == "5") {
             if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
                 $total_penalty += 0.25;
             } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
                 $range_index = ceil(($total_late_minutes - 15) / 15);
                 $total_penalty += 0.25 * $range_index;
             }
+            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
+                $total_penalty += 0.25;
+            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
+                $srange_index = ceil(($total_late_minutes - 15) / 15);
+                $total_penalty += 0.25 * $srange_index;
+            }
         }
+
 
 
         $deduction = $total_penalty + $fine;
@@ -1504,8 +1552,8 @@ class AttendanceRecordController extends Controller
 
         $info[] = [
             'day' => $i,
-            'hour' => $hour,
-            'minute' => $minute,
+            'hour' => $hours,
+            'minute' => $minutes,
             'deduction' => $deduction,
             'check_in' => $c_in,
             'check_out' => $c_out
@@ -1546,10 +1594,12 @@ class AttendanceRecordController extends Controller
         $info = [];
         $i = 0;
         $total_late_minutes = 0;
+        $stotal_late_minutes = 0;
         $total_penalty = 0.0;
 
         $fine = 0.0;
         $late_minutes = 0;
+        $slate_minutes = 0;
         $data = DB::table('attendance_records as ar')
             ->join('users as u', 'u.id', '=', 'ar.user_id')
             ->select(
@@ -1706,11 +1756,12 @@ class AttendanceRecordController extends Controller
                     }
 
                     if ($check_out->lessThan($shift_out)) {
-                        $late_minutes += abs($shift_out->diffInMinutes($check_out));
+                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
                         $i++;
                     }
 
                     $total_late_minutes += $late_minutes;
+                    $stotal_late_minutes += $slate_minutes;
 
                 }
 
@@ -1800,9 +1851,8 @@ class AttendanceRecordController extends Controller
             ];
         }
 
-        $hours = floor($late_minutes / 60);
-        $minutes = $late_minutes % 60;
-
+        $hours = floor(($late_minutes + $slate_minutes) / 60);
+        $minutes = ($late_minutes + $slate_minutes) % 60;
 
 
 
@@ -1813,6 +1863,12 @@ class AttendanceRecordController extends Controller
                 $range_index = ceil(($late_minutes - 15) / 15);
                 $total_penalty += 0.125 * $range_index;
             }
+            if ($slate_minutes > 0 && $slate_minutes <= 15) {
+                $total_penalty += 0.125;
+            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
+                $srange_index = ceil(($slate_minutes - 15) / 15);
+                $total_penalty += 0.125 * $srange_index;
+            }
 
         }
         if (auth()->user()->week_days == "5") {
@@ -1821,6 +1877,12 @@ class AttendanceRecordController extends Controller
             } elseif ($late_minutes > 15 && $late_minutes <= 540) {
                 $range_index = ceil(($late_minutes - 15) / 15);
                 $total_penalty += 0.25 * $range_index;
+            }
+            if ($slate_minutes > 0 && $slate_minutes <= 15) {
+                $stotal_penalty += 0.25;
+            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
+                $srange_index = ceil(($slate_minutes - 15) / 15);
+                $total_penalty += 0.25 * $srange_index;
             }
         }
 

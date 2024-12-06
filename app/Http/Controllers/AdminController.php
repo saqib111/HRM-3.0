@@ -171,7 +171,9 @@ class AdminController extends Controller
                     'designations.name as designation_name',
                     'users.status',
                     'users.image'
-                ]);
+                ])
+                ->orderBy('users.id', 'asc'); // This ensures sorting by ID in ascending order
+
 
             // Filter by company if specified
             if ($request->has('company')) {

@@ -48,15 +48,11 @@ class GroupController extends Controller
     {
         try {
             $id = auth()->user()->id;
-            $request->validate([
-                'group_name' => 'required',
-                'employee_id' => 'required',
 
-            ]);
 
             $group = new Group();
             $group->name = $request->group_name;
-            $group->user_id = implode(' , ', $request->employee_id);
+            $group->user_id = $request->selectedEmployee;
             $group->leader_id = $id;
             $group->status = "0";
             $group->save();
@@ -119,8 +115,11 @@ class GroupController extends Controller
         //       ->where('lu.status','0') 
         //       ->select('u.id as id','u.username as name') 
         //       ->get(); 
-
-        $group = Group::where('leader_id', $id)->where('status', '0');
+        if (auth()->user()->role == "1") {
+            $group = Group::where('status', '0');
+        } else {
+            $group = Group::where('leader_id', $id)->where('status', '0');
+        }
 
 
         if ($request->has('name')) {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
+
 
 class DepartmentController extends Controller
 {
@@ -13,10 +15,31 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+
+        // Fetch user permissions
+        $permissions = getUserPermissions($user);
+        $canUpdateDepartment = $user->role == 1 || in_array('update_department', $permissions);
+        $canDeleteDepartment = $user->role == 1 || in_array('delete_department', $permissions);
+
         if ($request->ajax()) {
-            $data = Department::select(['id', 'name']); // Select relevant fields
-            return DataTables::of($data)->make(true); // Return DataTables response
+            // Get data from the database
+            $collection = DB::table('departments')
+                ->select('id', 'name') // Select id and name fields
+                ->orderBy('id', 'asc');
+
+            // Return DataTables response with the correct columns
+            return DataTables::of($collection)
+                ->addIndexColumn() // Add index column
+                ->addColumn('action', function ($row) use ($canUpdateDepartment, $canDeleteDepartment) {
+                    return [
+                        'edit' => $canUpdateDepartment,
+                        'delete' => $canDeleteDepartment,
+                    ];
+                })
+                ->make(true);
         }
+
         return view('department'); // Return the main view
     }
 

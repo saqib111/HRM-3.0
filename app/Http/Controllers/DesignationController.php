@@ -6,6 +6,8 @@ use App\Models\Department;
 use App\Models\Designation;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
+
 
 class DesignationController extends Controller
 {
@@ -14,17 +16,38 @@ class DesignationController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+
+        // Fetch user permissions
+        $permissions = getUserPermissions($user);
+        $canUpdateDesignation = $user->role == 1 || in_array('update_designation', $permissions);
+        $canDeleteDesignation = $user->role == 1 || in_array('delete_designation', $permissions);
+
         if ($request->ajax()) {
-            // Join the Department table to get department names
-            $data = Designation::select('designations.id', 'designations.name as designation_name', 'departments.name as department_name')
-                ->join('departments', 'designations.department_id', '=', 'departments.id'); // Join Designation with Department table
+            // Get data from the database
+            $collection = DB::table('designations as de')
+                ->join('departments as dt', 'dt.id', '=', 'de.department_id')
+                ->select(
+                    'de.id as id',  // Add the id here
+                    'de.name as name',
+                    'dt.name as department_name',
+                ) // Select id and name fields
+                ->orderBy('de.id', 'asc');
 
-            return DataTables::of($data)->make(true); // Return DataTables response
+            // Return DataTables response with the correct columns
+            return DataTables::of($collection)
+                ->addIndexColumn() // Add index column
+                ->addColumn('action', function ($row) use ($canUpdateDesignation, $canDeleteDesignation) {
+                    return [
+                        'edit' => $canUpdateDesignation,
+                        'delete' => $canDeleteDesignation,
+                    ];
+                })
+                ->make(true);
         }
-
-        // Pass departments data to the view for the form
         $departments = Department::all();
-        return view('designation', compact('departments'));
+
+        return view('designation', compact('departments')); // Return the main view
     }
 
     public function create()

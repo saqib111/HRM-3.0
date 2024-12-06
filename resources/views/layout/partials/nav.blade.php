@@ -65,29 +65,36 @@
                         </a>
                     </li>
                 @endif
-                <li class="submenu">
-                    <a href="#"><i class="fa fa-user"></i> <span> Departments</span> <span
-                            class="menu-arrow"></span></a>
-                    <ul>
-                        <!-- <li>
-                            <a href="{{ route('company.index')}}"
-                                class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
-                        </li> -->
-                        <li>
-                            <a href="{{ route('brand.index')}}"
-                                class="{{ request()->routeIs('brand.index') ? 'active' : '' }}">Brand</a>
-                        </li>
-                        <li>
-                            <a href="{{ route('department.index')}}"
-                                class="{{ request()->routeIs('department.index') ? 'active' : '' }}">Department</a>
-                        </li>
-
-                        <li>
-                            <a href="{{ route('designation.index')}}"
-                                class="{{ request()->routeIs('designation.index') ? 'active' : '' }}">Designation</a>
-                        </li>
-                    </ul>
-                </li>
+                @if($user->role == 1 || in_array('show_brands', $permissions) || in_array('show_departments', $permissions) || in_array('show_designations', $permissions))
+                    <li class="submenu">
+                        <a href="#"><i class="fa fa-user"></i> <span> Departments</span> <span
+                                class="menu-arrow"></span></a>
+                        <ul>
+                            <!-- <li>
+                                                        <a href="{{ route('company.index')}}"
+                                                            class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
+                                                    </li> -->
+                            @if($user->role == 1 || in_array('show_brands', $permissions))
+                                <li>
+                                    <a href="{{ route('brand.index')}}"
+                                        class="{{ request()->routeIs('brand.index') ? 'active' : '' }}">Brand</a>
+                                </li>
+                            @endif
+                            @if($user->role == 1 || in_array('show_departments', $permissions))
+                                <li>
+                                    <a href="{{ route('department.index')}}"
+                                        class="{{ request()->routeIs('department.index') ? 'active' : '' }}">Department</a>
+                                </li>
+                            @endif
+                            @if($user->role == 1 || in_array('show_designations', $permissions))
+                                <li>
+                                    <a href="{{ route('designation.index')}}"
+                                        class="{{ request()->routeIs('designation.index') ? 'active' : '' }}">Designation</a>
+                                </li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
                 <li class="submenu ">
                     <a href="#"><i class="fa fa-calendar fa-1x"></i> <span>Manage Schedule</span> <span
                             class="menu-arrow"></span></a>
@@ -119,16 +126,20 @@
                         </a>
                     </li>
                 @endif
-                <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
-                    <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
-                    </a>
-                </li>
+                @if($user->role == 1 || in_array('view_manage_shift', $permissions))
+                    <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
+                        <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
+                        </a>
+                    </li>
+                @endif
+                @if($user->role == 1 || in_array('show_fingerprint_record', $permissions))
+                    <li class="{{ request()->routeIs('fingerprint-record.index') ? 'active' : '' }}">
+                        <a href="{{route('fingerprint-record.index')}}"><i class="fa-solid fa-fingerprint"></i>
+                            <span>Fingerprint Record</span>
+                        </a>
+                    </li>
+                @endif
 
-                <li class="{{ request()->routeIs('fingerprint-record.index') ? 'active' : '' }}">
-                    <a href="{{route('fingerprint-record.index')}}"><i class="fa-solid fa-fingerprint"></i>
-                        <span>Fingerprint Record</span>
-                    </a>
-                </li>
 
                 <!-- Leave Application -->
                 <li class="menu-title">

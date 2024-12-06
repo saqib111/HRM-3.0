@@ -128,6 +128,86 @@ Route::middleware('auth')->group(function () {
             ->name('search.users')
             ->defaults('permission', 'show_fingerprint_record');
 
+        // Brand Record Routes
+        Route::prefix('brand')->name('brand.')->group(function () {
+            Route::get('/', [BrandController::class, 'index'])
+                ->name('index')
+                ->defaults('permission', 'show_brands');
+
+            Route::get('{brand}', [BrandController::class, 'show'])
+                ->name('show')
+                ->defaults('permission', 'show_brands');
+
+            Route::post('/', [BrandController::class, 'store'])
+                ->name('store')
+                ->defaults('permission', 'create_brand');
+
+            Route::get('{brand}/edit', [BrandController::class, 'edit'])
+                ->name('edit')
+                ->defaults('permission', 'update_brand');
+
+            Route::put('{brand}', [BrandController::class, 'update'])
+                ->name('update')
+                ->defaults('permission', 'update_brand');
+
+            Route::delete('{brand}', [BrandController::class, 'destroy'])
+                ->name('destroy')
+                ->defaults('permission', 'delete_brand');
+        });
+
+        // Department Record Routes
+        Route::prefix('department')->name('department.')->group(function () {
+            Route::get('/', [DepartmentController::class, 'index'])
+                ->name('index')
+                ->defaults('permission', 'show_departments');
+
+            Route::get('{department}', [DepartmentController::class, 'show'])
+                ->name('show')
+                ->defaults('permission', 'show_departments');
+
+            Route::post('/', [DepartmentController::class, 'store'])
+                ->name('store')
+                ->defaults('permission', 'create_department');
+
+            Route::get('{department}/edit', [DepartmentController::class, 'edit'])
+                ->name('edit')
+                ->defaults('permission', 'update_department');
+
+            Route::put('{department}', [DepartmentController::class, 'update'])
+                ->name('update')
+                ->defaults('permission', 'update_department');
+
+            Route::delete('{department}', [DepartmentController::class, 'destroy'])
+                ->name('destroy')
+                ->defaults('permission', 'delete_department');
+        });
+
+        // Designation Record Routes
+        Route::prefix('designation')->name('designation.')->group(function () {
+            Route::get('/', [DesignationController::class, 'index'])
+                ->name('index')
+                ->defaults('permission', 'show_designations');
+
+            Route::get('{designation}', [DesignationController::class, 'show'])
+                ->name('show')
+                ->defaults('permission', 'show_designations');
+
+            Route::post('/', [DesignationController::class, 'store'])
+                ->name('store')
+                ->defaults('permission', 'create_designation');
+
+            Route::get('{designation}/edit', [DesignationController::class, 'edit'])
+                ->name('edit')
+                ->defaults('permission', 'update_designation');
+
+            Route::put('{designation}', [DesignationController::class, 'update'])
+                ->name('update')
+                ->defaults('permission', 'update_designation');
+
+            Route::delete('{designation}', [DesignationController::class, 'destroy'])
+                ->name('destroy')
+                ->defaults('permission', 'delete_designation');
+        });
     });
 
     // ROUTES FOR USER PROFILE
@@ -137,6 +217,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/emergency-update', [UserProfileController::class, 'updateEmergency'])->name('emergency.update')->defaults('permission', 'update_employee_info');
         Route::post('/dependant-update', [UserProfileController::class, 'updateDependant'])->name('dependant.update')->defaults('permission', 'update_employee_info');
     });
+
+    //  Route For View Employees for Manage Shift
+    Route::middleware(['auth', 'check_permission'])->group(function () {
+        Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list')->defaults('permission', 'view_manage_shift');
+        Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete')->defaults('permission', 'bulk_delete_attendance_schedule');
+        Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single')->defaults('permission', 'delete_attendance_schedule');
+    });
+
+    Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(function () {
+        Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page')->defaults('permission', 'view_attendance');
+        Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance')->defaults('permission', 'view_attendance');
+    });
+
+
 
 
     //Schedule Start
@@ -187,11 +281,11 @@ Route::middleware('auth')->group(function () {
     Route::post('team-update', [LeaderEmployeeController::class, 'update'])->name('update.team');
     Route::get('test/{id}', [ScheduleController::class, 'test']);
     Route::get('/employee-attendance-list', [AttendanceRecordController::class, 'attendanceRecordEdit'])->name('emp.edit');
-    Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list');
-    Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page');
-    Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance');
-    Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete');
-    Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single');
+    // Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list');
+    // Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page');
+    // Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance');
+    // Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete');
+    // Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single');
     Route::get('/get-schedule/{id}', [AttendanceRecordController::class, 'getSchedule']);
     Route::post('/schedule-update', [AttendanceRecordController::class, 'updateAttendance'])->name('schedule.update');
     Route::get('/statistics-admin/{id}', [AttendanceRecordController::class, 'statisticsAdmin'])->name('statistics.emp');
@@ -216,9 +310,9 @@ Route::middleware('auth')->group(function () {
 
     // Dynamic Department Routes
     Route::resource('company', CompanyController::class);
-    Route::resource('brand', BrandController::class);
-    Route::resource('department', DepartmentController::class);
-    Route::resource('designation', DesignationController::class);
+    // Route::resource('brand', BrandController::class);
+    // Route::resource('department', DepartmentController::class);
+    // Route::resource('designation', DesignationController::class);
 
     // Leave Application Frontend Route
     Route::get('/leave_application_form', [LeaveController::class, 'leave_form'])->name('leave.form.show');

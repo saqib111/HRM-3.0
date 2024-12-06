@@ -1,32 +1,93 @@
 @extends('layout.mainlayout')
 @section('css')
 <!-- Litepicker CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
-
+<link href="{{ asset('assets/css/custom-multi.css') }}" rel="stylesheet">
 <style>
-    <style>body {
-        font-family: "Arial", sans-serif;
-        background-color: #eaeaea;
-        padding: 20px;
+    .MultiDropdown {
+        width: 100%;
+        position: relative;
     }
 
-    .container {
-        max-width: 600px;
-        height: 100px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        border-color: green;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    .search-container {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 5px;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        border-radius: 4px;
     }
 
-    .selection {
+    .search-box-style {
+        width: 100%;
+        border: none;
+        outline: none;
+        background-color: transparent;
+        padding: 5px 10px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        max-width: 100%;
+    }
+
+    .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        margin: 2px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .selected-tag span {
+        margin-left: 5px;
+        cursor: pointer;
+    }
+
+    .options-container {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        border: 1px solid #ccc;
+        border-top: none;
+        max-height: 150px;
+        overflow-y: auto;
+        background-color: #fff;
+        z-index: 100;
+        border-radius: 0 0 4px 4px;
         display: none;
+        box-sizing: border-box;
+    }
+
+    .option {
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+    .option.selected {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .option:hover {
+        background-color: #f0f0f0;
     }
 </style>
 @endsection
+
 @section('content')
 <div class="page-header">
     <div class="row align-items-center">
@@ -92,17 +153,31 @@
                         </div>
                     </div>
 
-                    <!-- Multiple Select With Search -->
-                    <div class="col-sm-12">
-                        <div class="input-block mb-3">
-                            <label for="selectEmployee">Select Employee <span class="text-danger">*</span></label>
-                            <select class="form-select" name="employee_id[]" id="selectEmployee" multiple>
 
-                            </select>
+                    <div class="input-block mb-3">
 
+                        <div class="custom-select" id="first-assigner-select">
+                            <label for="select_box">First Assigner Name:</label>
+                            <div class="select-box first_select_box" id="select-box">
+                                <input type="hidden" class="tags_input" id="first_assigners_backend_field" name="tags"
+                                    hidden>
+                                <div class="selected-options"></div>
+                                <div class="arrow">
+                                    <i class="fa fa-angle-down first_icon"></i>
+                                </div>
+                            </div>
+                            <div class="options">
+                                <div class="option-search-tags">
+                                    <input type="text" class="search-tags" placeholder="Search Tags ..">
+                                    <button type="button" class="clear"><i class="fa fa-close"></i></button>
+                                </div>
+                                <div class="op-disabled" selected disabled>Select Users</div>
+                                <div class="no-result-message" style="display:none;">No Result Match</div>
+                            </div>
+                            <span class="text-danger" id="first_field_error"></span>
                         </div>
                     </div>
-                    <!-- Multiple Select With Search End-->
+
                     <div class="submit-section">
                         <button class="btn btn-primary">Submit</button>
                     </div>
@@ -114,7 +189,7 @@
 
 
 <!--Delete Modal -->
-<div class="modal fade" id="deleteGroup" tabindex="-1" aria-labelledby="exampleModalScrollable2" aria-hidden="true">
+<div class="modal  fade" id="deleteGroup" tabindex="-1" aria-labelledby="exampleModalScrollable2" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -137,7 +212,7 @@
 
 
 <!-- The Modal -->
-<div class="modal fade" id="employeeList" aria-hidden="true">
+<div class="modal fade" id="employeeList" tabindex="-1" aria-labelledby="employeeListLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
 
@@ -169,7 +244,7 @@
                 </table>
             </div>
 
-            <!-- Modal footer -->
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -182,27 +257,21 @@
 
 
 
-<!-- PreLoader -->
+
 <div id="loader" class="loader" style="display: none;">
     <div class="loader-animation"></div>
 </div>
 @endsection
 @section('script-z')  
 <!-- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
-
-
+<script src="{{asset('assets/js/custom-multi.js')}}"></script>
 
 <script>
 
     $(document).ready(function () {
 
-        $('#selectEmployee').select2({
-            placeholder: 'Search Employees',
-            allowClear: true,
-            width: '100%',
-            closeOnSelect: false,
-            multiple: true
-        });
+
+
         let table = $('#groupTable').DataTable({
             processing: true,
             serverSide: true,
@@ -235,54 +304,15 @@
 
     });
 
-    function loadEmployees() {
-        $.ajax({
-            url: '{{ route('group.employee') }}',
-            type: 'GET',
-            success: function (response) {
-                var select = $('#selectEmployee');
-                select.empty();
-
-                $.each(response.employee, function (key, value) {
-                    select.append('<option value="' + value.id + '">' + value.name + '</option>');
-                });
-
-                if (!select.data('multiselect-initialized')) {
-                    new MultiSelectTag("selectEmployee", {
-                        rounded: true,
-                        shadow: false,
-                        placeholder: "Search",
-                        tagColor: {
-                            textColor: "#327b2c",
-                            borderColor: "#92e681",
-                            bgColor: "#eaffe6"
-                        }
-                    });
-                    select.data('multiselect-initialized', true);
-                }
-            },
-            error: function (err) {
-                createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Error loading employees.');
-            }
-        });
-    }
-
 
 
     function groupAdd() {
         $('#groupName').val('');
         clearValidationStates();
-        loadEmployees();
+        // loadEmployees();
 
         $('#create-group').modal('show').on('shown.bs.modal', function () {
-            if (!$('#selectEmployee').hasClass("select2-hidden-accessible")) {
-                $('#selectEmployee').select2({
-                    placeholder: 'Search Employees',
-                    allowClear: true,
-                    width: '100%',
-                    closeOnSelect: false
-                });
-            }
+            $('#first-assigner-select').val('');
         });
     }
 
@@ -292,20 +322,27 @@
 
     $('#group-submit').on('submit', function (event) {
         event.preventDefault();
-        $('.select').select2();
+        const employee_id = [];
+
         var formData = new FormData();
-        console.log($('#groupName').val());
         formData.append('group_name', $('#groupName').val());
 
-        var selectedEmployee = $('#selectEmployee').val();
-        if (selectedEmployee) {
-            selectedEmployee.forEach(function (employee_id) {
-                formData.append('employee_id[]', employee_id);
-            });
-        }
+        $("#first-assigner-select .tag").each(function () {
+            const value = $(this).data("value");
+            employee_id.push(value);
+        });
+
+
+        formData.append('selectedEmployee', employee_id);
+
+        // if (selectedEmployee) {
+        //     selectedEmployee.forEach(function (employee_id) {
+        //         formData.append('employee_id[]', employee_id);
+        //     });
+        // }
         var isValid = true;
         clearValidationStates();
-        if (!validateEmployee(selectedEmployee)) isValid = false;
+        if (!validateEmployee(employee_id)) isValid = false;
         if (!validateField('#groupName', 'Group Name')) isValid = false;
         if (isValid) {
             showLoader();
@@ -330,7 +367,7 @@
 
                 },
                 error: function (data) {
-                    hideLoader();
+
 
                     var errors = data.responseJSON;
                     createToast('info', 'fa-solid fa-circle-uncheck', 'Fail', data.responseJSON.employee_name + ' ' + 'Schedule already exist.');
@@ -346,17 +383,19 @@
     }
     function valdateCancel() {
 
-        $('#selectEmployee').removeClass('is-invalid is-valid');
+        $('#first-assigner-select').removeClass('is-invalid is-valid');
         $('#groupName').removeClass('is-invalid is-valid');
 
         $('.text-danger').remove();
     }
     function validateEmployee(selectedEmployee) {
-        let parent = $('#selectEmployee').closest('.input-block');
+
+        let parent = $('#first-assigner-select').closest('.input-block');
         parent.find('.text-danger').remove();
 
         if (!selectedEmployee || selectedEmployee.length === 0) {
-            $('#assign_label').addClass('is-invalid');
+
+
             parent.append('<span class="text-danger">Please select at least one Employee.</span>');
             return false;
         } else {
@@ -420,7 +459,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function (response) {
-
+                    console.log(response)
                     $('#groupInfo').empty().append(
 
                         `<div class="col-md-12"><h5 class="modal-title">Group name : ${response.group_name} </h5></div>
@@ -450,7 +489,17 @@
         }
 
 
+    }
 
-    } 
+
+
+
+
+
+
+
+
 </script>
+
+
 @endsection

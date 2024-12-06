@@ -138,6 +138,20 @@
 </style>
 @endsection
 @section('content')
+
+
+@php
+    $user = auth()->user();
+    $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
+    // Check if the user has at least one of the required permissions or is a superadmin
+    $hasActionPermission = $user->role == 1 ||
+        in_array('update_attendance_schedule', $permissions) ||
+        in_array('delete_attendance_schedule', $permissions);
+
+    $hasActionPermissionBulkDelete = $user->role == 1 ||
+        in_array('bulk_delete_attendance_schedule', $permissions);
+@endphp
+
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="page-header">
     <div class="row">
@@ -177,11 +191,6 @@
                     </svg>
                     <div class="time-counter" id="timeCounter">0:00 hrs</div>
                 </div>
-                <div class="punch-btn-section d-flex justify-content-center mt-3">
-                    <!-- <button id="punchInBtn" class="btn btn-primary punch-btn mx-2">Punch In</button>
-                <button id="punchOutBtn" class="btn btn-primary punch-btn mx-2" disabled>Punch Out</button> -->
-                </div>
-
             </div>
         </div>
     </div>
@@ -268,7 +277,9 @@
                 </button>
                 <button class="btn btn-primary" type="submit" id="submitButton"> Search </button>
             </div>
-            <button id="deleteSelected" class="btnDanger">Bulk Delete</button>
+            @if($hasActionPermissionBulkDelete)
+                <button id="deleteSelected" class="btnDanger">Bulk Delete</button>
+            @endif
         </div>
     </div>
 </form>
@@ -292,7 +303,9 @@
                         <th>Check Out</th>
                         <th>Duty Hours</th>
                         <th class="text-center">Verify</th>
-                        <th>Action</th> <!-- Action Column -->
+                        @if($hasActionPermission)
+                            <th class="text-center">Action</th>
+                        @endif
                         <th><input type="checkbox" id="select-all"> </th> <!-- Checkbox Column at the End -->
                     </tr>
                 </thead>
@@ -420,6 +433,11 @@
             success: function (response) {
                 console.log(response);
 
+                let isSuperadmin = {{ auth()->user()->role == 1 ? 'true' : 'false' }};
+                let canEdit = isSuperadmin || {{ in_array('update_attendance_schedule', $permissions) ? 'true' : 'false' }};
+                let canDelete = isSuperadmin || {{ in_array('delete_attendance_schedule', $permissions) ? 'true' : 'false' }};
+                let canBulkDelete = isSuperadmin || {{ in_array('bulk_delete_attendance_schedule', $permissions) ? 'true' : 'false' }};
+
                 $('#attendance-employee').DataTable({
                     destroy: true,
                     pageLength: 31,
@@ -502,22 +520,31 @@
                             data: null,
                             title: 'Action',
                             render: function (data, type, row) {
-                                console.log(row)
-                                return `
-                                    <i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>
-                                    <i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>
-                                `;
+                                let buttons = '';
+                                if (canEdit) {
+                                    buttons += `<i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>`;
+                                }
+                                if (canDelete) {
+                                    buttons += `<i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>`;
+                                }
+                                return buttons || ' '; // Return buttons if any exist, otherwise return empty string
                             },
-                            orderable: false
+                            orderable: false,
+                            className: 'text-center',
+                            visible: canEdit || canDelete // Dynamically show/hide the column based on permissions
                         },
                         {
                             data: null,
-                            title: '<input type="checkbox" id="select-all" />',
+                            title: canBulkDelete ? '<input type="checkbox" id="select-all" />' : '',
                             render: function (data, type, row) {
-                                return `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`;
+                                return canBulkDelete
+                                    ? `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`
+                                    : '';
                             },
-                            orderable: false
-                        },
+                            orderable: false,
+                            className: 'text-center',
+                            visible: canBulkDelete // Show/hide column based on permission
+                        }
                     ],
                     order: [],
 

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
-
+use Illuminate\Support\Facades\DB;
 class BrandController extends Controller
 {
     /**
@@ -13,12 +13,34 @@ class BrandController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+
+        // Fetch user permissions
+        $permissions = getUserPermissions($user);
+        $canUpdatebrand = $user->role == 1 || in_array('update_brand', $permissions);
+        $canDeletebrand = $user->role == 1 || in_array('delete_brand', $permissions);
+
         if ($request->ajax()) {
-            $data = Brand::select(['id', 'name']); // Select relevant fields
-            return DataTables::of($data)->make(true); // Return DataTables response
+            // Get data from the database
+            $collection = DB::table('brands')
+                ->select('id', 'name') // Select id and name fields
+                ->orderBy('id', 'asc');
+
+            // Return DataTables response with the correct columns
+            return DataTables::of($collection)
+                ->addIndexColumn() // Add index column
+                ->addColumn('action', function ($row) use ($canUpdatebrand, $canDeletebrand) {
+                    return [
+                        'edit' => $canUpdatebrand,
+                        'delete' => $canDeletebrand,
+                    ];
+                })
+                ->make(true);
         }
+
         return view('brand'); // Return the main view
     }
+
 
     public function create()
     {

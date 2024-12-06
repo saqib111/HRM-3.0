@@ -764,8 +764,11 @@
                     'Manage Employee': ['create_user', 'show_users', 'update_user', 'delete_user',
                         'change_password', 'manage_permissions', 'update_status'
                     ],
+                    'Manage Brand': ['show_brands', 'create_brand', 'update_brand', 'delete_brand'],
+                    'Manage Department': ['show_departments', 'create_department', 'update_department', 'delete_department'],
+                    'Manage Designation': ['show_designations', 'create_designation', 'update_designation', 'delete_designation'],
                     'Manage Team': ['create_team', 'show_teams', 'update_team', 'delete_team'],
-                    'Manage Shift': ['create_schedule', 'update_schedule', 'delete_schedule'],
+                    'Manage Shift': ['view_manage_shift', 'view_attendance', 'update_attendance_schedule', 'delete_attendance_schedule', 'bulk_delete_attendance_schedule'],
                     'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
                     'Fingerprint Record': ['show_fingerprint_record', 'update_fingerprint_status', 'delete_fingerprint_record'],
                     'Employee Info': ['show_all_employee_info', 'update_employee_info'],
