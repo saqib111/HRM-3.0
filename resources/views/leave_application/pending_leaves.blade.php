@@ -1,5 +1,10 @@
 @extends('layout.mainlayout')
 @section('content')
+
+@php
+    $user = auth()->user();
+    $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
+@endphp
 <style>
     .date5,
     .date4,
@@ -92,7 +97,7 @@
         <div class="col-md-4 d-flex justify-content-end">
             <ul class="c_Employee">
                 <li>
-                    @if(auth()->user()->role === "1" || auth()->user()->role === "4")
+                    @if(auth()->user()->role === "1" || in_array('pending_leaves', $permissions))
                                         <div class="d-flex justify-content-end">
                                             <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                             @php

@@ -111,6 +111,9 @@ class AttendanceRecordController extends Controller
         $c_in = "";
         $c_out = "";
         $absent = "";
+        $difference = 0;
+        $v1 = "";
+        $v2 = "";
         $id = auth()->user()->id;
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
@@ -214,7 +217,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchIn)) {
+                if (!empty($closestPunchIn) && !empty($d->check_in)) {
                     $finger_print1 = date('Y-m-d H:i:s', strtotime($closestPunchIn->fingerprint_in));
                     $fp1 = Carbon::parse($finger_print1);
                     $checkIn1 = date('Y-m-d H:i:s', strtotime($d->check_in));
@@ -243,7 +246,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchOut)) {
+                if (!empty($closestPunchOut) && !empty($d->check_out)) {
                     $finger_print2 = date('Y-m-d H:i:s', strtotime($closestPunchOut->fingerprint_in));
                     $fp2 = Carbon::parse($finger_print2);
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
@@ -327,8 +330,15 @@ class AttendanceRecordController extends Controller
     public function searchRecord(Request $request)
     {
         $id = auth()->user()->id;
-        $absent = "";
         $color = "";
+        $info = [];
+        $i = 0;
+        $c_in = "";
+        $c_out = "";
+        $absent = "";
+        $difference = 0;
+        $v1 = "";
+        $v2 = "";
         $from = Carbon::parse($request->from_date);
         $to = Carbon::parse($request->to_date);
 
@@ -457,7 +467,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchIn)) {
+                if (!empty($closestPunchIn) && !empty($d->check_in)) {
                     $finger_print1 = date('Y-m-d H:i:s', strtotime($closestPunchIn->fingerprint_in));
                     $fp1 = Carbon::parse($finger_print1);
                     $checkIn1 = date('Y-m-d H:i:s', strtotime($d->check_in));
@@ -475,47 +485,6 @@ class AttendanceRecordController extends Controller
             }
 
 
-            if ($d->check_in && $d->check_out && $d->shift_in && $d->shift_out) {
-
-                $shift_in = Carbon::parse($d->shift_in);
-                $shift_out = Carbon::parse($d->shift_out);
-                $check_in = Carbon::parse($d->check_in);
-                $check_out = Carbon::parse($d->check_out);
-
-
-                if (
-                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
-                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
-                    abs($check_out->diffInHours($shift_out)) > 6
-                ) {
-
-
-                    if (auth()->user()->week_days == "6") {
-                        $i++;
-                        $fine = $fine + 4;
-                    } else if (auth()->user()->week_days == "5") {
-                        $fine = $fine + 4.8;
-                        $i++;
-                    }
-                } else {
-
-
-                    if ($check_in->greaterThan($shift_in)) {
-                        $late_minutes += abs($shift_in->diffInMinutes($check_in));
-                        $i++;
-
-                    }
-
-                    if ($check_out->lessThan($shift_out)) {
-                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
-                        $i++;
-                    }
-
-                    $total_late_minutes += $late_minutes;
-                    $stotal_late_minutes += $late_minutes;
-                }
-
-            }
 
 
 
@@ -533,7 +502,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchOut)) {
+                if (!empty($closestPunchOut) && !empty($d->check_out)) {
                     $finger_print2 = date('Y-m-d H:i:s', strtotime($closestPunchOut->fingerprint_in));
                     $fp2 = Carbon::parse($finger_print2);
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
@@ -629,51 +598,134 @@ class AttendanceRecordController extends Controller
                 'id' => $d->id
             ];
         }
+        $users = User::select(
+            'users.id as user_id',
+            'users.username',
+            'users.employee_id',
+            'users.week_days', // Fetch the week_days field
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 1 
+                    ELSE NULL 
+                END) as total_absentees'),
+            DB::raw('SUM(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 
+                                ELSE 4.0 
+                            END 
+                    ELSE 0 
+                END) as absentee_fine'),
+            DB::raw('SUM(
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM approved_leaves 
+                    WHERE approved_leaves.user_id = attendance_records.user_id 
+                      AND approved_leaves.date = DATE(attendance_records.shift_in)
+                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                ) THEN 0 -- No fine if leave is approved
+                WHEN attendance_records.dayoff = "Yes" THEN 0
+                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                    LEAST(
+                        CASE 
+                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                            ELSE 4.0 -- Cap for 6-day workers
+                        END,
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        ) +
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        )
+                    )
+                ELSE 0 
+            END
+        ) as late_fine'),
+            DB::raw('(SELECT COUNT(*) 
+          FROM approved_leaves 
+          WHERE approved_leaves.user_id = users.id 
+            AND approved_leaves.date BETWEEN "' . $from . '" AND "' . $to . '") as leave_count')
+        )
+            ->leftJoin('attendance_records', function ($join) use ($from, $to) {
+                $join->on('users.id', '=', 'attendance_records.user_id')
+                    ->whereBetween('attendance_records.shift_in', [$from, $to]);
+            })
 
-        $hours = floor(($late_minutes + $slate_minutes) / 60);
-        $minutes = ($late_minutes + $slate_minutes) % 60;
+            ->where('users.status', "1") // Include only activated users
+
+            ->groupBy('users.id', 'users.username', 'users.employee_id', 'users.week_days')
+            ->orderBy('users.id', 'asc')
+            ->where('users.id', $id)
+            ->get();
 
 
 
+        $c_in = "";
+        $c_out = "";
+        $today = Carbon::today();
+        $datetoday = date('Y-m-d', strtotime($today));
+        $chj = DB::table('attendance_records')
+            ->select('check_in', 'check_out')
+            ->where('user_id', $id)
+            ->whereDate('shift_in', $datetoday)
+            ->first();
 
-        if (auth()->user()->week_days == "6") {
-            if ($late_minutes > 0 && $late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
-                $range_index = ceil(($late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $range_index;
+        if ($chj) {
+            if ($chj->check_in != null) {
+                $c_in = date('H:i:s A', strtotime($chj->check_in));
+            } else {
+                $c_in = "";
             }
-            if ($slate_minutes > 0 && $slate_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
-                $srange_index = ceil(($slate_minutes - 15) / 15);
-                $total_penalty += 0.125 * $srange_index;
+            if ($chj->check_out != null) {
+                $c_out = date('H:i:s A', strtotime($chj->check_out));
+            } else {
+                $c_out = "";
             }
-
+        } else {
+            $c_in = "";
+            $c_out = "";
         }
-        if (auth()->user()->week_days == "5") {
-            if ($late_minutes > 0 && $late_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
-                $range_index = ceil(($late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $range_index;
-            }
-            if ($slate_minutes > 0 && $slate_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
-                $srange_index = ceil(($slate_minutes - 15) / 15);
-                $total_penalty += 0.25 * $srange_index;
-            }
-        }
 
 
-        $deduction = $total_penalty + $fine;
+
         $in[] = [
-            'day' => $i,
-            'hour' => $hours,
-            'minute' => $minutes,
-            'deduction' => $deduction,
-            'abc' => $total_penalty
+            'day' => $users[0]->total_absentees,
+            'absent_fine' => $users[0]->absentee_fine,
+            'late_fine' => $users[0]->late_fine,
+            'total' => $users[0]->absentee_fine + $users[0]->late_fine,
+            'check_in' => $c_in,
+            'check_out' => $c_out
         ];
 
         return response()->json([
@@ -786,19 +838,129 @@ class AttendanceRecordController extends Controller
     public function statistics($fromDate = null, $toDate = null)
     {
         $info = [];
-
         $id = auth()->user()->id;
+        if ($fromDate == null && $toDate == null) {
+            $from = Carbon::now()->startOfMonth()->toDateString();
+            $to = Carbon::now()->subDay();
+        } else {
+            $from = Carbon::parse($fromDate);
+            $to = Carbon::parse($toDate);
+            $from = $from->format('Y-m-d H:i:s');
+            $to = $to->format('Y-m-d H:i:s');
 
-        $color = "";
-        $total_late_minutes = 0;
-        $stotal_late_minutes = 0;
-        $total_penalty = 0.0;
-        $i = 0;
+            if ($from->diffInMonths($to) > 3) {
+                return response()->json(['error' => 'The date range cannot exceed 4 months.'], 400);
+            }
+
+            if ($from->gt($to)) {
+                return response()->json(['error' => 'The "From Date" cannot be greater than the "To Date".'], 400);
+            }
+
+
+            $currentMonthEnd = Carbon::now()->endOfMonth();
+            if ($to->gt($currentMonthEnd)) {
+                return response()->json(['error' => 'The "To Date" cannot exceed the current month.'], 400);
+            }
+            $from = $from->format('Y-m-d H:i:s');
+            $to = $to->format('Y-m-d H:i:s');
+
+        }
+
+        $users = User::select(
+            'users.id as user_id',
+            'users.username',
+            'users.employee_id',
+            'users.week_days', // Fetch the week_days field
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 1 
+                    ELSE NULL 
+                END) as total_absentees'),
+            DB::raw('SUM(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 
+                                ELSE 4.0 
+                            END 
+                    ELSE 0 
+                END) as absentee_fine'),
+            DB::raw('SUM(
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM approved_leaves 
+                    WHERE approved_leaves.user_id = attendance_records.user_id 
+                      AND approved_leaves.date = DATE(attendance_records.shift_in)
+                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                ) THEN 0 -- No fine if leave is approved
+                WHEN attendance_records.dayoff = "Yes" THEN 0
+                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                    LEAST(
+                        CASE 
+                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                            ELSE 4.0 -- Cap for 6-day workers
+                        END,
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        ) +
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        )
+                    )
+                ELSE 0 
+            END
+        ) as late_fine'),
+            DB::raw('(SELECT COUNT(*) 
+          FROM approved_leaves 
+          WHERE approved_leaves.user_id = users.id 
+            AND approved_leaves.date BETWEEN "' . $from . '" AND "' . $to . '") as leave_count')
+        )
+            ->leftJoin('attendance_records', function ($join) use ($from, $to) {
+                $join->on('users.id', '=', 'attendance_records.user_id')
+                    ->whereBetween('attendance_records.shift_in', [$from, $to]);
+            })
+
+            ->where('users.status', "1") // Include only activated users
+
+            ->groupBy('users.id', 'users.username', 'users.employee_id', 'users.week_days')
+            ->orderBy('users.id', 'asc')
+            ->where('users.id', $id)
+            ->get();
+
+
+
         $c_in = "";
         $c_out = "";
-        $fine = 0.0;
-        $late_minutes = 0;
-        $slate_minutes = 0;
         $today = Carbon::today();
         $datetoday = date('Y-m-d', strtotime($today));
         $chj = DB::table('attendance_records')
@@ -807,155 +969,6 @@ class AttendanceRecordController extends Controller
             ->whereDate('shift_in', $datetoday)
             ->first();
 
-        $data = DB::table('attendance_records as ar')
-            ->join('users as u', 'u.id', '=', 'ar.user_id')
-            ->select(
-                'u.week_days as wd',
-                'ar.user_id as user_id',
-                'ar.shift_in as shift_in',
-                'ar.shift_out as shift_out',
-                'ar.check_in as check_in',
-                'ar.check_out as check_out',
-                'ar.dayoff as dayoff'
-            )
-            ->where('ar.user_id', $id)
-            ->whereMonth('ar.shift_in', Carbon::now()->month)
-            ->get();
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-        $approvedLeaves = ApprovedLeave::whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
-            ->where('user_id', $id)
-            ->get();
-
-
-        foreach ($data as $record) {
-            $start = Carbon::parse($record->shift_in);
-
-            if ($approvedLeaves) {
-                foreach ($approvedLeaves as $app) {
-                    $date = Carbon::parse($app->date);
-                    if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
-                        $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift_in = $chdate . $app->start_time;
-                        $shift_out = $chdate . $app->end_time;
-                        $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
-
-                        $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
-                        ]);
-                        $color = "";
-                        break;
-                    } else {
-                        $color = "";
-                    }
-
-
-                    if ($start->isSameDay($date)) {
-                        $color = getColorByLeaveType($app->leave_type);
-                        break;
-                    } else {
-                        $color = "";
-                    }
-                }
-            }
-            if ($color == "" && $record->dayoff != "Yes") {
-
-                $currentDate = Carbon::now();
-                if ($start->lte($currentDate) && !$record->check_in && !$record->check_out) {
-                    $i++;
-                    if ($record->wd == "6") {
-                        $fine = $fine + 4;
-
-                    } else if ($record->wd == "5") {
-                        $fine = $fine + 4.8;
-                    }
-                }
-            }
-
-
-
-
-            if ($record->check_in && $record->check_out && $record->shift_in && $record->shift_out && $color == "" && $record->dayoff != "Yes") {
-
-                $shift_in = Carbon::parse($record->shift_in);
-                $shift_out = Carbon::parse($record->shift_out);
-                $check_in = Carbon::parse($record->check_in);
-                $check_out = Carbon::parse($record->check_out);
-
-
-                if (
-                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
-                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
-                    abs($check_out->diffInHours($shift_out)) > 6
-                ) {
-
-                    $i++;
-                    if ($record->wd == "6") {
-                        $fine = $fine + 4;
-                    } else if ($record->wd == "5") {
-                        $fine = $fine + 4.8;
-                    }
-                } else {
-
-                    if ($check_in->greaterThan($shift_in)) {
-                        $late_minutes += abs($check_in->diffInMinutes($shift_in));
-
-                        $i++;
-                    }
-
-                    if ($check_out->lessThan($shift_out)) {
-                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
-                        $i++;
-                    }
-
-                    // $penalty = ceil($late_minutes / 15) * 0.125;
-                    // $total_penalty += $penalty;
-
-                    $total_late_minutes += $late_minutes;
-                    $stotal_late_minutes += $slate_minutes;
-                }
-
-            }
-        }
-
-        $hours = floor(($late_minutes + $slate_minutes) / 60);
-        $minutes = ($late_minutes + $slate_minutes) % 60;
-
-        if (auth()->user()->week_days == "6") {
-            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
-                $range_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $range_index;
-            }
-            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
-                $srange_index = ceil(($stotal_late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $srange_index;
-            }
-
-        }
-        if (auth()->user()->week_days == "5") {
-            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
-                $total_penalty += 0.25;
-
-            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
-                $range_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $range_index;
-            }
-            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
-                $srange_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $srange_index;
-            }
-        }
-
-        $deduction = $total_penalty + $fine;
         if ($chj) {
             if ($chj->check_in != null) {
                 $c_in = date('H:i:s A', strtotime($chj->check_in));
@@ -973,14 +986,13 @@ class AttendanceRecordController extends Controller
         }
 
         $info[] = [
-            'day' => $i,
-            'hour' => $hours,
-            'minute' => $minutes,
-            'deduction' => $deduction,
+            'day' => $users[0]->total_absentees,
+            'absent_fine' => $users[0]->absentee_fine,
+            'late_fine' => $users[0]->late_fine,
+            'total' => $users[0]->absentee_fine + $users[0]->late_fine,
             'check_in' => $c_in,
             'check_out' => $c_out
         ];
-
         return response()->json([
             'status' => 'success',
             'info' => $info
@@ -1360,16 +1372,106 @@ class AttendanceRecordController extends Controller
             $id = auth()->user()->id;
         }
 
-        $color = "";
-        $total_late_minutes = 0;
-        $stotal_late_minutes = 0;
-        $total_penalty = 0.0;
-        $i = 0;
+
+        $from = Carbon::now()->startOfMonth()->toDateString();
+        $to = Carbon::now()->subDay();
+
+
+        $users = User::select(
+            'users.id as user_id',
+            'users.username',
+            'users.employee_id',
+            'users.week_days', // Fetch the week_days field
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 1 
+                    ELSE NULL 
+                END) as total_absentees'),
+            DB::raw('SUM(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 
+                                ELSE 4.0 
+                            END 
+                    ELSE 0 
+                END) as absentee_fine'),
+            DB::raw('SUM(
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM approved_leaves 
+                    WHERE approved_leaves.user_id = attendance_records.user_id 
+                      AND approved_leaves.date = DATE(attendance_records.shift_in)
+                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                ) THEN 0 -- No fine if leave is approved
+                WHEN attendance_records.dayoff = "Yes" THEN 0
+                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                    LEAST(
+                        CASE 
+                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                            ELSE 4.0 -- Cap for 6-day workers
+                        END,
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        ) +
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        )
+                    )
+                ELSE 0 
+            END
+        ) as late_fine'),
+            DB::raw('(SELECT COUNT(*) 
+          FROM approved_leaves 
+          WHERE approved_leaves.user_id = users.id 
+            AND approved_leaves.date BETWEEN "' . $from . '" AND "' . $to . '") as leave_count')
+        )
+            ->leftJoin('attendance_records', function ($join) use ($from, $to) {
+                $join->on('users.id', '=', 'attendance_records.user_id')
+                    ->whereBetween('attendance_records.shift_in', [$from, $to]);
+            })
+
+            ->where('users.status', "1") // Include only activated users
+
+            ->groupBy('users.id', 'users.username', 'users.employee_id', 'users.week_days')
+            ->orderBy('users.id', 'asc')
+            ->where('users.id', $id)
+            ->get();
+
+
+
         $c_in = "";
         $c_out = "";
-        $fine = 0.0;
-        $late_minutes = 0;
-        $slate_minutes = 0;
         $today = Carbon::today();
         $datetoday = date('Y-m-d', strtotime($today));
         $chj = DB::table('attendance_records')
@@ -1378,162 +1480,6 @@ class AttendanceRecordController extends Controller
             ->whereDate('shift_in', $datetoday)
             ->first();
 
-        $data = DB::table('attendance_records as ar')
-            ->join('users as u', 'u.id', '=', 'ar.user_id')
-            ->select(
-                'u.week_days as wd',
-                'ar.user_id as user_id',
-                'ar.shift_in as shift_in',
-                'ar.shift_out as shift_out',
-                'ar.check_in as check_in',
-                'ar.check_out as check_out',
-                'ar.dayoff as dayoff'
-            )
-            ->where('ar.user_id', $id)
-            ->whereMonth('ar.shift_in', Carbon::now()->month)
-            ->get();
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-        $approvedLeaves = ApprovedLeave::whereMonth('date', $currentMonth)
-            ->whereYear('date', $currentYear)
-            ->where('user_id', $id)
-            ->get();
-
-
-        foreach ($data as $record) {
-            $start = Carbon::parse($record->shift_in);
-
-            if ($approvedLeaves) {
-
-                foreach ($approvedLeaves as $app) {
-                    $date = Carbon::parse($app->date);
-                    if ($app->start_time != null && $app->leave_type == "1" && $start->isSameDay($date)) {
-                        $chdate = date('Y-m-d', strtotime($app->date));
-                        $shift_in = $chdate . $app->start_time;
-                        $shift_out = $chdate . $app->end_time;
-                        $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
-
-                        $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
-                        ]);
-                        $color = "";
-                    } else {
-                        $color = "";
-                    }
-
-
-                    if ($start->isSameDay($date)) {
-                        $color = getColorByLeaveType($app->leave_type);
-                        break;
-                    } else {
-                        $color = "";
-                    }
-                }
-            }
-            if ($color == "" && $record->dayoff != "Yes") {
-
-                $currentDate = Carbon::now();
-                if ($start->lte($currentDate) && !$record->check_in && !$record->check_out) {
-                    $i++;
-                    if ($record->wd == "6") {
-                        $fine = $fine + 4;
-
-                    } else if ($record->wd == "5") {
-                        $fine = $fine + 4.8;
-                    }
-                }
-            }
-
-
-
-
-            if ($record->check_in && $record->check_out && $record->shift_in && $record->shift_out && $color == "" && $record->dayoff != "Yes") {
-
-                $shift_in = Carbon::parse($record->shift_in);
-                $shift_out = Carbon::parse($record->shift_out);
-                $check_in = Carbon::parse($record->check_in);
-                $check_out = Carbon::parse($record->check_out);
-
-
-                if (
-                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
-                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
-                    abs($check_out->diffInHours($shift_out)) > 6
-                ) {
-
-                    $i++;
-                    if ($record->wd == "6") {
-                        $fine = $fine + 4;
-                    } else if ($record->wd == "5") {
-                        $fine = $fine + 4.8;
-                    }
-                } else {
-
-                    if ($check_in->greaterThan($shift_in)) {
-                        $late_minutes += abs($check_in->diffInMinutes($shift_in));
-
-                        $i++;
-                    }
-
-                    if ($check_out->lessThan($shift_out)) {
-                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
-                        $i++;
-                    }
-
-                    // $penalty = ceil($late_minutes / 15) * 0.125;
-                    // $total_penalty += $penalty;
-
-                    $total_late_minutes += $late_minutes;
-                    $stotal_late_minutes += $slate_minutes;
-
-                }
-
-            }
-        }
-        $week_days = DB::table('users')
-            ->select('week_days')
-            ->where('id', $id)
-            ->first();
-
-
-        $hours = floor(($late_minutes + $slate_minutes) / 60);
-        $minutes = ($late_minutes + $slate_minutes) % 60;
-
-        if (auth()->user()->week_days == "6") {
-            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
-                $range_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $range_index;
-            }
-            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
-                $srange_index = ceil(($stotal_late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $srange_index;
-            }
-
-        }
-        if (auth()->user()->week_days == "5") {
-            if ($total_late_minutes > 0 && $total_late_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($late_minutes > 15 && $total_late_minutes <= 540) {
-                $range_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $range_index;
-            }
-            if ($stotal_late_minutes > 0 && $stotal_late_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($slate_minutes > 15 && $stotal_late_minutes <= 540) {
-                $srange_index = ceil(($total_late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $srange_index;
-            }
-        }
-
-
-
-        $deduction = $total_penalty + $fine;
         if ($chj) {
             if ($chj->check_in != null) {
                 $c_in = date('H:i:s A', strtotime($chj->check_in));
@@ -1551,10 +1497,10 @@ class AttendanceRecordController extends Controller
         }
 
         $info[] = [
-            'day' => $i,
-            'hour' => $hours,
-            'minute' => $minutes,
-            'deduction' => $deduction,
+            'day' => $users[0]->total_absentees,
+            'absent_fine' => $users[0]->absentee_fine,
+            'late_fine' => $users[0]->late_fine,
+            'total' => $users[0]->absentee_fine + $users[0]->late_fine,
             'check_in' => $c_in,
             'check_out' => $c_out
         ];
@@ -1569,7 +1515,15 @@ class AttendanceRecordController extends Controller
         $color = "";
         $id = (int) $request->id;
         $absent = "";
-
+        $color = "";
+        $info = [];
+        $i = 0;
+        $c_in = "";
+        $c_out = "";
+        $absent = "";
+        $difference = 0;
+        $v1 = "";
+        $v2 = "";
         $from = Carbon::parse($request->from_date);
         $to = Carbon::parse($request->to_date);
 
@@ -1640,7 +1594,7 @@ class AttendanceRecordController extends Controller
                         $up = AttendanceRecord::find($in->id);
                         $up->update([
                             $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
+                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
                         ]);
                         $color = "";
                         break;
@@ -1655,14 +1609,6 @@ class AttendanceRecordController extends Controller
                     } else {
                         $color = "";
                     }
-                }
-            }
-            if ($color == "" && $d->dayoff != "Yes") {
-                $currentDate = Carbon::now();
-                if ($start->lte($currentDate) && !$d->check_in && !$d->check_out) {
-                    $absent = "Yes";
-                } else {
-                    $absent = "No";
                 }
             }
             if ($color == "" && $d->dayoff != "Yes") {
@@ -1706,7 +1652,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchIn)) {
+                if (!empty($closestPunchIn) && !empty($d->check_in)) {
                     $finger_print1 = date('Y-m-d H:i:s', strtotime($closestPunchIn->fingerprint_in));
                     $fp1 = Carbon::parse($finger_print1);
                     $checkIn1 = date('Y-m-d H:i:s', strtotime($d->check_in));
@@ -1724,48 +1670,6 @@ class AttendanceRecordController extends Controller
             }
 
 
-            if ($d->check_in && $d->check_out && $d->shift_in && $d->shift_out) {
-
-                $shift_in = Carbon::parse($d->shift_in);
-                $shift_out = Carbon::parse($d->shift_out);
-                $check_in = Carbon::parse($d->check_in);
-                $check_out = Carbon::parse($d->check_out);
-
-
-                if (
-                    (($check_out->format('A') == 'AM' && $shift_out->format('A') == 'PM') ||
-                        ($check_out->format('A') == 'PM' && $shift_out->format('A') == 'AM')) &&
-                    abs($check_out->diffInHours($shift_out)) > 6
-                ) {
-
-
-                    if (auth()->user()->week_days == "6") {
-                        $i++;
-                        $fine = $fine + 4;
-                    } else if (auth()->user()->week_days == "5") {
-                        $fine = $fine + 4.8;
-                        $i++;
-                    }
-                } else {
-
-
-                    if ($check_in->greaterThan($shift_in)) {
-                        $late_minutes += abs($shift_in->diffInMinutes($check_in));
-                        $i++;
-
-                    }
-
-                    if ($check_out->lessThan($shift_out)) {
-                        $slate_minutes += abs($shift_out->diffInMinutes($check_out));
-                        $i++;
-                    }
-
-                    $total_late_minutes += $late_minutes;
-                    $stotal_late_minutes += $slate_minutes;
-
-                }
-
-            }
 
 
 
@@ -1783,7 +1687,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchOut)) {
+                if (!empty($closestPunchOut) && !empty($d->check_out)) {
                     $finger_print2 = date('Y-m-d H:i:s', strtotime($closestPunchOut->fingerprint_in));
                     $fp2 = Carbon::parse($finger_print2);
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
@@ -1801,33 +1705,62 @@ class AttendanceRecordController extends Controller
             }
 
             $name = $d->name;
-
+            $start_date = date('d F Y', strtotime($d->shift_in));
+            $end_date = date('d F Y', strtotime($d->shift_out));
             $shift_in = Carbon::parse($d->shift_in);
             $shift_out = Carbon::parse($d->shift_out);
+            if ($d->check_in != null) {
+                $in_date = date('d F Y', strtotime($d->check_in));
+            } else {
+                $in_date = "";
+            }
+            if ($d->check_out != null) {
+                $out_date = date('d F Y', strtotime($d->check_out));
+            } else {
+                $out_date = "";
+            }
             $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+            $total_working_duration = $scheduled_duration;
 
             if ($d->check_in && $d->check_out) {
                 $check_in = Carbon::parse($d->check_in);
                 $check_out = Carbon::parse($d->check_out);
 
-                // Calculate effective check-in and check-out within shift boundaries
-                $effective_check_in = $check_in->lt($shift_in) ? $shift_in : $check_in;
-                $effective_check_out = $check_out->gt($shift_out) ? $shift_out : $check_out;
 
-                // Calculate the working duration in seconds
-                $working_duration = $effective_check_in->diffInSeconds($effective_check_out);
+                $scheduled_duration = $shift_in->diffInSeconds($shift_out);
+                $total_working_duration = $scheduled_duration;
 
-                // Convert the working duration into hours, minutes, and seconds
-                $hours = floor($working_duration / 3600);
-                $minutes = floor(($working_duration % 3600) / 60);
-                $seconds = $working_duration % 60;
 
-                $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+                if ($check_in <= $shift_in && $check_out >= $shift_out) {
+                    $duty_hours = gmdate("H:i:s", $scheduled_duration);
+                } else {
+
+                    if ($shift_out->diffInHours($check_out, false) > 6) {
+                        $duty_hours = "00:00:00";
+                    } else {
+
+                        if ($check_in > $shift_in) {
+                            $late_duration = $shift_in->diffInSeconds($check_in);
+                            $total_working_duration -= $late_duration;
+                        }
+
+                        if ($check_out < $shift_out) {
+                            $early_checkout_duration = $check_out->diffInSeconds($shift_out);
+                            $total_working_duration -= $early_checkout_duration;
+                        }
+
+
+                        $hours = floor($total_working_duration / 3600);
+                        $minutes = floor(($total_working_duration % 3600) / 60);
+                        $seconds = $total_working_duration % 60;
+
+                        $duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+                    }
+                }
             } else {
-                // Default value if check-in or check-out is missing
+
                 $duty_hours = "";
             }
-
 
 
             $info[] = [
@@ -1850,50 +1783,134 @@ class AttendanceRecordController extends Controller
                 'id' => $d->id
             ];
         }
+        $users = User::select(
+            'users.id as user_id',
+            'users.username',
+            'users.employee_id',
+            'users.week_days', // Fetch the week_days field
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 1 
+                    ELSE NULL 
+                END) as total_absentees'),
+            DB::raw('SUM(CASE 
+                    WHEN attendance_records.shift_in IS NOT NULL 
+                         AND attendance_records.shift_out IS NOT NULL 
+                         AND attendance_records.check_in IS NULL 
+                         AND attendance_records.check_out IS NULL 
+                         AND attendance_records.dayoff = "No" 
+                         AND NOT EXISTS (
+                             SELECT 1 
+                             FROM approved_leaves 
+                             WHERE approved_leaves.user_id = attendance_records.user_id 
+                               AND approved_leaves.date = DATE(attendance_records.shift_in)
+                               AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                         ) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 
+                                ELSE 4.0 
+                            END 
+                    ELSE 0 
+                END) as absentee_fine'),
+            DB::raw('SUM(
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 
+                    FROM approved_leaves 
+                    WHERE approved_leaves.user_id = attendance_records.user_id 
+                      AND approved_leaves.date = DATE(attendance_records.shift_in)
+                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                ) THEN 0 -- No fine if leave is approved
+                WHEN attendance_records.dayoff = "Yes" THEN 0
+                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                    LEAST(
+                        CASE 
+                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                            ELSE 4.0 -- Cap for 6-day workers
+                        END,
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        ) +
+                        GREATEST(
+                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                CASE 
+                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                END, 0
+                        )
+                    )
+                ELSE 0 
+            END
+        ) as late_fine'),
+            DB::raw('(SELECT COUNT(*) 
+          FROM approved_leaves 
+          WHERE approved_leaves.user_id = users.id 
+            AND approved_leaves.date BETWEEN "' . $from . '" AND "' . $to . '") as leave_count')
+        )
+            ->leftJoin('attendance_records', function ($join) use ($from, $to) {
+                $join->on('users.id', '=', 'attendance_records.user_id')
+                    ->whereBetween('attendance_records.shift_in', [$from, $to]);
+            })
 
-        $hours = floor(($late_minutes + $slate_minutes) / 60);
-        $minutes = ($late_minutes + $slate_minutes) % 60;
+            ->where('users.status', "1") // Include only activated users
+
+            ->groupBy('users.id', 'users.username', 'users.employee_id', 'users.week_days')
+            ->orderBy('users.id', 'asc')
+            ->where('users.id', $id)
+            ->get();
 
 
 
-        if (auth()->user()->week_days == "6") {
-            if ($late_minutes > 0 && $late_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
-                $range_index = ceil(($late_minutes - 15) / 15);
-                $total_penalty += 0.125 * $range_index;
+        $c_in = "";
+        $c_out = "";
+        $today = Carbon::today();
+        $datetoday = date('Y-m-d', strtotime($today));
+        $chj = DB::table('attendance_records')
+            ->select('check_in', 'check_out')
+            ->where('user_id', $id)
+            ->whereDate('shift_in', $datetoday)
+            ->first();
+
+        if ($chj) {
+            if ($chj->check_in != null) {
+                $c_in = date('H:i:s A', strtotime($chj->check_in));
+            } else {
+                $c_in = "";
             }
-            if ($slate_minutes > 0 && $slate_minutes <= 15) {
-                $total_penalty += 0.125;
-            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
-                $srange_index = ceil(($slate_minutes - 15) / 15);
-                $total_penalty += 0.125 * $srange_index;
+            if ($chj->check_out != null) {
+                $c_out = date('H:i:s A', strtotime($chj->check_out));
+            } else {
+                $c_out = "";
             }
-
+        } else {
+            $c_in = "";
+            $c_out = "";
         }
-        if (auth()->user()->week_days == "5") {
-            if ($late_minutes > 0 && $late_minutes <= 15) {
-                $total_penalty += 0.25;
-            } elseif ($late_minutes > 15 && $late_minutes <= 540) {
-                $range_index = ceil(($late_minutes - 15) / 15);
-                $total_penalty += 0.25 * $range_index;
-            }
-            if ($slate_minutes > 0 && $slate_minutes <= 15) {
-                $stotal_penalty += 0.25;
-            } elseif ($slate_minutes > 15 && $slate_minutes <= 540) {
-                $srange_index = ceil(($slate_minutes - 15) / 15);
-                $total_penalty += 0.25 * $srange_index;
-            }
-        }
 
 
-        $deduction = $total_penalty + $fine;
+
         $in[] = [
-            'day' => $i,
-            'hour' => $hours,
-            'minute' => $minutes,
-            'deduction' => $deduction,
-            'abc' => $total_penalty
+            'day' => $users[0]->total_absentees,
+            'absent_fine' => $users[0]->absentee_fine,
+            'late_fine' => $users[0]->late_fine,
+            'total' => $users[0]->absentee_fine + $users[0]->late_fine,
+            'check_in' => $c_in,
+            'check_out' => $c_out
         ];
 
         return response()->json([

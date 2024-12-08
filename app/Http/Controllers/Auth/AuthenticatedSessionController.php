@@ -24,35 +24,51 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Authenticate the user
-        $request->authenticate();
+        // Manually authenticate the user by checking credentials
+        $credentials = $request->only('email', 'password');  // Adjust this if you need other fields
 
-        // Regenerate the session to prevent session fixation
-        $request->session()->regenerate();
+        // Try to authenticate the user
+        if (Auth::attempt($credentials)) {
+            // Retrieve the authenticated user
+            $user = auth()->user();
 
-        // Check the user's role and redirect accordingly
-        $user = auth()->user();
+            // Check if the user's status is disabled (status = "0")
+            if ($user->status === "0") {
+                // Log out the user immediately since their account is disabled
+                Auth::logout();
 
-        if ($user->role === "1") {
-            // Redirect to dashboard for admin or role 1
-            return redirect()->intended(route('dashboard'));
-        } elseif ($user->role === "2") {
-            // Redirect to attendance record page for employee role 5
-            return redirect()->intended(route('attendanceemployee.record'));
-        } elseif ($user->role === "3") {
-            // Redirect to attendance record page for employee role 5
-            return redirect()->intended(route('attendanceemployee.record'));
-        } elseif ($user->role === "4") {
-            // Redirect to attendance record page for employee role 5
-            return redirect()->intended(route('attendanceemployee.record'));
-        } elseif ($user->role === "5") {
-            // Redirect to attendance record page for employee role 5
-            return redirect()->intended(route('attendanceemployee.record'));
+                // Redirect to login page with error message
+                return redirect()->route('login')
+                    ->withErrors(['status_disabled' => 'Your account has been disabled by the administrator. Please contact HR.']);
+            }
+
+            // Check if the user needs to change their password
+            if ($user->userpass == "0") {
+                return redirect()->route('change.password'); // Redirect to change password page
+            }
+
+            // Regenerate the session to prevent session fixation
+            $request->session()->regenerate();
+
+            // Redirect based on the user's role
+            switch ($user->role) {
+                case "1":
+                    return redirect()->intended(route('dashboard'));
+                case "2":
+                case "3":
+                case "4":
+                case "5":
+                    return redirect()->intended(route('attendanceemployee.record'));
+                default:
+                    return redirect()->route('login')->withErrors(['role' => 'Unauthorized role']);
+            }
         }
 
-        // Optionally, handle cases where the role is neither 1 nor 5
-        return redirect()->route('login')->withErrors(['role' => 'Unauthorized role']);
+        // If authentication fails, redirect back to login with error message
+        return redirect()->route('login')->withErrors(['credentials' => 'Invalid credentials.']);
     }
+
+
 
     /**
      * Destroy an authenticated session.

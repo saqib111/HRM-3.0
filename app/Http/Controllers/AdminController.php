@@ -372,6 +372,7 @@ class AdminController extends Controller
 
         // Update the user's password
         $user->password = Hash::make($request->password); // Hash the new password
+        $user->userpass = "0";
         $user->save();
 
         // Return a success response

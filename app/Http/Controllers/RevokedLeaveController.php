@@ -128,7 +128,7 @@ class RevokedLeaveController extends Controller
                 if (isset($detail['start_date']) && isset($detail['end_date'])) {
                     // Find and delete the approved leaves for the same user and leave dates
                     ApprovedLeave::where('user_id', $leaveRequest->user_id)
-                        ->where('leave_type', 1)
+                        ->whereIn('leave_type', [1, 2, 3, 4, 5, 6, 7, 8])
                         ->whereBetween('date', [$detail['start_date'], $detail['end_date']])
                         ->delete(); // Deletes all matching records
                 }

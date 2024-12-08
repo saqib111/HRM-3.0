@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check_permission' => \App\Http\Middleware\CheckPermission::class,
             'check_user_permission' => \App\Http\Middleware\CheckUserProfilePermission::class,
             'check_team_permission' => \App\Http\Middleware\CheckTeamPermission::class,
+            'check_user_password' => \App\Http\Middleware\CheckUserPassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

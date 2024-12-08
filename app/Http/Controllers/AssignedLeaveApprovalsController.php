@@ -62,31 +62,6 @@ class AssignedLeaveApprovalsController extends Controller
         return view('leaveReassigners.leave-approvals', compact('users'));
     }
 
-    // public function searchAssigner(Request $request)
-    // {
-    //     $search = $request->input('search');
-    //     $page = $request->input('page', 1);  // Get the current page, default to 1
-
-    //     // If there is no search term, return the first 10 records
-    //     if (!$search) {
-    //         $data = User::where('status', '1')
-    //             ->paginate(10, ['*'], 'page', $page);  // Paginate, 10 items per page
-    //     } else {
-    //         $data = User::when($search, function ($query) use ($search) {
-    //             return $query->where('username', 'LIKE', '%' . $search . '%');
-    //         })
-    //             ->where('status', '1')
-    //             ->paginate(10, ['*'], 'page', $page);
-    //     }
-
-    //     return response()->json([
-    //         'data' => $data->items(),
-    //         'total' => $data->total(),
-    //         'current_page' => $data->currentPage(),
-    //         'last_page' => $data->lastPage(),
-    //     ]);
-    // }
-
     // CUSTOM-MULTI CONTROLLER CODE.
     public function getUsers(Request $request)
     {

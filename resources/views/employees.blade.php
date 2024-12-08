@@ -771,6 +771,7 @@
                     'Manage Shift': ['view_manage_shift', 'view_attendance', 'update_attendance_schedule', 'delete_attendance_schedule', 'bulk_delete_attendance_schedule'],
                     'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
                     'Fingerprint Record': ['show_fingerprint_record', 'update_fingerprint_status', 'delete_fingerprint_record'],
+                    'Manage Leaves': ['unassigned_leaves', 'pending_leaves', 'hr_work', 'revoked_leaves', 'leave_approvals'],
                     'Employee Info': ['show_all_employee_info', 'update_employee_info'],
                     'Visa Documents': ['expired_visa'],
                 };

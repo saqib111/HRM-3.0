@@ -47,6 +47,22 @@ class LeaveController extends Controller
         $user_id = auth()->user()->id;
         $errors = [];
 
+        // Check for pending leave requests (status_1 = pending or status_2 = pending)
+        $alreadyAppliedLeave = LeaveManagement::where('user_id', $user_id)
+            ->where(function ($query) {
+                $query->where('status_1', 'pending')  // Pending in first stage
+                    ->orWhere(function ($query) {
+                        $query->where('status_1', 'approved')  // Accepted in first stage
+                            ->where('status_2', 'pending'); // Pending in second stage
+                    });
+            })
+            ->exists(); // Use exists to check if any such leave exists
+
+        if ($alreadyAppliedLeave) {
+            $errors['already_applied_leave'] = 'You have an unprocessed leave request. Please wait until it is processed.';
+        }
+
+
         // Check if "Birthday Leave" is selected in the request
         if (in_array(2, $request->full_day_leave ?? [])) { // 2 stands for "Birthday Leave"
             $currentYear = now()->year;

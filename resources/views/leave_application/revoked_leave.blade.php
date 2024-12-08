@@ -92,7 +92,7 @@
     <div class="col-md-4 d-flex justify-content-end">
       <ul class="c_Employee">
         <li>
-          @if(auth()->user()->role === "1" || auth()->user()->role === "4")
+          @if(auth()->user()->role === "1" || auth()->user()->role === "2" || auth()->user()->role === "3")
             <div class="d-flex justify-content-end">
             <!-- Status Buttons (Approved, Revoked) -->
             @php

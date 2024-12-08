@@ -448,6 +448,10 @@
                         $('.leave_error').text(''); // Clear previous errors
 
                         // Display specific errors
+                        if (errors.already_applied_leave) {
+                            $('#notification').html(`<div class="alert alert-danger">${errors.already_applied_leave}</div>`);
+                        }
+
                         if (errors.birthday_leave) {
                             $('#notification').html(`<div class="alert alert-danger">${errors.birthday_leave}</div>`);
                         }

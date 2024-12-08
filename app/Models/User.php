@@ -31,7 +31,8 @@ class User extends Authenticatable
         'brand',
         'is-allowed_8_offdays',
         'status',
-        'role'
+        'role',
+        'userpass'
     ];
 
     /**
@@ -46,7 +47,7 @@ class User extends Authenticatable
 
     public function userprofile(): HasOne
     {
-        return $this->hasOne(userProfile::class);
+        return $this->hasOne(UserProfile::class);
     }
 
     public function assignedLeaveApproval(): HasOne

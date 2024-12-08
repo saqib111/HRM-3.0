@@ -200,7 +200,6 @@
             <div class="card-body">
                 <h5 class="card-title">Statistics</h5>
                 <div class="stats-list">
-
                     <div class="stats-info">
                         <p>Late <strong><span id="day"></span> </strong></p>
 
@@ -208,15 +207,18 @@
 
 
                     <div class="stats-info">
-                        <p>Total Hours <strong> <small><span id="hour"> </span></small></strong></p>
+                        <p>Absent Fine<strong> <small><span id="absent_fine"> </span></small></strong></p>
 
                     </div>
 
                     <div class="stats-info">
-                        <p>Total Deduction <strong> <small><span id="deduction"> </span></small></strong></p>
-
+                        <p>Late Fine<strong> <small><span id="late_fine"> </span></small></strong></p>
                     </div>
 
+                    <div class="stats-info">
+                        <p>Total Deduction <strong> <small><span id="total"> </span></small></strong></p>
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -807,14 +809,15 @@
                     hideLoader();
                     var inf = response.in;
                     $('#day').empty();
-                    $('#hour').empty();
-                    $('#deduction').empty();
-
+                    $('#absent_fine').empty();
+                    $('#late_fine').empty();
+                    $('#total').empty();
 
 
                     $('#day').append(`${inf[0].day}  Days `);
-                    $('#hour').append(`${inf[0].hour} hr ${inf[0].minute} mins `);
-                    $('#deduction').append(`${inf[0].deduction} % `);
+                    $('#absent_fine').append(`${inf[0].absent_fine}% `);
+                    $('#late_fine').append(`${inf[0].late_fine}% `);
+                    $('#total').append(`${inf[0].total}% `);
 
                     $('#attendance-employee').DataTable({
                         destroy: true,
@@ -1237,15 +1240,16 @@
             .then(data => {
 
                 $('#day').empty();
-                $('#hour').empty();
-                $('#deduction').empty();
-                $('#check_in').empty();
-                $('#check_out').empty();
+                $('#absent_fine').empty();
+                $('#late_fine').empty();
+                $('#total').empty();
                 if (data.status == 'success') {
 
                     $('#day').append(`${data.info[0].day}  Days `);
-                    $('#hour').append(`${data.info[0].hour} hr ${data.info[0].minute} mins `);
-                    $('#deduction').append(`${data.info[0].deduction} % `);
+                    $('#absent_fine').append(`${data.info[0].absent_fine}%`);
+                    $('#late_fine').append(`${data.info[0].late_fine}%`);
+                    $('#total').append(`${data.info[0].total}%`);
+
                     $('#check_in').append(`${data.info[0].check_in} . `);
                     $('#check_out').append(`${data.info[0].check_out} . `);
                 }

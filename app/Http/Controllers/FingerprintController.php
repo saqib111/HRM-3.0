@@ -138,15 +138,25 @@ class FingerprintController extends Controller
             $leaderId = auth()->user()->id;  // Get the logged-in user's ID
 
             // Get the active users that belong to this leader (where leader_id matches)
-            $data = User::when($search, function ($query) use ($search) {
+            $teamMembersQuery = User::when($search, function ($query) use ($search) {
                 return $query->where('username', 'LIKE', '%' . $search . '%');
             })
                 ->where('status', '1')
                 ->whereIn('id', function ($query) use ($leaderId) {
                     $query->select('employee_id')
                         ->from('leader_employees')
-                        ->where('leader_id', $leaderId);  // Filter by the logged-in user's leader_id
-                })
+                        ->where('leader_id', $leaderId);  // Get team members
+                });
+
+            // Now, include the leader's own ID in the result set
+            $leaderQuery = User::when($search, function ($query) use ($search) {
+                return $query->where('username', 'LIKE', '%' . $search . '%');
+            })
+                ->where('status', '1')
+                ->where('id', $leaderId);  // Ensure we get the leader's own record
+
+            // Union the leader's own data with the team members' data
+            $data = $teamMembersQuery->union($leaderQuery)
                 ->paginate(10, ['*'], 'page', $page);
         }
 

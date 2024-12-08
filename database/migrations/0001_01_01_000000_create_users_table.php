@@ -27,6 +27,7 @@ return new class extends Migration {
             $table->enum('week_days', ['5', '6'])->default('6');
             $table->enum('status', ['0', '1'])->default('1');
             $table->enum('role', ['1', '2', '3', '4', '5'])->default('5');
+            $table->enum('userpass', ['0', '1'])->default(0);
             $table->rememberToken();
             $table->timestamps();
         });

@@ -7,67 +7,179 @@
     <meta name="csrf-token" content="itA1Ny454sf8Rb9AoDXzhXmr0Y3nrCYDhNL6VAiJ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Smarthr - Bootstrap Admin Template">
-    <meta name="keywords"
-        content="admin, estimates, bootstrap, business, corporate, creative, management, minimal, modern, accounts, invoice, html5, responsive, CRM, Projects">
-    <meta name="author" content="Dreamstechnologies - Bootstrap Admin Template">
+    <meta name="keywords" content="Affan Ahmed">
+    <meta name="author" content="Created By Affan Ahmed">
     <title>Login - HRMS admin template</title>
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{asset('/assets/img/favicon.png')}}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/assets/img/logo5.png') }}">
 
-    <link rel="stylesheet" href="{{asset('/assets/css/bootstrap.min.css')}}">
-
-
-    <link rel="stylesheet" href="{{asset('/assets/plugins/fontawesome/css/fontawesome.min.css')}}">
-    <link rel="stylesheet" href="{{asset('/assets/plugins/fontawesome/css/all.min.css')}}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/bootstrap.min.css') }}">
 
 
+    <link rel="stylesheet" href="{{ asset('/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('/assets/plugins/fontawesome/css/all.min.css') }}">
 
-    <link rel="stylesheet" href="{{asset('/assets/css/line-awesome.min.css')}}/">
+
+
+    <link rel="stylesheet" href="{{ asset('/assets/css/line-awesome.min.css') }}/">
     <!-- Lineawesome CSS -->
-    <link rel="stylesheet" href="{{asset('/assets/css/line-awesome.min.css')}}">
-    <link rel="stylesheet" href="{{asset('/assets/css/material.css')}}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/line-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/material.css') }}">
     <!-- Main CSS -->
-    <link rel="stylesheet" href="{{asset('/assets/css/style.css')}}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
+
+    <style>
+        .container1 {
+            min-height: 40vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 100%;
+            padding-right: 100px;
+            margin-top: 30%;
+        }
+
+
+        .scanner {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            border-radius: 15px;
+            overflow: hidden;
+            padding: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fingerprint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background: repeating-radial-gradient(circle,
+                    #fff 0%,
+                    #fff 5%,
+                    transparent 5%,
+                    transparent 10%);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            transform: translateY(-50%);
+            width: 60%;
+            height: 4px;
+            background: #00ff7f;
+            animation: scan 3s infinite linear;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes scan {
+            0% {
+                top: -20%;
+                /* Start above the container */
+            }
+
+            50% {
+                top: 50%;
+                /* Center during the animation */
+            }
+
+            100% {
+                top: 120%;
+                /* End below the container */
+            }
+        }
+    </style>
+
 </head>
 
-<body class="account-page">
+<body class="account-page" style="
+    background-image: url('/assets/img/background.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-color: #00000060;
+    background-blend-mode: overlay;
+    padding-right: 10%;
+    ">
     <!-- Main Wrapper -->
-    <div class="main-wrapper">
+    <div style="margin-left:28%" class="main-wrapper">
         <div class="account-content">
             <div class="container">
 
                 <!-- Account Logo -->
                 <div class="account-logo">
-                    <a href=""><img src="{{asset('/assets/img/logo2.png')}}" alt="Dreamguy's Technologies"></a>
+                    <a href=""><img src="{{ asset('/assets/img/logo.png') }}" alt="SV-HRM System"></a>
                 </div>
                 <!-- /Account Logo -->
 
                 <div class="account-box">
                     <div class="account-wrapper">
                         <h3 class="account-title">Login</h3>
-                        <p class="account-subtitle">Access to our dashboard</p>
+                        <p class="account-subtitle">Access to dashboard</p>
+                        @if ($errors->has('status_disabled'))
+                            <span class="text-danger">
+                                {{ $errors->first('status_disabled') }}
+                            </span>
+                        @endif
 
                         <!-- Account Form -->
-                        <form action=" {{route('loginto')}}" method="POST" id="login-form">
+                        <form action=" {{ route('loginto') }}" method="POST" id="login-form">
                             @csrf
 
                             <div class="input-block mb-4">
                                 <label class="col-form-label">Email Address</label>
                                 <input class="form-control" type="text" name="email" id="email"
-                                    value="affan.ahmed@auroramy.com" autocomplete="off">
+                                    placeholder="Please enter your email" autocomplete="off"
+                                    value="affan.ahmed@auroramy.com">
                                 <span id="email-error" class="text-danger"></span> <!-- For displaying errors -->
+                                @if ($errors->has('credentials'))
+                                    <span class="text-danger">
+                                        {{ $errors->first('credentials') }}
+                                    </span>
+                                @endif
                             </div>
                             <div class="input-block mb-4">
                                 <label class="col-form-label">Password</label>
                                 <div class="position-relative">
-                                    <input class="form-control" type="password" name="password" value="12345678"
-                                        id="password" autocomplete="off">
+                                    <input class="form-control" type="password" name="password"
+                                        placeholder="Please enter your password" id="password" autocomplete="off"
+                                        value="12345678">
                                     <!-- <span class="fa-solid fa-eye-slash" id="toggle-password"></span> -->
                                 </div>
                                 <span id="password-error" class="text-danger"></span> <!-- For displaying errors -->
                             </div>
                             <div class="input-block mb-4 text-center">
-                                <button class="btn btn-primary account-btn" type="submit" id="submitbtn">Login</button>
+                                <button style="border: none;
+                                background-color: #00c5fb; color:white;
+                                padding: 10px 20px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                border-radius: 5px;
+                                transition: 0.5s;
+                                position: relative;
+                                width: 100%;
+                                " type="submit" id="submitbtn">Login</button>
                             </div>
                             <div class="account-footer">
                                 <p></p>
@@ -79,16 +191,25 @@
             </div>
         </div>
     </div>
+    <div>
+
+        <div class="scanner">
+            <div class="fingerprint"></div>
+            <div class="scan-line"></div>
+        </div>
+
+    </div>
+
     <!-- /Main Wrapper -->
     <!-- jQuery -->
-    <script src="{{asset('/assets/js/jquery-3.7.1.min.js')}}"></script>
+    <script src="{{ asset('/assets/js/jquery-3.7.1.min.js') }}"></script>
 
     <!-- Bootstrap Core JS -->
-    <script src="{{asset('/assets/js/bootstrap.bundle.min.js')}}"></script>
+    <script src="{{ asset('/assets/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Slimscroll JS -->
-    <script src="{{asset('/assets/js/jquery.slimscroll.min.js')}}"></script>
-    <script src="{{asset('/assets/js/feather.min.js')}}"></script>
+    <script src="{{ asset('/assets/js/jquery.slimscroll.min.js') }}"></script>
+    <script src="{{ asset('/assets/js/feather.min.js') }}"></script>
     <script data-navigate-once="true">
         window.livewireScriptConfig = {
             "csrf": "itA1Ny454sf8Rb9AoDXzhXmr0Y3nrCYDhNL6VAiJ",
@@ -160,9 +281,9 @@
                     $('#password-error').hide();
                 }
 
-                if ((password_str.length < 6) || (password_str.length > 10)) {
+                if ((password_str.length < 6) || (password_str.length > 30)) {
                     $('#password-error').show();
-                    $('#password-error').html("Password length must be between 6 to 10");
+                    $('#password-error').html("Password length must be between 6 to 30");
                     $('#password-error').focus();
                     // $('#password-error').css("color", "red");
                     pass_err = false;
