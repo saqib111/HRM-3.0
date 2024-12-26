@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('emergencies', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id');
             $table->string('e_name')->nullable();
             $table->string('e_phone')->nullable();
             $table->string('e_email')->nullable();
@@ -19,7 +20,6 @@ return new class extends Migration {
             $table->string('e_country')->nullable();
             $table->string('e_gender')->nullable();
             $table->string('e_relationship')->nullable();
-            $table->foreignId('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

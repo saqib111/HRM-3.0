@@ -327,24 +327,40 @@
                 { data: 'to', name: 'to', orderable: false, searchable: false },
                 { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
                 {
-                    data: 'status_2',
+                    data: null,  // Data is not tied to a single column, since we are combining status_1 and status_2
                     render: function (data, type, row) {
                         var buttonClass = '';
                         var buttonText = '';
 
-                        // Check if the revoked value is '1' in the row
-                        if (data === 'approved' && row.revoked === '1' && row.hr_approved_id !== 'Null') {
-                            buttonClass = 'btn-red';  // Set button to red color
-                            buttonText = 'Revoked';   // Set button text to 'Revoked'
-                        } else if (data === 'pending') {
-                            buttonClass = 'btn-yellow'; // Set button to yellow color
-                            buttonText = 'Pending';     // Set button text to 'Pending'
-                        } else if (data === 'approved') {
-                            buttonClass = 'btn-green';  // Set button to green color
-                            buttonText = 'Approved';    // Set button text to 'Approved'
-                        } else if (data === 'rejected') {
-                            buttonClass = 'btn-red';    // Set button to red color
-                            buttonText = 'Rejected';    // Set button text to 'Rejected'
+                        // If revoked is 1, show 'Revoked' button
+                        if (row.revoked === '1') {
+                            buttonClass = 'btn-red';
+                            buttonText = 'Revoked';
+                        }
+                        // If status_1 is approved and status_2 is rejected
+                        else if (row.status_1 === 'approved' && row.status_2 === 'rejected') {
+                            buttonClass = 'btn-red';
+                            buttonText = 'Rejected';  // Show rejected button
+                        }
+                        // If status_1 is approved and status_2 is pending
+                        else if (row.status_1 === 'approved' && row.status_2 === 'pending') {
+                            buttonClass = 'btn-yellow';
+                            buttonText = 'Pending';  // Show pending button
+                        }
+                        // If status_1 and status_2 are both approved
+                        else if (row.status_1 === 'approved' && row.status_2 === 'approved') {
+                            buttonClass = 'btn-green';
+                            buttonText = 'Approved';  // Show approved button
+                        }
+                        // If status_1 is pending
+                        else if (row.status_1 === 'pending') {
+                            buttonClass = 'btn-yellow';
+                            buttonText = 'Pending';  // Show pending button
+                        }
+                        // If status_1 is rejected
+                        else if (row.status_1 === 'rejected') {
+                            buttonClass = 'btn-red';
+                            buttonText = 'Rejected';  // Show rejected button
                         }
 
                         // Return the button HTML with dynamic class and text

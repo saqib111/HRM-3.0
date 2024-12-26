@@ -57,7 +57,7 @@
                 <h2>Profile Image</h2><br>
                 <div class="position-relative ">
                     <img id="profileImagePreview"
-                        src="{{ $user->image ? url('uploads/', $user->image) : url('uploads/images/default_profile_picture.png') }}"
+                        src="{{ $user->image ? url('uploads/' . $user->image) : url('uploads/images/default_profile_picture.png') }}"
                         alt="Profile Picture" class="rounded-circle img-fluid" style="width: 200px; height: 200px; padding: 5px; border: 3px solid #cccc; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
                             ">
                     <label for="imageInput" class="position-absolute top-0 end-0 border rounded-circle p-2 m-1"

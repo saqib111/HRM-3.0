@@ -43,13 +43,14 @@ class AdminController extends Controller
     {
         // Define validation rules
         $rules = [
-            'email' => 'required|email|max:50',
+            // 'email' => 'required|email|max:50',
+            'email' => 'required|email|max:50|unique:users,email',
             'employee_id' => 'required|unique:users,employee_id',
             'username' => 'required|max:50',
             'company' => 'required',
             'department' => 'required',
             'designation' => 'required',
-            'brand' => 'required|array|min:1',
+            'brand' => 'required|string',
             'joining_date' => 'required|date',
             'leave_type' => 'required', // Ensure leave type is provided and valid
         ];
@@ -69,8 +70,9 @@ class AdminController extends Controller
             $img = uploadImage($image); // Attempt to upload the image
         }
         // Process the selected brands array into a comma-separated string
-        $brands = implode(',', $request->input('brand')); // Convert array to comma-separated string
+        // $brands = implode(',', $request->input('brand')); // Convert array to comma-separated string
 
+        $brands = $request->input('brand');
         $user = new User();
         $user->employee_id = $request->employee_id;
         $user->username = $request->username;
@@ -391,5 +393,24 @@ class AdminController extends Controller
     public function createTeam()
     {
         return view('admin.leader-team.leader-team');
+    }
+
+    public function loadBrands(Request $request)
+    {
+        $searchTerm = $request->input('searchTerm');
+        $page = $request->input('page', 1);
+        $pageSize = 10;
+
+        $query = Brand::query();
+
+        if ($searchTerm) {
+            $query->where('name', 'LIKE', "%{$searchTerm}%");
+        }
+
+        $brands = $query->paginate($pageSize, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $brands->items(),
+        ]);
     }
 }

@@ -420,8 +420,10 @@
                                     else if (row.color == '4') { return "UL"; }
                                     else if (row.color == '5') { return "HL"; }
                                     else if (row.color == '6') { return "CL"; }
-                                    else if (row.color == '7') { return "MTL"; }
-                                    else if (row.color == '8') { return "PL"; }
+                                    else if (row.color == '7') { return "MTRL"; }
+                                    else if (row.color == '8') { return "PTRL"; }
+                                    else if (row.dayoff === "PH") { return "Public Holiday"; }
+                                    else if (row.dayoff === "BT") { return "Business Trip"; }
                                     else if (row.absent == "Yes") { return "Absent"; }
                                     else { return data; }
                                 }
@@ -452,7 +454,7 @@
 
                         const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-                        if (data.dayoff === "Yes") {
+                        if (data.dayoff === "Yes" || data.dayoff === "PH" || data.dayoff === "BT") {
                             leaveColumns.forEach(function (colIndex) {
                                 $(row).find('td').eq(colIndex).css({
                                     'background-color': '#767D83',   //Grey
@@ -689,8 +691,10 @@
                                         else if (row.color == '4') { return "UL"; }
                                         else if (row.color == '5') { return "HL"; }
                                         else if (row.color == '6') { return "CL"; }
-                                        else if (row.color == '7') { return "MTL"; }
-                                        else if (row.color == '8') { return "PL"; }
+                                        else if (row.color == '7') { return "MTRL"; }
+                                        else if (row.color == '8') { return "PTRL"; }
+                                        else if (row.dayoff === "PH") { return "Public Holiday"; }
+                                        else if (row.dayoff === "BT") { return "Business Trip"; }
                                         else if (row.absent == "Yes") { return "Absent"; }
                                         else { return data; }
                                     }
@@ -721,7 +725,7 @@
 
                             const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-                            if (data.dayoff === "Yes") {
+                            if (data.dayoff === "Yes" || data.dayoff === "PH" || data.dayoff === "BT") {
                                 leaveColumns.forEach(function (colIndex) {
                                     $(row).find('td').eq(colIndex).css({
                                         'background-color': '#767D83',   //Grey
@@ -1020,7 +1024,7 @@
 
                     }
                     else {
-
+                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Your shift is over.');
                         clearInterval(intervalId);
                         punchInTime = null;
                         punchInTimeDisplay.textContent = '';

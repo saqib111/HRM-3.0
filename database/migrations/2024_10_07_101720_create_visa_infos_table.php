@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('visa_infos', function (Blueprint $table) {
             $table->id();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('passport_no')->nullable();
             $table->date('p_issue_date')->nullable();
             $table->date('p_expiry_date')->nullable();
@@ -21,7 +22,6 @@ return new class extends Migration {
             $table->string('foreign_no')->nullable();
             $table->date('f_expiry_date')->nullable();
             $table->foreignId('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -1,7 +1,5 @@
 <?php
 
-
-use App\Http\Middleware\CheckUserProfilePermission;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\{
@@ -166,8 +164,7 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     // Permission Routes
     Route::get('/user-permissions/{userId}', [RolesPermissionsController::class, 'getUserPermissions'])->name('get.user.permissions');
     Route::post('/user-permissions/{userId}', [RolesPermissionsController::class, 'saveUserPermissions'])->name('save.user.permissions');
-
-
+    Route::get('/brand_loads', [AdminController::class, 'loadBrands'])->name('brand.load');
 
 });
 
@@ -288,5 +285,12 @@ Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(
     Route::get('/edit-attendance/{id}', [AttendanceRecordController::class, 'ediAtttendance'])->name('edit.page')->defaults('permission', 'view_attendance');
     Route::get('/edit-attendance-employee-record/{id}', [AttendanceRecordController::class, 'ediAtttendanceRecord'])->name('edit.attendance')->defaults('permission', 'view_attendance');
 });
+
+// ROUTE TO GET THE LEAEVES ON SEARCH
+Route::get('/search-leave', [LeaveController::class, 'search']);
+// ROUTE TO REDIRECT INDIVIDUAL REQUEST
+Route::get('custom-leave-detail', [LeaveController::class, 'customLeaveDetail'])->name('custom-leave-detail');
+// ALL LEAVES ROUTE
+Route::get("all-leaves-detail", [LeaveController::class, "allLeaves"])->name("all-leaves-detail");
 
 require __DIR__ . '/auth.php';

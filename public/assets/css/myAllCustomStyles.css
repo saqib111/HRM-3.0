@@ -393,3 +393,24 @@ body {
 .form-control[readonly] {
     background-color: #ffffff !important;
 }
+
+/* Header */
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: #009efb !important;
+    color: #ffff !important;
+}
+
+/* Schedule CSS */
+.btn-check:checked + .btn,
+.btn.active,
+.btn.show,
+.btn:first-child:active,
+:not(.btn-check) + .btn:active {
+    background-color: #00c5fb !important;
+    border-color: #00c5fb !important;
+}
+.split-head li .btn:hover {
+    background-color: #009dc8 !important;
+    border-color: #009dc8 !important;
+}

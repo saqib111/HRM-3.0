@@ -8,7 +8,7 @@ use App\Models\LeaveManagement;
 use Yajra\DataTables\Facades\DataTables;
 use DB;
 use App\Models\AnnualLeaves;
-
+use Carbon\Carbon;
 
 class RevokedLeaveController extends Controller
 {
@@ -121,37 +121,47 @@ class RevokedLeaveController extends Controller
         // Check if leave_details field (JSON) exists and contains leave data
         $leaveDetails = json_decode($leaveRequest->leave_details, true);
 
+        // Initialize a variable to store the total number of days for leave_type_id == 1 (Full Day)
+        $totalDaysToAddBack = 0;
+
         // Check if leave details exist and are in the correct format
         if ($leaveDetails && is_array($leaveDetails)) {
             // Iterate through the leave details and delete the corresponding leaves from approved_leaves
             foreach ($leaveDetails as $detail) {
                 if (isset($detail['start_date']) && isset($detail['end_date'])) {
+                    // If the leave is of type 'full_day' and the leave_type_id is 1, we'll add it back to the balance
+                    if ($detail['type'] === 'full_day' && $detail['leave_type_id'] == 1) {
+                        // Calculate the number of days between start_date and end_date
+                        $startDate = Carbon::parse($detail['start_date']);
+                        $endDate = Carbon::parse($detail['end_date']);
+                        $daysCount = $startDate->diffInDays($endDate) + 1; // +1 to include the start date
+
+                        // Accumulate the total days to add back to the AnnualLeave balance
+                        $totalDaysToAddBack += $daysCount;
+
+                        // Optionally, mark the leave as revoked in details
+                        $detail['status'] = 'revoked'; // Mark the leave as revoked in details
+                    }
+
                     // Find and delete the approved leaves for the same user and leave dates
                     ApprovedLeave::where('user_id', $leaveRequest->user_id)
-                        ->whereIn('leave_type', [1, 2, 3, 4, 5, 6, 7, 8])
+                        ->whereIn('leave_type', [1, 2, 3, 4, 5, 6, 7, 8]) // Ensure matching leave types
                         ->whereBetween('date', [$detail['start_date'], $detail['end_date']])
                         ->delete(); // Deletes all matching records
                 }
             }
 
-            // Optionally, update leave_details (e.g., mark status as 'revoked' or any other change)
-            foreach ($leaveDetails as &$detail) {
-                $detail['status'] = 'revoked'; // Mark the leave as revoked in details
-            }
-            $leaveRequest->leave_details = json_encode($leaveDetails); // Save updated details
+            // Update leave_details with revoked status for the revoked leaves
+            $leaveRequest->leave_details = json_encode($leaveDetails);
         }
 
-        // Fetch the leave_balance from LeaveManagement
-        $leaveBalance = $leaveRequest->leave_balance;
-
-        // Now update the leave_balance in the AnnualLeaves table
         // Assuming AnnualLeaves table has a `user_id` field to match with LeaveManagement user_id
         $annualLeave = AnnualLeaves::where('user_id', $leaveRequest->user_id)->first();
 
         if ($annualLeave) {
-            // Update the leave_balance in AnnualLeaves table
-            $annualLeave->leave_balance = $leaveBalance;
-            $annualLeave->save(); // Save the changes to the AnnualLeaves table
+            // Add the total days to add back to the AnnualLeave balance
+            $annualLeave->leave_balance += $totalDaysToAddBack;
+            $annualLeave->save(); // Save the updated balance to the AnnualLeaves table
         } else {
             // If no AnnualLeaves entry is found, handle as needed
             return response()->json([
@@ -177,7 +187,7 @@ class RevokedLeaveController extends Controller
         // Return a success response with the updated data
         return response()->json([
             'success' => true,
-            'message' => 'Leave request successfully updated and revoked, corresponding approved leaves removed',
+            'message' => 'Leave request successfully updated and revoked, corresponding approved leaves removed, and balance updated.',
             'data' => $response,
         ]);
     }

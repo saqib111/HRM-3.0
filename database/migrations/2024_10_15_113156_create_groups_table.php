@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
             $table->string('user_id');
+            $table->string('name');
             $table->integer('leader_id');
             $table->enum('status', ['0', '1'])->default('0');
             $table->timestamps();

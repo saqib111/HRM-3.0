@@ -22,174 +22,458 @@
     <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
 
     <style>
-        .container1 {
-            min-height: 40vh;
+        .mainSec {
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 100%;
-            padding-right: 100px;
-            margin-top: 30%;
+            text-align: left;
+            /* Align text to the left */
         }
 
+        /* Section background radial gradient */
+        .background-radial-gradient {
+            /* background-color: hsl(218, 41%, 15%); */
+            background-color: hsl(218deg 19.78% 10.05%);
+            background-image: radial-gradient(650px circle at 0% 0%, hsl(218, 41%, 35%) 15%, hsl(218, 41%, 30%) 35%, hsl(218, 41%, 20%) 75%, hsl(218, 41%, 19%) 80%, transparent 100%), radial-gradient(1250px circle at 100% 100%, hsl(218, 41%, 45%) 15%, hsl(218, 41%, 30%) 35%, hsl(218, 41%, 20%) 75%, hsl(218, 41%, 19%) 80%, transparent 100%);
+        }
 
-        .scanner {
-            position: relative;
-            width: 150px;
-            height: 200px;
-            border-radius: 15px;
+        /* Shapes used for visual effects */
+        #radius-shape-1,
+        #radius-shape-2 {
+            position: absolute;
+            background: radial-gradient(#00C5FB, #3d85f1);
             overflow: hidden;
-            padding: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        .fingerprint {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 150px;
-            height: 150px;
-            background: repeating-radial-gradient(circle,
-                    #fff 0%,
-                    #fff 5%,
-                    transparent 5%,
-                    transparent 10%);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite ease-in-out;
+        #radius-shape-1 {
+            height: 220px;
+            width: 220px;
+            top: -60px;
+            left: -130px;
         }
 
-        .scan-line {
-            position: absolute;
-            top: 50%;
-            /* Vertically centered */
-            left: 20%;
-            /* Horizontally centered with 60% width */
-            transform: translateY(-50%);
-            width: 60%;
-            /* 60% of the scanner's width */
-            height: 4px;
-            /* Line thickness */
-            background: #00ff7f;
-            animation: scan 3s infinite linear;
+        #radius-shape-2 {
+            border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
+            bottom: -60px;
+            right: -110px;
+            width: 300px;
+            height: 300px;
         }
 
-        @keyframes pulse {
+        /* Glassmorphism effect for the card */
+        .bg-glass {
+            background-color: hsl(0deg 0% 0% / 45.5%) !important;
+            backdrop-filter: saturate(200%) blur(50px);
+        }
+
+        /* Custom styles for the form and text */
+        .form-outline input,
+        .form-outline label {
+            color: hsl(0, 0%, 100%) !important;
+
+        }
+
+        .form-outline input {
+            color: black !important;
+        }
+
+        .account-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .account-subtitle {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .formdiv {
+            margin-top: 160px !important;
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            .formdiv {
+                margin-top: 0 !important;
+            }
+
+            .account-title {
+                font-size: 2rem;
+            }
+
+            .account-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .col-lg-6 {
+                text-align: left;
+                /* Ensure text is aligned left on smaller screens */
+            }
+
+            #radius-shape-1,
+            #radius-shape-2 {
+                height: 150px;
+                width: 150px;
+                top: -30px;
+                left: -60px;
+                bottom: -40px;
+                right: -60px;
+            }
+
+            .bg-glass {
+                padding: 25px 30px;
+            }
+
+            .card-body {
+                padding: 30px;
+            }
+
+            .mainSec {
+                height: auto;
+                padding: 20px;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        /* Larger devices like tablets, laptops */
+        @media (max-width: 1024px) {
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .mainSec {
+                padding: 20px;
+            }
+        }
+
+        /* Very small screens (phones in portrait) */
+        @media (max-width: 576px) {
+            .account-title {
+                font-size: 1.8rem;
+            }
+
+
+
+            .account-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .card-body {
+                padding: 25px;
+            }
+
+            #radius-shape-1,
+            #radius-shape-2 {
+                display: none;
+            }
+        }
+
+        /* Add animations to make the shapes round and bouncing */
+        @keyframes bounce {
 
             0%,
             100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
+                transform: translateY(0);
             }
 
             50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 0.8;
+                transform: translateY(-20px);
             }
         }
 
-        @keyframes scan {
-            0% {
-                top: -20%;
-                /* Start above the container */
-            }
+        @keyframes bounce-opposite {
 
-            50% {
-                top: 50%;
-                /* Center during the animation */
-            }
-
+            0%,
             100% {
-                top: 120%;
-                /* End below the container */
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(20px);
             }
         }
+
+        #radius-shape-1,
+        #radius-shape-2 {
+            border-radius: 50%;
+            /* Makes the shapes round */
+            position: absolute;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+            animation-duration: 3s;
+        }
+
+        #radius-shape-1 {
+            background: radial-gradient(#00C5FB, #3d85f1);
+            height: 220px;
+            width: 220px;
+            top: -60px;
+            left: -130px;
+            animation-name: bounce;
+        }
+
+        #radius-shape-2 {
+            background: radial-gradient(#3d85f1, #00C5FB);
+            height: 300px;
+            width: 300px;
+            bottom: -60px;
+            right: -110px;
+            animation-name: bounce-opposite;
+        }
+
+        /* @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        } */
+
+        .imgcontainer img {
+            /* animation: rotate 30s linear infinite; */
+            /* Adjust duration and easing as needed */
+            display: block;
+            margin: 0 auto;
+            /* Center the image within its container */
+        }
+
+        .headingcontainer {
+            display: flex;
+            justify-content: space-between;
+
+        }
+
+        .imgcontainer {
+            margin: 0;
+            height: 100px;
+            width: 100px;
+        }
+
+        button {
+            background-color: #00C5FB;
+            color: white;
+            width: 100%;
+            border: none;
+            height: 38px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+
+        @media only screen and (max-width: 768px) {
+
+            .rs_display_none {
+                display: none !important;
+            }
+
+            body {
+                display: none;
+            }
+        }
+
+        @media only screen and (min-width: 768px) and (max-width:1024px) {
+
+            .rs_display_none {
+                display: none !important;
+
+            }
+
+            .loginContainerDiv {
+                width: 75% !important;
+            }
+
+            .formdiv {
+                display: flex;
+                align-items: center;
+                justify-content: space-evenly;
+            }
+
+            .innerDiv {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+        }
+
+        .sideimgcontainer {
+            margin-right: 50px;
+            background-image: url("/assets/img/sideimages/sideimage.png");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 50%;
+            height: 500px;
+            width: 100%;
+            animation: zoom 3s infinite;
+        }
+
+        /* scanner image  */
+        .scanner-container {
+            text-align: center;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            margin-left: 65px;
+            margin-top: 45px;
+            justify-content: center;
+        }
+
+        /* Fingerprint */
+        .fingerprint {
+            position: relative;
+            width: 190px;
+            height: 210px;
+            margin-left: 10%;
+            border-radius: 50%;
+            background: transparent;
+            overflow: hidden;
+            margin: 0 auto;
+            animation: zoom 3s infinite;
+        }
+
+        /* Scanning Line */
+        .line {
+            position: absolute;
+            left: 50%;
+            /* Center horizontally */
+            transform: translateX(-50%);
+            /* Correct horizontal alignment */
+            width: 100%;
+            /* Line width */
+            height: 3px;
+            margin-top: 4px;
+            margin-left: 20px;
+            /* Line height */
+            background: #60b6c5;
+            opacity: 0.8;
+            animation: scan 2s infinite;
+        }
+
+        /* Animation: Scanning Line */
+        @keyframes scan {
+
+            0%,
+            100% {
+                top: 0;
+            }
+
+            50% {
+                top: calc(100% - 10px);
+            }
+        }
+
+        /* Animation: Zoom In and Out */
+        @keyframes zoom {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* end image scanner */
     </style>
 </head>
 
-<body class="account-page" style="
-    background-image: url('/assets/img/background.jpg');
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center center;
-    background-color: #00000060;
-    background-blend-mode: overlay;
-    padding-right: 10%;
-    ">
-    <!-- Main Wrapper -->
-    <div class="main-wrapper" style="margin-left: 28%;">
-        <div class="account-content">
-            <div class="container">
-                <!-- Account Logo -->
-                <div class="account-logo">
-                    <a href="#"><img src="{{ asset('/assets/img/logo.png') }}" alt="SV-HRM System"></a>
+<body>
+
+    <!-- Section: Design Block -->
+    <section class="background-radial-gradient overflow-hidden mainSec">
+        <div class="container px-5 py-5 px-md-5 text-lg-start my-5 formdiv">
+            <div class="row gx-lg-5 align-items-center mb-5 innerDiv">
+                <div class="col-lg-6 mb-5 mb-lg-0 rs_display_none" style="z-index: 10">
+                    <div class="sideimgcontainer">
+                        <div class="scanner-container">
+                            <div class="fingerprint">
+                                <div class="line"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <!-- /Account Logo -->
 
-                <div class="account-box">
-                    <div class="account-wrapper">
-                        <h3 class="account-title">Change Password</h3>
-                        <p class="account-subtitle">Access to dashboard</p>
+                <div class="col-lg-6 mb-5 mb-lg-0 position-relative loginContainerDiv">
+                    <div id="radius-shape-1" class="position-absolute rounded-circle shadow-5-strong"></div>
+                    <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
 
-                        <!-- Change Password Form -->
-                        <form action="{{ route('changed.password') }}" method="POST" id="changePasswordForm">
-                            @csrf
+                    <!-- Glassmorphism Card with Form -->
+                    <div class="card bg-glass h-100">
+                        <div class="container card-body px-4 py-5 px-md-5" style="height: 600px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 30px;
+                        justify-content: space-evenly;">
+                            <div class="headingcontainer">
 
-                            <!-- Current Password -->
-                            <div class="input-block mb-4">
-                                <label class="col-form-label">Current Password</label>
-                                <input class="form-control" type="password" name="current_password" id="currentPassword"
-                                    placeholder="Enter current Password">
-                                <span id="error-current_password" class="text-danger"></span>
+                                <div class="textcontainer">
+                                    <h3 class="account-title">Change Password</h3>
+                                    <p class="account-subtitle">Access to dashboard</p>
+                                </div>
+                                <div class="imgcontainer">
+                                    <img src="{{ asset('assets/img/logo/logo.png') }}" class="img-fluid rounded-circle">
+                                </div>
+
                             </div>
+                            <form action="{{ route('changed.password') }}" method="POST" id="changePasswordForm">
 
-                            <!-- New Password -->
-                            <div class="input-block mb-4">
-                                <label class="col-form-label">New Password</label>
-                                <input class="form-control" type="password" name="password" id="newPassword"
-                                    placeholder="Enter new password">
-                                <span id="error-password" class="text-danger"></span>
-                            </div>
+                                <!-- Current Password -->
+                                <div class="form-outline mb-4">
+                                    <label class="col-form-label">Current Password</label>
+                                    <input type="password" name="current_password" id="currentPassword"
+                                        placeholder="Enter current Password" class="form-control" />
+                                    <span id="error-current_password" class="text-danger"></span>
+                                </div>
 
-                            <!-- Confirm New Password -->
-                            <div class="input-block mb-4">
-                                <label class="col-form-label">Confirm New Password</label>
-                                <input class="form-control" type="password" name="password_confirmation"
-                                    id="confirmPassword" placeholder="Confirm new password">
-                                <span id="error-password_confirmation" class="text-danger"></span>
-                            </div>
+                                <!-- New Password -->
+                                <div class="form-outline mb-4">
+                                    <label class="col-form-label">New Password</label>
+                                    <input type="password" name="password" id="newPassword"
+                                        placeholder="Enter new password" class="form-control" />
+                                    <span id="error-password" class="text-danger"></span>
+                                </div>
 
-                            <!-- Submit Button -->
-                            <div class="input-block mb-4 text-center">
-                                <button style="border: none;
-                                background-color: #00c5fb; color:white;
-                                padding: 10px 20px;
-                                font-size: 16px;
-                                cursor: pointer;
-                                border-radius: 5px;
-                                transition: 0.5s;
-                                position: relative;
-                                width: 100%;
-                                " type="submit">Change
-                                    Password</button>
-                            </div>
+                                <!-- Confirm Password -->
+                                <div class="form-outline mb-4">
+                                    <label class="col-form-label">Confirm Password</label>
+                                    <input type="password" name="password_confirmation" id="confirmPassword"
+                                        placeholder="Confirm new password" class="form-control" />
+                                    <span id="error-password_confirmation" class="text-danger"></span>
+                                </div>
 
-                            <div id="success-message" class="alert alert-success mt-3 d-none"></div>
-                        </form>
-                        <!-- /Change Password Form -->
+                                <div id="success-message" class="alert alert-success mt-3 d-none"></div>
+                                <!-- Submit button -->
+                                <button type="submit">
+                                    Login
+                                </button>
+
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div>
-        <div class="scanner">
-            <div class="fingerprint"></div>
-            <div class="scan-line"></div>
-        </div>
-    </div>
+    </section>
 
     <!-- /Main Wrapper -->
 
@@ -262,9 +546,11 @@
                         if (response.message) {
                             $('#success-message').removeClass('d-none').text(response.message);
                             if (response.userRole === "1") {
-                                setTimeout(() => window.location.href = "{{ route('dashboard') }}", 200);
+                                setTimeout(() => window.location.href =
+                                    "{{ route('dashboard') }}", 200);
                             } else {
-                                setTimeout(() => window.location.href = "{{ route('attendanceemployee.record') }}", 200);
+                                setTimeout(() => window.location.href =
+                                    "{{ route('attendanceemployee.record') }}", 200);
                             }
                         }
                     },
@@ -272,7 +558,8 @@
                         // Handle errors
                         if (xhr.status === 400) {
                             // Display backend validation errors (incorrect password, etc.)
-                            $('#error-current_password').text(xhr.responseJSON.error); // For example, incorrect password
+                            $('#error-current_password').text(xhr.responseJSON
+                                .error); // For example, incorrect password
                             $('#error-current_password').show();
                         } else if (xhr.status === 422) {
                             // Form validation errors
@@ -286,7 +573,6 @@
                 });
             });
         });
-
     </script>
 
 </body>

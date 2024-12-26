@@ -22,20 +22,35 @@ class BrandController extends Controller
 
         if ($request->ajax()) {
             // Get data from the database
-            $collection = DB::table('brands')
-                ->select('id', 'name') // Select id and name fields
+            $collection = DB::table('brands')->select('id', 'name') // Select id and name fields
                 ->orderBy('id', 'asc');
 
             // Return DataTables response with the correct columns
             return DataTables::of($collection)
                 ->addIndexColumn() // Add index column
                 ->addColumn('action', function ($row) use ($canUpdatebrand, $canDeletebrand) {
-                    return [
-                        'edit' => $canUpdatebrand,
-                        'delete' => $canDeletebrand,
-                    ];
-                })
+                    return ['edit' => $canUpdatebrand, 'delete' => $canDeletebrand,]; })
                 ->make(true);
+            // REQUEST TO LOAD BRANDS FOR MULTISELECT
+            if ($request->ajax() && $request->has('searchTerm')) {
+                $searchTerm = $request->get('searchTerm');
+                $page = $request->get('page', 1);
+
+                // Query for searching brands
+                $query = Brand::query();
+                if ($searchTerm) {
+                    $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+                }
+
+                // Paginate results (you can adjust per-page as needed)
+                $brands = $query->paginate(10, ['id', 'name']);
+
+                return response()->json([
+                    'data' => $brands->items(),
+                    'total' => $brands->total(),
+                    'current_page' => $brands->currentPage(),
+                ]);
+            }
         }
 
         return view('brand'); // Return the main view

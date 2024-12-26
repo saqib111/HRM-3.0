@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->datetime('check_in')->nullable();
             $table->datetime('check_out')->nullable();
             $table->integer('emergency_checkout')->nullable();
-            $table->enum('dayoff', ['Yes', 'No', 'AL'])->default('No');
+            $table->enum('dayoff', ['Yes', 'No', 'PH', 'BT'])->default('No');
             $table->enum('status', ['0', '1'])->default('0');
             $table->timestamps();
         });

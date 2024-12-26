@@ -21,7 +21,8 @@ class AnnualLeavesController extends Controller
             $permissions = getUserPermissions($user);
             $canUpdateLeaveBalance = $user->role == 1 || in_array('update_al_balance', $permissions);
 
-            $data = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
+            // Query with join
+            $query = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
                 ->select([
                     'annual_leaves.id',
                     'users.username as username',
@@ -30,16 +31,24 @@ class AnnualLeavesController extends Controller
                     'annual_leaves.last_year_balance'
                 ]);
 
-            return DataTables::of($data)
+            return DataTables::of($query)
                 ->addIndexColumn()
+
+                // Fix search for "username"
+                ->filterColumn('username', function ($query, $keyword) {
+                    $query->where('users.username', 'LIKE', "%{$keyword}%");
+                })
+
                 ->addColumn('can_update', function () use ($canUpdateLeaveBalance) {
                     return $canUpdateLeaveBalance; // Include permission flag in response
                 })
+                ->rawColumns(['can_update']) // Allow HTML in this column if needed
                 ->make(true);
         }
 
         return view('annualLeaveBalance.annual-leaves');
     }
+
 
 
     /**

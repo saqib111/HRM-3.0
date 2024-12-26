@@ -1,0 +1,37 @@
+#first-assigner-select {
+    width: 100%;
+    border: 1px solid #d3d3d4;
+    height: auto;
+    min-height: 40px;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+#first-assigner-select .search-tags {
+    display: none;
+    border: 1px solid;
+    border-color: #d3d3d4;
+    margin-top: 8px;
+}
+
+#first-assigner-select .selected-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+}
+
+#first-assigner-select .options {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-top: 2px;
+    display: none;
+    width: 100%;
+}
+
+#first-assigner-select.open .options {
+    display: block;
+}

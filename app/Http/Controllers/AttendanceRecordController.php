@@ -30,28 +30,7 @@ class AttendanceRecordController extends Controller
      */
     public function index()
     {
-
-        // $id = auth()->user()->id;
-        // $fourMonth = Carbon::now()->subMonths(4)->startOfMonth();
-        // $data = DB::table('attendance_records as ar')
-        //     ->join('users as u', 'u.id', '=', 'ar.user_id')
-        //     ->select(
-        //         'u.username as name',
-        //         'ar.user_id as user_id',
-        //         'ar.shift_in as shift_in',
-        //         'ar.id as id',
-        //         'ar.shift_out as shift_out',
-        //         'ar.duty_hours as duty_hours',
-        //         'ar.check_in as check_in',
-        //         'ar.check_out as check_out',
-        //         'ar.dayoff as dayoff'
-        //     )
-        //     ->where('ar.leader_id', $id)
-        //     ->where('ar.shift_in', '>=', $fourMonth)
-        //     ->get()
-        //     ->groupBy('ar.user_id');
-        // dd($data);
-
+        // 
     }
 
     /**
@@ -484,11 +463,6 @@ class AttendanceRecordController extends Controller
                 $v1 = "no";
             }
 
-
-
-
-
-
             $checkOutTime = date('Y-m-d ', strtotime($d->shift_out));
             $check2 = DB::table('check_verify')
                 ->where('user_id', $employee_id)
@@ -603,7 +577,7 @@ class AttendanceRecordController extends Controller
             'users.username',
             'users.employee_id',
             'users.week_days', // Fetch the week_days field
-            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" OR attendance_records.dayoff = "PH" OR attendance_records.dayoff = "BT"  THEN 1 ELSE NULL END) as dayoff_count'),
             DB::raw('COUNT(CASE 
                     WHEN attendance_records.shift_in IS NOT NULL 
                          AND attendance_records.shift_out IS NOT NULL 
@@ -744,7 +718,7 @@ class AttendanceRecordController extends Controller
         $time = date('Y-m-d H:i:s');
 
         $check = DB::table('attendance_records')
-            ->select('id')
+            ->select('*')
             ->whereDate('shift_in', '=', $checkInTime)
             ->where('check_in', '=', null)
             ->where('user_id', $user)
@@ -752,23 +726,29 @@ class AttendanceRecordController extends Controller
 
         if (!empty($check)) {
 
-            $update = AttendanceRecord::find($check->id);
-            $update->update([
-                $update->check_in = $time
-            ]);
+            if (strtotime($time) > strtotime($check->shift_out)) {
+                return response()->json(['status' => 'error', 'punch_in_time' => "error"]);
+            } else {
+                $update = AttendanceRecord::find($check->id);
+                $update->update([
+                    $update->check_in = $time
+                ]);
 
-            $sess = new AttendanceSession();
-            $sess->user_id = $user;
-            $sess->attendance_id = $check->id;
-            $sess->check_in = $time;
-            $sess->save();
-            // $active="on";
-            // Session::put(['info'=>$sess,'status'=>$active]);
+                $sess = new AttendanceSession();
+                $sess->user_id = $user;
+                $sess->attendance_id = $check->id;
+                $sess->check_in = $time;
+                $sess->save();
+                // $active="on";
+                // Session::put(['info'=>$sess,'status'=>$active]);
 
-            $punch = AttendanceRecord::find($check->id);
-            $punch_in_time = $punch->check_in;
+                $punch = AttendanceRecord::find($check->id);
+                $punch_in_time = $punch->check_in;
 
-            return response()->json(['status' => 'success', 'punch_in_time' => $punch_in_time]);
+                return response()->json(['status' => 'success', 'punch_in_time' => $punch_in_time]);
+            }
+
+
         } else {
             return response()->json(['status' => 'error']);
         }
@@ -871,7 +851,7 @@ class AttendanceRecordController extends Controller
             'users.username',
             'users.employee_id',
             'users.week_days', // Fetch the week_days field
-            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" OR attendance_records.dayoff = "PH" OR attendance_records.dayoff = "BT"   THEN 1 ELSE NULL END) as dayoff_count'),
             DB::raw('COUNT(CASE 
                     WHEN attendance_records.shift_in IS NOT NULL 
                          AND attendance_records.shift_out IS NOT NULL 
@@ -1036,6 +1016,8 @@ class AttendanceRecordController extends Controller
         $c_in = "";
         $c_out = "";
         $absent = "";
+        $v1 = "";
+        $v2 = "";
 
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
@@ -1140,7 +1122,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchIn)) {
+                if (!empty($closestPunchIn) && !empty($d->check_in)) {
                     $finger_print1 = date('Y-m-d H:i:s', strtotime($closestPunchIn->fingerprint_in));
                     $fp1 = Carbon::parse($finger_print1);
                     $checkIn1 = date('Y-m-d H:i:s', strtotime($d->check_in));
@@ -1169,7 +1151,7 @@ class AttendanceRecordController extends Controller
                     }
                 }
 
-                if (!empty($closestPunchOut)) {
+                if (!empty($closestPunchOut) && !empty($d->check_out)) {
                     $finger_print2 = date('Y-m-d H:i:s', strtotime($closestPunchOut->fingerprint_in));
                     $fp2 = Carbon::parse($finger_print2);
                     $checkout = date('Y-m-d H:i:s', strtotime($d->check_out));
@@ -1296,9 +1278,10 @@ class AttendanceRecordController extends Controller
         return response()->json([
 
             'start_date' => date('Y-m-d', strtotime($schedule->shift_in)),
-            'start_time' => date('H:i A', strtotime($schedule->shift_in)),
+            'start_time' => date('H:i', strtotime($schedule->shift_in)),
             'end_date' => date('Y-m-d', strtotime($schedule->shift_out)),
-            'end_time' => date('H:i A', strtotime($schedule->shift_out)),
+            'end_time' => date('H:i', strtotime($schedule->shift_out)),
+            'dayoff' => $schedule->dayoff,
         ]);
     }
 
@@ -1356,6 +1339,7 @@ class AttendanceRecordController extends Controller
         if ($schedule) {
             $schedule->shift_in = $shift_in;
             $schedule->shift_out = $shift_out;
+            $schedule->dayoff = $request->manage_day;
 
             $schedule->save();
 
@@ -1382,7 +1366,7 @@ class AttendanceRecordController extends Controller
             'users.username',
             'users.employee_id',
             'users.week_days', // Fetch the week_days field
-            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" OR attendance_records.dayoff = "PH" OR attendance_records.dayoff = "BT" THEN 1 ELSE NULL END) as dayoff_count'),
             DB::raw('COUNT(CASE 
                     WHEN attendance_records.shift_in IS NOT NULL 
                          AND attendance_records.shift_out IS NOT NULL 
@@ -1788,7 +1772,7 @@ class AttendanceRecordController extends Controller
             'users.username',
             'users.employee_id',
             'users.week_days', // Fetch the week_days field
-            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" THEN 1 ELSE NULL END) as dayoff_count'),
+            DB::raw('COUNT(CASE WHEN attendance_records.dayoff = "Yes" OR attendance_records.dayoff = "PH" OR attendance_records.dayoff = "BT" THEN 1 ELSE NULL END) as dayoff_count'),
             DB::raw('COUNT(CASE 
                     WHEN attendance_records.shift_in IS NOT NULL 
                          AND attendance_records.shift_out IS NOT NULL 

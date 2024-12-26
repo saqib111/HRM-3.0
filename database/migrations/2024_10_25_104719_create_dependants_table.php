@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('dependants', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id');
             $table->string('d_name')->nullable();
             $table->string('d_gender')->nullable();
             $table->string('d_nationality')->nullable();
@@ -22,7 +23,6 @@ return new class extends Migration {
             $table->string('d_visa_no')->nullable();
             $table->date('d_visa_issue_date')->nullable();
             $table->date('d_visa_expiry_date')->nullable();
-            $table->foreignId('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->timestamps();

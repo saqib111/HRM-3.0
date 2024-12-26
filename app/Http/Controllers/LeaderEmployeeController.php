@@ -141,16 +141,42 @@ class LeaderEmployeeController extends Controller
     {
         //
     }
-    public function teamData()
+    public function teamData(Request $request)
     {
-        $employee = DB::table('users')
-            ->select('id', 'username')
-            ->where('status', '1')
-            ->get();
+        $id = auth()->user()->id;
+        if (auth()->user()->role == "1") {
+            $query = DB::table('users as u')
+                ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department');
+
+        } else {
+            $query = DB::table('users as u')
+                ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->join('leader_employees as ld', 'ld.employee_id', '=', 'u.id')
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
+                ->where('ld.leader_id', '=', $id);
+        }
+
+        if ($request->has('search') && $request->input('search')['value']) {
+            $search = $request->input('search')['value'];
+            $query->where('name', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%");
+        }
+
+
+
+        $perPage = $request->input('length', 10);
+        $currentPage = ($request->input('start', 0) / $perPage) + 1;
+
+        $users = $query->paginate($perPage, ['*'], 'page', $currentPage);
 
         return response()->json([
-            'employees' => $employee,
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $users->total(),
+            'recordsFiltered' => $users->total(),
+            'data' => $users->items(),
         ]);
+
     }
     public function teamDatatable()
     {

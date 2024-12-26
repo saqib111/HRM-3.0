@@ -19,6 +19,6 @@ class AttendanceRecord extends Model
         'check_out',
         'emergency_checkout',
         'status',
-        'offday'
+        'dayoff'
     ];
 }

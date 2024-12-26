@@ -89,11 +89,11 @@
                 <li class="breadcrumb-item active">HR Work (Leaves)</li>
             </ul>
         </div>
-        <div class="col-md-4 d-flex justify-content-end">
+        <div class="col-md-8 d-flex justify-content-end">
             <ul class="c_Employee">
                 <li>
                     @if(auth()->user()->role === "1" || auth()->user()->role === "2" || auth()->user()->role === "3")
-                                        <div class="d-flex justify-content-end">
+                                        <div class="d-flex justify-content-end flex-wrap">
                                             <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                             @php
                                                 $statuses = ['pending' => 'All Pending', 'approved' => 'HR Task', 'rejected' => 'All Rejected', 'completed' => 'All Completed', 'revoked' => 'Revoked'];
@@ -101,7 +101,8 @@
 
                                             @foreach($statuses as $status => $label)
                                                 <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->first ? 'active' : '' }}"
-                                                    data-status="{{ $status }}" onclick="filterByStatus('{{ $status }}')">
+                                                    style="width:138px; margin-bottom: 10px;" data-status="{{ $status }}"
+                                                    onclick="filterByStatus('{{ $status }}')">
                                                     {{ $label }}
                                                 </button>
                                             @endforeach

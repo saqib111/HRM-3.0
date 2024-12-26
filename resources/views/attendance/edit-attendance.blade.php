@@ -388,7 +388,17 @@
 
                             </div>
                         </div>
-
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label for="manage_day">Manage Day:</label>
+                                <select class="form-select" id="manage_day" name="manage_day">
+                                    <option value="Yes">OFF</option>
+                                    <option value="No">Working Day</option>
+                                    <option value="BT">Business Trip</option>
+                                    <option value="PH">Public Holiday</option>
+                                </select>
+                            </div>
+                        </div>
                         <input type="hidden" id="row_id" name="row_id">
                     </div>
 
@@ -489,6 +499,8 @@
                             title: 'Duty Hours',
                             render: function (data, type, row) {
                                 if (row.dayoff === "Yes") return "OFF";
+                                if (row.dayoff === "PH") return "Public Holiday";
+                                if (row.dayoff === "BT") return "Bussiness Trip";
                                 if (row.color === '1') return "AL";
                                 if (row.color === '2') return "BL";
                                 if (row.color === '3') return "ML";
@@ -555,7 +567,7 @@
                         const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
                         // If the row is marked as a day off
-                        if (data.dayoff === "Yes") {
+                        if (data.dayoff === "Yes" || data.dayoff === "PH" || data.dayoff === "BT") {
                             leaveColumns.forEach(function (colIndex) {
                                 $(row).find('td').eq(colIndex).css({
                                     'background-color': '#767D83',  // Light Gray for OFF days
@@ -871,6 +883,8 @@
                                 title: 'Duty Hours',
                                 render: function (data, type, row) {
                                     if (row.dayoff === "Yes") return "OFF";
+                                    if (row.dayoff === "PH") return "Public Holiday";  // Show "PH" if dayoff is PH
+                                    if (row.dayoff === "BT") return "Bussiness Trip";  // Show "BT" if dayoff is BT
                                     if (row.color === '1') return "AL";
                                     if (row.color === '2') return "BL";
                                     if (row.color === '3') return "ML";
@@ -927,7 +941,7 @@
                             const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
                             // If the row is marked as a day off
-                            if (data.dayoff === "Yes") {
+                            if (data.dayoff === "Yes" || data.dayoff === "PH" || data.dayoff === "BT") {
                                 leaveColumns.forEach(function (colIndex) {
                                     $(row).find('td').eq(colIndex).css({
                                         'background-color': '#767D83',  // Light Gray for OFF days
@@ -1088,12 +1102,12 @@
             url: `/get-schedule/${rowId}`,
             type: 'GET',
             success: function (response) {
-                console.log(response)
 
                 $('#date-picker').val(response.start_date);
-                $('#time-input').val(convertTo24HourFormat(response.start_time));
+                $('#time-input').val(response.start_time);
                 $('#date-picker2').val(response.end_date);
-                $('#end-time').val(convertTo24HourFormat(response.end_time));
+                $('#end-time').val(response.end_time);
+                $('#manage_day').val(response.dayoff);
                 $('#row_id').val(rowId);
 
                 $('#schedule').modal('show');

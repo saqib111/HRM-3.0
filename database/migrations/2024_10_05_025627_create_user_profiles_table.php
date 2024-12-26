@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id');
             $table->string('real_name')->nullable();
             $table->date('dob')->nullable();
             $table->string('phone')->nullable();
@@ -25,7 +26,6 @@ return new class extends Migration {
             $table->string('remarks')->nullable();
             $table->string('leave_assign_user_id')->nullable();
             $table->string('second_leave_assign_user_id')->nullable();
-            $table->foreignId('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

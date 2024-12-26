@@ -106,7 +106,7 @@
                     searchable: false,
                     className: 'text-center'
                 },
-                { data: 'username', name: 'username', orderable: false, searchable: false },
+                { data: 'username', name: 'username', orderable: false, searchable: true },
                 { data: 'leave_type', name: 'leave_type', className: 'text-center', orderable: false, searchable: false },
                 { data: 'leave_balance', name: 'leave_balance', className: 'text-center', orderable: false, searchable: false },
                 { data: 'last_year_balance', name: 'last_year_balance', className: 'text-center', orderable: false, searchable: false },

@@ -1,4 +1,8 @@
 @extends('layout.mainlayout')
+@section('css')
+<link href="{{ asset('assets/css/custom-multi.css') }}" rel="stylesheet">
+<link href="{{ asset('assets/css/custom-multi-single.css') }}" rel="stylesheet">
+@endsection
 @section('content')
 
 @php
@@ -203,7 +207,7 @@
                                 <div id="designation"></div>
                             </div>
                         </div>
-                        <div class="col-sm-6">
+                        <!-- <div class="col-sm-6">
                             <div class="input-block mb-3">
                                 <label class="col-form-label" for="brand_label">Brand <span
                                         class="text-danger">*</span></label>
@@ -215,6 +219,24 @@
                                     @endforeach
                                 </select>
                                 <div id="brand"></div>
+                            </div>
+                        </div> -->
+
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label class="col-form-label" for="first-assigner-select">
+                                    Brand <span class="text-danger">*</span>
+                                </label>
+                                <div id="first-assigner-select" class="custom-select custom">
+                                    <div class="selected-options custom_selected_options"></div>
+                                    <input type="text" class="search-tags custom-search"
+                                        placeholder="Search brands..." />
+                                    <input type="hidden" class="tags_input" name="brand_ids" />
+                                    <div class="options">
+                                        <div class="no-result-message" style="display: none;">No Options Found</div>
+                                    </div>
+                                </div>
+                                <span class="text-danger" id="brand_error"></span>
                             </div>
                         </div>
 
@@ -231,8 +253,10 @@
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
                                 <label class="col-form-label" for="leave_type">Annual Leaves</label>
-                                <input type="number" class="form-control leave_type" name="leave_type" id="leave_type">
-                                <div id="leaves"></div>
+                                <select class="form-select" aria-label="Default select example" id="leave_type">
+                                    <option value="28" selected>28</option>
+                                    <option value="14">14</option>
+                                </select>
                             </div>
                         </div>
 
@@ -447,6 +471,7 @@
 @endsection
 
 @section('script-z')
+<script src="{{asset('assets/js/custom-multi-single.js')}}"></script>
 <script>
 
     let table;
@@ -571,6 +596,17 @@
 
         $('#employee-form').on('submit', function (event) {
             event.preventDefault();
+            var tagInput = $(".tags_input").val();
+            valid = true;
+            if (tagInput === "") {
+                $("#first-assigner-select").css("border", "1px solid red");
+                $("#brand_error").html("Atleast One Brand Is Required");
+                valid = false;
+            } else {
+                $("#first-assigner-select").css("border", "");
+                $("#brand_error").html("");
+                $("#brand_error").hide();
+            }
 
             var formData = new FormData();
             formData.append('id', $('#id').val());
@@ -583,14 +619,7 @@
             formData.append('company', $('.company').val());
             formData.append('department', $('.department').val());
             formData.append('designation', $('.designation').val());
-
-            // Handle brand array
-            var selectedBrands = $('.brand').val(); // This should return an array
-            if (selectedBrands) {
-                selectedBrands.forEach(function (brand) {
-                    formData.append('brand[]', brand);
-                });
-            }
+            formData.append('brand', tagInput);
 
             formData.append('image', $('.img')[0].files[0]);
 
@@ -609,7 +638,7 @@
             if (!validateField('.company', 'Company')) isValid = false;
             if (!validateField('.department', 'Department')) isValid = false;
             if (!validateField('.designation', 'Designation')) isValid = false;
-            if (!validateBrand(selectedBrands)) isValid = false;
+            // if (!validateBrand(selectedBrands)) isValid = false;
 
             // Validate leave_type
             if (!validateField('#leave_type', 'Leave Type')) isValid = false;
@@ -637,8 +666,20 @@
                     },
                     error: function (data) {
                         hideLoader();
-                        var errors = data.responseJSON;
-                        console.log(errors);
+                        if (data.status === 422) {
+                            var errors = data.responseJSON.errors;
+
+                            // Loop through errors and display them
+                            $.each(errors, function (key, messages) {
+                                messages.forEach(function (message) {
+                                    createToast('error', 'fa-solid fa-circle-xmark', 'Error', message);
+                                });
+                            });
+                        } else {
+                            createToast('error', 'fa-solid fa-circle-xmark', 'Error', 'An unexpected error occurred. Please try again.');
+                        }
+
+                        console.log(data.responseJSON);
                     }
                 });
             }

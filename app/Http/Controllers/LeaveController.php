@@ -67,7 +67,7 @@ class LeaveController extends Controller
         if (in_array(2, $request->full_day_leave ?? [])) { // 2 stands for "Birthday Leave"
             $currentYear = now()->year;
             $birthdayLeaveTaken = LeaveManagement::where('user_id', $user_id)
-                ->whereJsonContains('leave_details', [['leave_type_id' => "2"]])
+                ->whereJsonContains('leave_details', [['leave_type_id' => 2]])
                 ->whereYear('created_at', $currentYear)
                 ->exists();
 
@@ -79,11 +79,11 @@ class LeaveController extends Controller
         // Check total "Marriage Leave" days taken in lifetime
         if (in_array(3, $request->full_day_leave ?? [])) { // 3 stands for "Marriage Leave"
             $marriageLeaveDaysTaken = LeaveManagement::where('user_id', $user_id)
-                ->whereJsonContains('leave_details', [['leave_type_id' => "3"]])
+                ->whereJsonContains('leave_details', [['leave_type_id' => 3]])
                 ->get()
                 ->sum(function ($leave) {
                     $details = json_decode($leave->leave_details, true);
-                    return collect($details)->where('leave_type_id', "3")->sum(function ($marriageLeave) {
+                    return collect($details)->where('leave_type_id', 3)->sum(function ($marriageLeave) {
                         $start = new \DateTime($marriageLeave['start_date']);
                         $end = new \DateTime($marriageLeave['end_date']);
                         return $end->diff($start)->days + 1;
@@ -94,7 +94,7 @@ class LeaveController extends Controller
             $newMarriageLeaveDaysRequested = 0;
             if (!empty($request->full_day_leave)) {
                 foreach ($request->full_day_leave as $index => $leave_type) {
-                    if ($leave_type == "3") {
+                    if ($leave_type == 3) {
                         $from = new \DateTime($request->full_leave_from[$index]);
                         $to = new \DateTime($request->full_leave_to[$index]);
                         $newMarriageLeaveDaysRequested += $to->diff($from)->days + 1;
@@ -1077,4 +1077,184 @@ class LeaveController extends Controller
         ]);
     }
 
+    // **************************************************************   CUSTOM LEAVE SEARCH  *************************************************************************************
+    public function search(Request $request)
+    {
+        $user = auth()->user();  // Get the currently authenticated user
+
+        // If the user does not have role 1, 2, or 3, return an error response
+        if (!in_array($user->role, [1, 2, 3])) {
+            return response()->json(['success' => false, 'message' => 'You do not have permission to perform this action.']);
+        }
+
+        $request->validate([
+            'user_id' => 'required|integer',
+            'employee_name' => 'required|string'
+        ]);
+
+        // Find the user by employee_id or username
+        $user = User::where('employee_id', $request->employee_name)->orWhere('username', $request->employee_name)->first();
+
+        if ($user) {
+            // Get the leaves for the found user
+            $leaves = LeaveManagement::where('user_id', $user->id)->orderBy('created_at', 'desc')->take(8)->get();
+
+            // Map over the leaves to extract leave details
+            $responseData = $leaves->map(function ($leave) {
+                // Decode the JSON stored in the leave_details column for each leave
+                $leaveDetails = json_decode($leave->leave_details, true);
+
+                $totalLeaveDays = 0;  // To accumulate total leave days
+                $leaveFrom = [];
+                $leaveTo = [];
+
+                // Loop through each leave type and extract the start_date and end_date
+                foreach ($leaveDetails as $detail) {
+                    $startDate = isset($detail['start_date']) ? $detail['start_date'] : null;
+                    $endDate = isset($detail['end_date']) ? $detail['end_date'] : null;
+
+                    if ($startDate && $endDate) {
+                        // Optionally, you can calculate the leave days for each range
+                        $totalLeaveDays += $this->calculateLeaveDays($startDate, $endDate);
+                        $leaveFrom[] = $startDate;
+                        $leaveTo[] = $endDate;
+                    }
+                }
+
+
+                // $currentStatus = $leave->status_2 ?: $leave->status_1;
+                if ($leave->status_1 == 'rejected') {
+                    $currentStatus = 'Rejected';
+                } elseif ($leave->status_1 == 'approved' && $leave->status_2 == 'pending') {
+                    $currentStatus = 'Pending';
+                } elseif ($leave->status_1 == 'approved' && $leave->status_2 == 'rejected') {
+                    $currentStatus = 'Rejected';
+                } elseif ($leave->status_1 == 'approved' && $leave->status_2 == 'approved') {
+                    $currentStatus = 'Approved';
+                } elseif ($leave->status_1 == 'pending' && $leave->status_2 == 'pending') {
+                    $currentStatus = 'Pending';
+                } elseif ($leave->revoked === '1') {
+                    $currentStatus = "Revoked";
+                } else {
+                    $currentStatus = 'Unknown'; // For any unexpected status combination
+                }
+                // Return the structured response
+                return [
+                    'name' => $leave->user->username, // Assuming leave record has a relation to User
+                    'employee_id' => $leave->user->employee_id,
+                    'leave_balance' => $leave->leave_balance,
+                    'leave_days' => $totalLeaveDays,  // Total calculated leave days from all leave types
+                    'leave_title' => $leave->title,
+                    'leave_description' => $leave->description,
+                    'leave_from' => implode(', ', $leaveFrom), // Combine all start dates into a string
+                    'leave_to' => implode(', ', $leaveTo),     // Combine all end dates into a string
+                    'leave_status_1' => $leave->status_1,
+                    'leave_status_2' => $leave->status_2,
+                    'leave_status' => $currentStatus,
+                    'leave_id' => $leave->id,
+                    'user_id' => $leave->user_id,
+                    'revoked' => $leave->revoked,
+                ];
+            });
+
+            // Return the response as JSON
+            return response()->json(['success' => true, 'data' => $responseData]);
+        }
+
+        // If user not found
+        return response()->json(['success' => false, 'message' => 'User not found']);
+    }
+
+    public function customLeaveDetail()
+    {
+        return view('leave_application.custom_search_detail'); // Pass as 'leaves'
+    }
+
+    public function allLeaves(Request $request)
+    {
+        $userID = $request->userID;
+        $leaveID = $request->leaveID;
+
+        if ($userID) {
+            $leave = LeaveManagement::with('user')
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance'])
+                ->where('user_id', $userID)
+                ->get();
+        }
+
+        if ($leaveID) {
+            $leave = LeaveManagement::with('user')
+                ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance'])
+                ->where('id', $leaveID)
+                ->get();
+        }
+
+        if ($leave) {
+            // Return the leaves data as Datatables
+            return Datatables::of($leave)
+                ->addIndexColumn()
+                ->addColumn('username', function ($row) {
+                    return $row->user->username ?? 'N/A';
+                })
+                ->addColumn('employee_id', function ($row) {
+                    return $row->user->employee_id ?? 'N/A';
+                })
+                ->addColumn('day', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $day_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $day_str .= '<span class="badge bg-primary">Full Day</span><br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $day_str .= '<span class="badge bg-warning">Half Day</span><br>';
+                        }
+                    }
+                    return $day_str;
+                })
+                ->addColumn('from', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $from_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $from_str .= $detail->start_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $from_str .= $detail->date . ' (' . $detail->start_time . ')<br>';
+                        }
+                    }
+                    return $from_str;
+                })
+                ->addColumn('to', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $to_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $to_str .= $detail->end_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $to_str .= $detail->date . ' (' . $detail->end_time . ')<br>';
+                        }
+                    }
+                    return $to_str;
+                })
+                ->addColumn('off_days', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $off_day_str = '<ul class="list-unstyled mb-0">';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'off_day') {
+                            $off_day_str .= "<li><span class='badge bg-secondary'>{$detail->date}</span></li>";
+                        }
+                    }
+
+                    return $off_day_str .= '</ul>';
+                })
+                ->rawColumns(['day', 'from', 'to', 'off_days'])
+                ->make(true);
+        }
+        return view('leave_application.custom_search_detail');
+    }
+
+    // ***************************** CUSTOM LEAVE SEARCH  ******************************************************************
 }

@@ -88,34 +88,13 @@
 <div class="page-header">
     <div class="row align-items-center justify-content-between">
         <div class="col-md-4">
-            <h3 class="page-title">Pending Leave Applications</h3>
+            <h3 class="page-title">Custom Leave Applications</h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Pending Leave Applications</li>
+                <li class="breadcrumb-item active">Custom Leave Applications</li>
             </ul>
         </div>
-        <div class="col-md-8 d-flex justify-content-end">
-            <ul class="c_Employee">
-                <li>
-                    @if(auth()->user()->role === "1" || in_array('pending_leaves', $permissions))
-                                        <div class="d-flex justify-content-end flex-wrap">
-                                            <!-- Status Buttons (Pendings, Approved, Rejected) -->
-                                            @php
-                                                $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected', 'revoked' => 'Revoked'];
-                                            @endphp
 
-                                            @foreach($statuses as $status => $label)
-                                                <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->first ? 'active' : '' }}"
-                                                    style="width:138px; margin-bottom: 10px;" data-status="{{ $status }}"
-                                                    onclick="filterByStatus('{{ $status }}')">
-                                                    {{ $label }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                    @endif
-                </li>
-            </ul>
-        </div>
     </div>
 </div>
 
@@ -278,15 +257,26 @@
 <script>
     let table;
 
+    // Function to get query string parameter using jQuery
+    function getQueryParam(param) {
+        let urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // Get `user_id` and `leave_id` from the URL
+    var userID = getQueryParam('user_id') || ''; // Default to an empty string if not present
+    var leaveID = getQueryParam('leave_id') || ''; // Default to an empty string if not present
+
     // Function to initialize the DataTable
     function initializeDataTable(status) {
         table = $('#leave_table').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('leave_application.data') }}", // Backend URL
+                url: "{{ route('all-leaves-detail') }}", // Backend URL
                 data: function (d) {
-                    d.status = status;  // Send the selected status as a query parameter
+                    d.userID = userID;  // Send the selected status as a query parameter
+                    d.leaveID = leaveID;  // Send the selected status as a query parameter
                 }
             },
             columns: [
@@ -367,70 +357,7 @@
     $(document).ready(function () {
 
         /// Initialize DataTable with the default status (Pending)
-        const defaultStatus = 'pending';  // You can adjust this based on which status you want to load by default
-        initializeDataTable(defaultStatus);
-
-        // Handle the status buttons click event to filter data
-        $('.company-btn').on('click', function () {
-            const status = $(this).data('status');  // Get the status from the button's data-status attribute
-            filterByStatus(status);
-        });
-
-        $('#approval_btn').click(function () {
-            const id = $(this).data('id');
-            const step = $(this).data('action');
-            showLoader(); // Start loader
-
-            // Fetch leave details using AJAX
-            $.ajax({
-                url: `/leave_action`, // Route for fetching leave application by ID
-                method: 'POST',
-                data: {
-                    leave_id: id,
-                    leave_action: 'approval_request',
-                    leave_step: step,
-                    _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
-                },
-                success: function (response) {
-                    console.log(response);
-                    hideLoader(); // Hide loader
-                    $('#leaveDetailsModal').modal('hide');
-                    $('#leave_table').DataTable().ajax.reload();
-                },
-                error: function (xhr) {
-                    console.error('Error fetching leave application:', xhr);
-                    hideLoader(); // Hide loader even if there's an error
-                }
-            });
-        });
-
-        $('#rejection_btn').click(function () {
-            const id = $(this).data('id');
-            const step = $(this).data('action');
-            showLoader(); // Start loader
-
-            // Fetch leave details using AJAX
-            $.ajax({
-                url: `/leave_action`, // Route for fetching leave application by ID
-                method: 'POST',
-                data: {
-                    leave_id: id,
-                    leave_action: 'reject_request',
-                    leave_step: step,
-                    _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
-                },
-                success: function (response) {
-                    console.log(response);
-                    hideLoader(); // Hide loader
-                    $('#leaveDetailsModal').modal('hide');
-                    $('#leave_table').DataTable().ajax.reload();
-                },
-                error: function (xhr) {
-                    console.error('Error fetching leave application:', xhr);
-                    hideLoader(); // Hide loader even if there's an error
-                }
-            });
-        });
+        initializeDataTable();
 
         // Fetch leave details and open the modal
         $(document).on('click', '.toggle-modal', function () {
@@ -761,21 +688,21 @@
             halfDaySection.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'flex-wrap');
 
             halfDaySection.innerHTML = `
-        <span class="fw-semibold">Annual Leave (Half Day):</span>
-        <div class="d-flex gap-3 ms-2">
-            <div class="d-flex justify-content-between">
-                <span class="text-muted">Date:</span>
-                <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
-            </div>
-            <div class="d-flex justify-content-between">
-                <span class="text-muted">Start Time:</span>
-                <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
-            </div>
-            <div class="d-flex justify-content-between">
-                <span class="text-muted">End Time:</span>
-                <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
-            </div>
-        </div>`;
+            <span class="fw-semibold">Annual Leave (Half Day):</span>
+            <div class="d-flex gap-3 ms-2">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Date:</span>
+                    <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Start Time:</span>
+                    <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">End Time:</span>
+                    <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
+                </div>
+            </div>`;
 
             // Append the half-day leave section
             leaveSections.appendChild(halfDaySection);
@@ -786,7 +713,6 @@
             halfDayCircle.innerText = new Date(leave.date).getDate();
             leaveSections.appendChild(halfDayCircle);
         }
-
 
         // Helper function to format date in a readable way
         function formatDate(date) {

@@ -656,6 +656,9 @@
                                     <option value="Poipet" {{ $profileUser->office == 'Poipet' ? 'selected' : '' }}>
                                         Poi Pet
                                     </option>
+                                    <option value="Srilanka" {{ $profileUser->office == 'Srilanka' ? 'selected' : '' }}>
+                                        Sri Lanka
+                                    </option>
                                 </select>
                             </div>
                         </div>

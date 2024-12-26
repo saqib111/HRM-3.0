@@ -351,7 +351,7 @@ class ScheduleController extends Controller
     public function submitHoliday(Request $request)
     {
         $uid = auth()->user()->id;
-        $user_id = $request->employee_id;
+        $user_id = explode(',', $request->selectedEmployee);
         $date = $request->date;
         $dateArray = (explode(" , ", $date));
         $dates = preg_split("/\,/", $dateArray[0]);

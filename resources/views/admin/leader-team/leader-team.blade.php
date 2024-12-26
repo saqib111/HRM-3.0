@@ -1,6 +1,15 @@
 @extends('layout.mainlayout')
 @section('css')
 <link href="{{ asset('assets/css/custom-multi.css') }}" rel="stylesheet">
+<style>
+    #not_wanted .remove-tag {
+        display: none;
+    }
+
+    #not_wanted .tag {
+        background: none;
+    }
+</style>
 @endsection
 @section('content')
 
@@ -58,7 +67,7 @@
 <!-- Add Team Modal Starts -->
 <div class="modal custom-modal fade" id="add_team" tabindex="-1" role="dialog" aria-labelledby="addTeamModal"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document" style="min-width: 70%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Create Team</h5>
@@ -69,16 +78,16 @@
             <div class="modal-body">
                 <form id="AddTeamForm" method="POST">
                     @csrf
-                    <div class="custom-select" id="first-leader-select">
+                    <div class="custom-select" id="first-leader-select" style="width:100%">
                         <label for="select_box">Leader Name:</label>
-                        <div class="select-box first_select_box" id="select-box">
+                        <div class="select-box first_select_box" id="select-box" style="width:100%">
                             <input type="hidden" class="tags_input tags singleTag" id="leader_id" name="leader_id">
                             <div class="selected-options"></div>
                             <div class="arrow">
                                 <i class="fa fa-angle-down first_icon"></i>
                             </div>
                         </div>
-                        <div class="options">
+                        <div class="options" style="width:100%">
                             <div class="option-search-tags">
                                 <input type="text" class="search-tags" placeholder="Search Tags ..">
                                 <button type="button" class="clear"><i class="fa fa-close"></i></button>
@@ -89,16 +98,16 @@
                         <span class="text-danger" id="first_field_error"></span>
                     </div>
 
-                    <div class="custom-select" id="second-employee-select">
+                    <div class="custom-select mt-3" id="second-employee-select" style="width:100%">
                         <label for="second-select-box">Employees Name:</label>
-                        <div class="select-box second_select_box" id="select-box">
+                        <div class="select-box second_select_box" id="select-box" style="width:100%">
                             <input type="hidden" class="tags_input tags" id="employee_id" name="employee_id">
                             <div class="selected-options"></div>
                             <div class="arrow">
                                 <i class="fa fa-angle-down second_icon"></i>
                             </div>
                         </div>
-                        <div class="options">
+                        <div class="options" style="width:100%">
                             <div class="option-search-tags">
                                 <input type="text" class="search-tags" placeholder="Search Tags ..">
                                 <button type="button" class="clear"><i class="fa fa-close"></i></button>
@@ -144,9 +153,9 @@
 
 
 <!-- Edit Team Modal Starts -->
-<div class="modal custom-modal fade" id="edit_team" tabindex="-1" role="dialog" aria-labelledby="editTeamModal"
+<div class="modal custom-modal fade  mt-5" id="edit_team" tabindex="-1" role="dialog" aria-labelledby="editTeamModal"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-xl  mt-5" role="document" style="min-width: 70%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Team</h5>
@@ -157,36 +166,36 @@
             <div class="modal-body">
                 <form id="EditTeamForm" method="POST">
                     @csrf
-                    <div class="custom-select" id="leader-select">
-                        <label for="select_box">Edit Leader Name:</label>
-                        <div class="select-box edit_first_select_box" id="select-box">
-                            <input type="hidden" class="tags_input tags" id="edit_leader_id" name="leader_id">
-                            <div class="selected-options"></div>
-                            <div class="arrow">
+                    <div class="custom-select" id="leader-select" style="width:100%" disabled>
+                        <label for="select_box">Leader Name:</label>
+                        <div class="select-box edit_first_select_box" id="select-box" style="width:100%">
+                            <input type="hidden" class="tags_input tags" id="edit_leader_id" name="leader_id" disabled>
+                            <div class="selected-options" id="not_wanted"></div>
+                            <!-- <div class="arrow">
                                 <i class="fa fa-angle-down edit_first_icon"></i>
-                            </div>
+                            </div> -->
                         </div>
-                        <div class="options">
+                        <!-- <div class="options" style="width:100%" disabled>
                             <div class="option-search-tags">
                                 <input type="text" class="search-tags" placeholder="Search Tags ..">
                                 <button type="button" class="clear"><i class="fa fa-close"></i></button>
                             </div>
                             <div class="op-disabled" selected disabled>Select Users</div>
                             <div class="no-result-message" style="display:none;">No Result Match</div>
-                        </div>
+                        </div> -->
                         <span class="text-danger" id="edit_first_field_error"></span>
                     </div>
 
-                    <div class="custom-select" id="employee-select">
+                    <div class="custom-select mt-3" id="employee-select" style="width:100%">
                         <label for="second-select-box">Edit Employees Name:</label>
-                        <div class="select-box edit_second_select_box" id="select-box">
+                        <div class="select-box edit_second_select_box" id="select-box" style="width:100%">
                             <input type="hidden" class="tags_input tags" id="edit_employee_id" name="employee_id">
                             <div class="selected-options"></div>
                             <div class="arrow">
                                 <i class="fa fa-angle-down edit_second_icon"></i>
                             </div>
                         </div>
-                        <div class="options">
+                        <div class="options" style="width:100%">
                             <div class="option-search-tags">
                                 <input type="text" class="search-tags" placeholder="Search Tags ..">
                                 <button type="button" class="clear"><i class="fa fa-close"></i></button>
@@ -208,6 +217,7 @@
         </div>
     </div>
 </div>
+
 <!-- Edit Team Modal Ends -->
 
 

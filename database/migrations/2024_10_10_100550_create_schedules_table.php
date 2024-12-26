@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
+            $table->integer('user_id');
             $table->date('start_to');
             $table->date('start_end');
             $table->time('start_time');
@@ -20,7 +21,6 @@ return new class extends Migration {
             $table->time('end_time');
             $table->string('name');
             $table->enum('status', ['0', '1'])->default('0');
-            $table->integer('user_id');
             $table->timestamps();
         });
     }

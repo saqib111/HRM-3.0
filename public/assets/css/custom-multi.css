@@ -94,7 +94,6 @@
 
 .custom-select {
     position: relative;
-    width: 500px;
 }
 
 .selected-options {
@@ -115,17 +114,17 @@
 }
 
 .select-box {
-    background: #f9f9f9;
+    background: #ffffff;
     border: 1px solid #ced4da;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: center; /* Ensure items are vertically aligned */
     height: auto;
-    min-height: 38px;
+    min-height: 45px;
     padding: 0 10px;
     cursor: pointer;
-    width: 90%;
+    width: 100%;
     border-radius: 4px;
     max-height: 150px; /* Adjust based on desired maximum height */
     overflow-y: auto; /* Allow scroll if too many tags are selected */
@@ -143,7 +142,7 @@
 }
 
 .tag {
-    background-color: #f2f2f2d0;
+    background-color: #b4b4b4d0;
     color: #000;
     border-radius: 5px;
     margin-right: 5px;
@@ -172,7 +171,7 @@
 .options {
     display: none;
     position: absolute;
-    width: 90%;
+    width: 100%;
     background-color: #ffff;
     border: 1px solid #ced4da;
     border-top: none;
@@ -185,7 +184,7 @@
 .open .options {
     display: block;
     height: 10px;
-    width: 90%;
+    width: 100%;
 }
 
 .option-search-tags {
@@ -215,7 +214,7 @@
     font-weight: 600;
     padding: 0;
     color: #000;
-    top: 26px;
+    top: 20px;
     left: auto;
     right: 15px;
 }
@@ -227,7 +226,7 @@
 
 .option.active {
     color: #000;
-    background-color: #f2f2f2;
+    background-color: #b4b4b4d0;
     border-bottom: 1px solid #eaeaea;
 }
 

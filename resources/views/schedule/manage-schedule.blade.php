@@ -1,7 +1,7 @@
 @extends('layout.mainlayout')
 @section('head')
 <!-- Litepicker CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 <style>
     .select2-search__field {
         display: none;
@@ -15,46 +15,45 @@
     .select2-selection__choice {
         margin-top: 0;
     }
-     .select2-selection--multiple.is-invalid
-   {
-      border-color: red!important;
+
+    .select2-selection--multiple.is-invalid {
+        border-color: red !important;
     }
-  
-            body {
-                font-family: "Arial", sans-serif;
-                background-color: #eaeaea;
-                padding: 20px;
-            }
 
-            .container {
-                max-width: 600px;
-                margin: auto;
-                background: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            }
+    body {
+        font-family: "Arial", sans-serif;
+        background-color: #eaeaea;
+        padding: 20px;
+    }
 
-            .result {
-                margin-top: 20px;
-                font-size: 1.1em;
-                color: #333;
-            }
-     
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .result {
+        margin-top: 20px;
+        font-size: 1.1em;
+        color: #333;
+    }
 </style>
 @endsection
 @section('content')
 <div class="page-header">
-  <div class="row align-items-center">
-    <div class="col-md-4">
-      <h3 class="page-title">Enable/Delete Schedule</h3>
-      <ul class="breadcrumb">
-        <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
-        <li class="breadcrumb-item active">Enable/Delete Schedule</li>
-      </ul>
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <h3 class="page-title">Enable/Delete Schedule</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item active">Enable/Delete Schedule</li>
+            </ul>
+        </div>
+
     </div>
-   
-  </div>
 </div>
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="row">
@@ -70,11 +69,11 @@
                         <th>End Date</th>
                         <th>End Time</th>
                         <th>Status / Activate </th>
-                       
+
                     </tr>
                 </thead>
                 <tbody>
-                    
+
                 </tbody>
             </table>
         </div>
@@ -88,84 +87,85 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Assign Employee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
                 <form id="assign-employee" method="post" enctype="multipart/form-data">
-                    @csrf 
-                <div class="row">
+                    @csrf
+                    <div class="row">
 
-                     <input type="hidden" name="schedule_id" val="" id="ID"> 
-                     <input type="hidden" name="start_to" val="" id="st">
-                     <input type="hidden" name="start_end" val="" id="se">
-                     <input type="hidden" name="start_time" val="" id="stime">
-                     <input type="hidden" name="end_to" val="" id="et">
-                     <input type="hidden" name="end_end" val="" id="en">
-                     <input type="hidden" name="end_time" val="" id="etime">
+                        <input type="hidden" name="schedule_id" val="" id="ID">
+                        <input type="hidden" name="start_to" val="" id="st">
+                        <input type="hidden" name="start_end" val="" id="se">
+                        <input type="hidden" name="start_time" val="" id="stime">
+                        <input type="hidden" name="end_to" val="" id="et">
+                        <input type="hidden" name="end_end" val="" id="en">
+                        <input type="hidden" name="end_time" val="" id="etime">
 
                         <div class="col-sm-12 ">
                             <div class="input-block mb-3">
                                 <label class="col-form-label" for="shiftname">Shift Name <span
                                         class="text-danger">*</span></label>
-                                <input class="form-control shiftname" type="text" name="shift_name" id="shiftname" disabled>
-                              
-                               
+                                <input class="form-control shiftname" type="text" name="shift_name" id="shiftname"
+                                    disabled>
+
+
                             </div>
                         </div>
 
-                    <div class="col-sm-6">
-                        <div class="input-block mb-3">
-                            <label for="datepicker">Select Shift Start Dates:</label>
-                            <input  type="text"  id="date-picker" name="start-date[]" class="form-control" disabled/>
-                           
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label for="datepicker">Select Shift Start Dates:</label>
+                                <input type="text" id="date-picker" name="start-date[]" class="form-control" disabled />
 
+
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="input-block mb-3">
-                            <label for="datepicker-time">Select Shift Start Time:</label>
-                            <input type="time" id="time-input"  name="start_time" class="form-control" disabled/>
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label for="datepicker-time">Select Shift Start Time:</label>
+                                <input type="time" id="time-input" name="start_time" class="form-control" disabled />
 
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-sm-6">
-                        <div class="input-block mb-3">
-                            <label for="datepicker2">Select Shift End Dates:</label>
-                            <input  type="text"  id="date-picker2" name="end-date[]" class="form-control"  disabled/>
-                            
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label for="datepicker2">Select Shift End Dates:</label>
+                                <input type="text" id="date-picker2" name="end-date[]" class="form-control" disabled />
 
+
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="input-block mb-3">
-                            <label for="datepicker2-time">Select Shift End Time:</label>
-                            <input type="time" id="end-time"  name="end_time" class="form-control" disabled/>
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3">
+                                <label for="datepicker2-time">Select Shift End Time:</label>
+                                <input type="time" id="end-time" name="end_time" class="form-control" disabled />
 
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-sm-6">
+                        <div class="col-sm-6">
                             <div class="input-block mb-3 ">
                                 <label class="col-form-label" for="assign_label">Assign Employee <span
                                         class="text-danger">*</span></label>
 
                                 <select class="form-select tagging assign " name="employee_id[]" multiple="multiple"
                                     id="assign_label">
-                                 
+
                                 </select>
                                 <div id="assign"></div>
                             </div>
                         </div>
-            </div>
+                    </div>
 
                     <div class="submit-section">
                         <button class="btn btn-primary" id="">Submit</button>
                     </div>
-        </form>
-            
-                </div>
+                </form>
+
+            </div>
         </div>
     </div>
 </div>
@@ -179,13 +179,13 @@
 @endsection
 
 @section('script-z')  
- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script>
- $(document).ready(function () {
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    $(document).ready(function () {
         $('.tagging').select2({
             tags: true
         });
-        
+
         let table = $('#manageSchedule').DataTable({
             processing: true,
             serverSide: true,
@@ -224,13 +224,13 @@
                 name: 'end_time',
                 orderable: false,
             },
-            
+
             {
                 data: 'status',
                 name: 'status',
                 orderable: false,
                 render: function (data, type, row) {
-                   
+
                     let checked = (data === '0') ? 'checked' : '';
                     return `
                         <div class="status-toggle-container" style="display:flex;">
@@ -242,13 +242,13 @@
                     `;
                 }
             },
- 
+
             ],
             order: [
                 []
             ]
         });
-    });           
+    });
 
     function changeStatus(id, checkbox) {
         const status = checkbox.checked ? 0 : 1; // Assuming 1 is active and 0 is inactive
@@ -258,7 +258,7 @@
             type: 'POST',
             data: {
                 id: id,
-                
+
                 _token: '{{ csrf_token() }}' // Include CSRF token for security
             },
             success: function (response) {
@@ -280,8 +280,8 @@
         });
     }
 
-              
 
-        </script>
+
+</script>
 
 @endsection

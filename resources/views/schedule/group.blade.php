@@ -135,7 +135,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Create Group</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -221,7 +221,8 @@
             <div class="modal-header ">
 
                 <h4 class="modal-title">Group Details </h4>
-                <button type="button" class="close" data-bs-dismiss="modal" style="margin-left:300px;">&times;</button>
+                <button type="button" class="closed_btn" data-bs-dismiss="modal"
+                    style="margin-left:300px;">&times;</button>
             </div>
             <div class="row mt-2" style="margin-left:10px;" id="groupInfo">
 
