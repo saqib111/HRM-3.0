@@ -34,8 +34,10 @@ class SettingController extends Controller
             $defaultimg = uploadImage($uploadedFile); // Pass the file, not the name
 
             // If the user already has an image, optionally delete the old one
-            if ($user->image && file_exists(public_path('uploads/' . $user->image))) {
-                unlink(public_path('uploads/' . $user->image));
+            if ($user->image !== "default_profile_picture.png") {
+                $imagePath = public_path('uploads/' . $user->image);
+            } elseif (file_exists($imagePath)) {
+                unlink($imagePath);
             }
 
             // Update the user's image in the database
@@ -67,11 +69,5 @@ class SettingController extends Controller
         return response()->json(['success' => true, 'message' => 'Password updated successfully.']);
 
     }
-
-
-
-
-
-
 
 }

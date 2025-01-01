@@ -21,7 +21,6 @@
     }
 
     body {
-        font-family: "Arial", sans-serif;
         background-color: #eaeaea;
         padding: 20px;
     }
@@ -58,6 +57,7 @@
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="row">
     <div class="col-md-12">
+        <button class="btn btn-danger btn-sm d-flex flex-end" id="deleteSelectedBtn">Delete Schedule</button>
         <div class="table-responsive">
             <table class="table table-striped custom-table" id="manageSchedule">
                 <thead>
@@ -69,7 +69,7 @@
                         <th>End Date</th>
                         <th>End Time</th>
                         <th>Status / Activate </th>
-
+                        <th><input type="checkbox" id="selectAll"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -242,11 +242,62 @@
                     `;
                 }
             },
+            {
+                data: 'id',
+                name: 'id',
+                orderable: false,
+                render: function (data, type, row) {
+                    return `<input type="checkbox" class="rowCheckbox" data-id="${data}">`; // Add checkbox to each row
+                }
+            },
 
             ],
             order: [
                 []
             ]
+        });
+
+        // *********** DELETE SELECTED SCHEDULE ************
+        $('#selectAll').on('click', function () {
+            console.log("select all working");
+            var isChecked = $(this).prop('checked');
+            $('.rowCheckbox').prop('checked', isChecked);
+        });
+
+        $('#deleteSelectedBtn').on('click', function (e) {
+            e.preventDefault();
+            var selectedIds = [];
+            $('.rowCheckbox:checked').each(function () {
+                selectedIds.push($(this).data('id'));
+            });
+            console.log(selectedIds);
+
+            if (selectedIds.length === 0) {
+                alert('Please select at least one row to delete.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete the selected schedules?')) {
+                $.ajax({
+                    url: "{{ route('delete.schedules') }}",
+                    type: 'POST',
+                    data: {
+                        ids: selectedIds,
+                        _token: '{{ csrf_token() }}' // Add CSRF token for security
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            table.ajax.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred while deleting the schedules.');
+                    }
+                });
+            }
         });
     });
 

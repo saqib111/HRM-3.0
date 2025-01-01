@@ -264,6 +264,9 @@
                     </div>
                 </div>
             </div>
+            <div class="d-flex flex-column flex-sm-row justify-content-center mt-4 mb-4 p-2" id="action_buttons">
+                <button class="btn btn-danger mb-2 mb-sm-0" id="delete_btn">Delete Application</button>
+            </div>
         </div>
     </div>
 </div>
@@ -388,6 +391,32 @@
     // Call initializeDataTable when the page loads
     initializeDataTable();
 
+    $('#delete_btn').click(function () {
+        const id = $(this).data('id');
+        showLoader(); // Start loader
+
+        // Fetch leave details using AJAX
+        $.ajax({
+            url: `/leave_deletion`, // Route for fetching leave application by ID
+            method: 'POST',
+            data: {
+                leave_id: id,
+                leave_action: 'delete_application_request',
+                _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
+            },
+            success: function (response) {
+                console.log(response);
+                hideLoader(); // Hide loader
+                $('#leaveDetailsModal').modal('hide');
+                $('#leave_table').DataTable().ajax.reload();
+            },
+            error: function (xhr) {
+                console.error('Error fetching leave application:', xhr);
+                hideLoader(); // Hide loader even if there's an error
+            }
+        });
+    });
+
 
     // Fetch leave details and open the modal
     $(document).on('click', '.toggle-modal', function () {
@@ -420,14 +449,14 @@
                 const actionButtons = $('#action_buttons');
 
                 // Check if 2nd step needs action
-                if (data.status_1 === "approved" && data.status_2 === "approved" && (data.hr_approval_id === "" || data.hr_approval_id === null || data.hr_approval_id === "Null")) {
-                    $('#hr_task_done').prop('disabled', false); // Enable buttons
+                if (data.status_1 === "pending") {
+                    $('#delete_btn').prop('disabled', false); // Enable buttons
                     actionButtons.removeClass("hideBlock");
-                    $('#hr_task_done').data('id', id);
+                    $('#delete_btn').data('id', id);
                 }
                 // If both steps are completed, hide buttons
                 else {
-                    $('#hr_task_done').prop('disabled', true); // Disable buttons
+                    $('#delete_btn').prop('disabled', true); // Disable buttons
                     actionButtons.addClass("hideBlock");
                 }
 

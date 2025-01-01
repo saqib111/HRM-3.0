@@ -12,12 +12,14 @@
     <title>Login - HRMS admin template</title>
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/assets/img/logo5.png') }}">
+
     <link rel="stylesheet" href="{{ asset('/assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/plugins/fontawesome/css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/plugins/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/css/line-awesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/css/material.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/myAllCustomStyles.css') }}">
     <style>
         .mainSec {
             height: 100vh;
@@ -321,49 +323,6 @@
             animation: zoom 3s infinite;
         }
 
-        /* scanner image  */
-        .scanner-container {
-            text-align: center;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            margin-left: 65px;
-            margin-top: 45px;
-            justify-content: center;
-        }
-
-        /* Fingerprint */
-        .fingerprint {
-            position: relative;
-            width: 190px;
-            height: 210px;
-            margin-left: 10%;
-            border-radius: 50%;
-            background: transparent;
-            overflow: hidden;
-            margin: 0 auto;
-            animation: zoom 3s infinite;
-        }
-
-        /* Scanning Line */
-        .line {
-            position: absolute;
-            left: 50%;
-            /* Center horizontally */
-            transform: translateX(-50%);
-            /* Correct horizontal alignment */
-            width: 100%;
-            /* Line width */
-            height: 3px;
-            margin-top: 4px;
-            margin-left: 20px;
-            /* Line height */
-            background: #60b6c5;
-            opacity: 0.8;
-            animation: scan 2s infinite;
-        }
-
         /* Animation: Scanning Line */
         @keyframes scan {
 
@@ -391,11 +350,25 @@
         }
 
         /* end image scanner */
+
+        .hover-shadow:hover {
+            transform: scale(1.1);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
     </style>
 
 </head>
 
 <body>
+
+    <div id="loader" class="loader" style="display: none;">
+        <div class="loader-animation"></div>
+    </div>
 
     <section class="background-radial-gradient overflow-hidden mainSec">
         <div class="container px-5 py-5 px-md-5 text-lg-start my-5 formdiv">
@@ -421,9 +394,7 @@
                                 <div class="textcontainer">
                                     <h3 class="account-title">Login</h3>
                                     <p class="account-subtitle">Access to dashboard</p>
-                                    @if ($errors->has('status_disabled'))
-                                        <span class="text-danger">{{ $errors->first('status_disabled') }}</span>
-                                    @endif
+                                    <span id="message_error" class="text-danger"></span>
                                 </div>
                                 <div class="imgcontainer">
                                     <img src="{{ asset('assets/img/logo/logo.png') }}" class="img-fluid rounded-circle">
@@ -432,24 +403,23 @@
                             <form action="{{ route('loginto') }}" method="POST" id="login-form">
                                 @csrf
                                 <div class="form-outline mb-4">
-                                    <label class="col-form-label">Email Address</label>
+                                    <label class="col-form-label" for="email">Email Address</label>
                                     <input type="text" name="email" id="email" placeholder="Please enter your email"
-                                        autocomplete="off" class="form-control" value="affan.ahmed@auroramy.com" />
+                                        autocomplete="off" class="form-control" />
                                     <span id="email-error" class="text-danger"></span>
-                                    @if ($errors->has('credentials'))
-                                        <span class="text-danger">{{ $errors->first('credentials') }}</span>
-                                    @endif
                                 </div>
 
                                 <div class="form-outline mb-4">
-                                    <label class="col-form-label">Password</label>
+                                    <label class="col-form-label" for="password">Password</label>
                                     <input type="password" name="password" id="password"
-                                        placeholder="Please enter your password" autocomplete="off" class="form-control"
-                                        value="12345678" />
+                                        placeholder="Please enter your password" autocomplete="off"
+                                        class="form-control" />
                                     <span id="password-error" class="text-danger"></span>
                                 </div>
 
+                                {{-- <button type="submit" id="submitbtn" class="btn btn-primary">Login</button> --}}
                                 <button type="submit" id="submitbtn">Login</button>
+                                <div id="general-error" class="text-danger mt-3"></div>
                             </form>
                         </div>
                     </div>
@@ -462,74 +432,107 @@
     <script src="{{ asset('/assets/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('/assets/js/jquery.slimscroll.min.js') }}"></script>
     <script src="{{ asset('/assets/js/feather.min.js') }}"></script>
-    <script src="http://127.0.0.1:8000/assets/js/app.js"></script>
 
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('#email-error').hide();
-            $('#password-error').hide();
 
-            var user_err = true;
-            var pass_err = true;
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-            $('#email').keyup(function () {
-                useremail_check();
-            });
+            // Clear previous errors
+            document.getElementById('email-error').textContent = '';
+            document.getElementById('password-error').textContent = '';
+            document.getElementById('general-error').textContent = '';
 
-            function useremail_check() {
-                var user_val = $('#email').val();
-                const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const loader = document.getElementById('loader');
+            const form = e.target;
+            const formData = new FormData(form);
+            const url = form.action;
 
-                if (user_val.length == '') {
-                    $('#email-error').show();
-                    $('#email-error').html("Email is Required");
-                    user_err = false;
-                    return false;
-                } else if (!emailPattern.test(user_val)) {
-                    $('#email-error').show();
-                    $('#email-error').html("Please enter a valid email address");
-                    user_err = false;
-                    return false;
-                } else {
-                    $('#email-error').hide();
-                    user_err = true;
+            // Client-side validation
+            const email = formData.get('email');
+            const password = formData.get('password');
+            let hasError = false;
+
+            // Reset borders before validation
+            $('#email').css('border', '');
+            $('#password').css('border', '');
+
+            if (email === '') {
+                document.getElementById('email-error').textContent = 'Email is required.';
+                $('#email').css('border', '1px solid red');
+                hasError = true;
+            } else {
+                if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+                    document.getElementById('email-error').textContent = 'Please enter a valid email address.';
+                    $('#email').css('border', '1px solid red');
+                    hasError = true;
                 }
             }
 
-            $('#password').keyup(function () {
-                password_check();
-            });
-
-            function password_check() {
-                var password_str = $('#password').val();
-
-                if (password_str.length == '') {
-                    $('#password-error').show();
-                    $('#password-error').html("Password is Required");
-                    pass_err = false;
-                    return false;
-                } else if (password_str.length < 6 || password_str.length > 30) {
-                    $('#password-error').show();
-                    $('#password-error').html("Password length must be between 6 to 30");
-                    pass_err = false;
-                    return false;
-                } else {
-                    $('#password-error').hide();
-                    pass_err = true;
+            if (password === '') {
+                hasError = true;
+                document.getElementById('password-error').textContent = 'Password is required.';
+                $('#password').css('border', '1px solid red');
+            } else {
+                if (!password || password.length < 8) {
+                    document.getElementById('password-error').textContent =
+                        'Password must be at least 8 characters.';
+                    $('#password').css('border', '1px solid red');
+                    hasError = true;
                 }
             }
 
-            $('#submitbtn').click(function () {
-                useremail_check();
-                password_check();
-                if (user_err && pass_err) {
-                    return true;
+            if (hasError) {
+                return; // Stop submission if client-side validation fails
+            }
+
+            try {
+                // Show loader
+                $('#loader').show();
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    },
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                    } else {
+                        alert(result.message);
+                    }
                 } else {
-                    return false;
+                    if (response.status === 401) {
+                        document.getElementById('general-error').textContent = 'Your credentials are invalid. Please contact your administrator for assistance.';
+                        $('#password').css('border', '1px solid red');
+                        $('#email').css('border', '1px solid red');
+                    } else if (response.status === 402) {
+                        if (result.redirect_url) {
+                            window.location.href = result.redirect_url;
+                        } else {
+                            document.getElementById('message_error').innerHTML =
+                                'Your account has been disabled by the administrator.<br>Please contact HR';
+                            $('#password').css('border', '1px solid red');
+                            $('#email').css('border', '1px solid red');
+                        }
+                    }
                 }
-            });
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('general-error').textContent =
+                    'An error occurred. Please try again later.';
+            } finally {
+                // Hide loader
+                loader.style.display = 'none';
+            }
         });
     </script>
+
 </body>
 
 </html>

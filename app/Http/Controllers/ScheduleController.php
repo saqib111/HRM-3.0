@@ -422,6 +422,23 @@ class ScheduleController extends Controller
 
     }
 
+    // *********** DELETE SELECTED SCHEDULE ************
+    public function deleteSelectedSchedule(Request $request)
+    {
+        // Get the IDs of the selected rows
+        $ids = $request->input('ids');
+
+        // Check if any IDs were provided
+        if (!empty($ids)) {
+            // Delete the schedules with the provided IDs
+            Schedule::whereIn('id', $ids)->delete();
+
+            return response()->json(['success' => true, 'message' => 'Selected schedules deleted successfully.']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No schedules selected.']);
+    }
+
     public function test(Request $request, $id)
     {
         $user = auth()->user()->id;

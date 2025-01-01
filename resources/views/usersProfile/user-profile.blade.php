@@ -104,7 +104,12 @@
                                         <div class="title">Telegram:</div>
                                         <div class="text" id="telegram">{{ $profileUser->telegram }}</div>
                                     </li>
-
+                                    <li>
+                                        <div class="title">UnPaid Leaves (UL):</div>
+                                        <div class="text" id="allowed_ul">
+                                            {{ $profileUser->allowed_ul == 0 ? 'Not Allowed' : 'Allowed UL & Other Leaves' }}
+                                        </div>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -629,6 +634,10 @@
                                     </option>
                                     <option value="Korea" {{ $profileUser->nationality == 'Korea' ? 'selected' : '' }}>
                                         Korean</option>
+                                    <option value="Indonesia" {{ $profileUser->nationality == 'Indonesia' ? 'selected' : '' }}>
+                                        Indonesian</option>
+                                    <option value="Srilanka" {{ $profileUser->nationality == 'Srilanka' ? 'selected' : '' }}>
+                                        Sri Lankan</option>
                                 </select>
                             </div>
                         </div>
@@ -642,6 +651,8 @@
                                         OPTION</option>
                                     <option value="Bataan" {{ $profileUser->office == 'Bataan' ? 'selected' : '' }}>
                                         Bataan</option>
+                                    <option value="Cebu" {{ $profileUser->office == 'Cebu' ? 'selected' : '' }}>
+                                        Cebu</option>
                                     <option value="Sihanoukville" {{ $profileUser->office == 'Sihanoukville' ? 'selected' : '' }}>
                                         Sihanoukville
                                     </option>
@@ -671,8 +682,21 @@
                                     name="telegram" id="telegram">
                             </div>
                         </div>
-                    </div>
 
+                        <div class="col-md-6">
+                            <div class="input-block">
+                                <label class="col-form-label" for="allowed_ul">UnPaid Leaves (UL)</label>
+                                <select class="form-select" name="allowed_ul" id="allowed_ul">
+                                    <option disabled selected {{ empty($profileUser->allowed_ul) ? 'selected' : '' }}>
+                                        SELECT OPTION</option>
+                                    <option value="0" {{ $profileUser->allowed_ul == '0' ? 'selected' : '' }}>
+                                        Not Allowed</option>
+                                    <option value="1" {{ $profileUser->allowed_ul == '1' ? 'selected' : '' }}>
+                                        Allowed UL & Other Leaves</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
             </div>
             <div class="submit-section">
                 <button type="submit" class="btn btn-primary submit-btn mb-3">Submit</button>
@@ -1155,6 +1179,8 @@
                     // Update the week_days select dropdown value
                     $('#week_days').val(response.data.week_days);
 
+                    $('#allowed_ul').text(response.data.allowed_ul == 0 ? 'Not Allowed' : 'Allowed UL & Other Leaves');
+                    $('#allowed_ul').val(response.data.allowed_ul);
 
                     createToast('info', 'fa-solid fa-circle-check', 'Success',
                         'Profile Updated Successfully.');

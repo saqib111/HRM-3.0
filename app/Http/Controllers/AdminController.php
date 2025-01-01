@@ -172,7 +172,8 @@ class AdminController extends Controller
                     'departments.name as department_name',
                     'designations.name as designation_name',
                     'users.status',
-                    'users.image'
+                    'users.image',
+                    'users.role'
                 ])
                 ->orderBy('users.id', 'asc'); // This ensures sorting by ID in ascending order
 
@@ -197,6 +198,10 @@ class AdminController extends Controller
                     if ($user->role == 1) {
                         // Superadmin sees all buttons
                         return $this->renderAllButtons($row->id);
+                    }
+
+                    if ($row->role == 1) {
+                        return '<div class="text-center">Super Admin</div>';
                     }
 
                     // Dynamically render buttons based on permissions
@@ -302,6 +307,8 @@ class AdminController extends Controller
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
         $employee->brand = implode(',', $request->brand);
+        $employee->confirmation_status = $request->confirmation_status;
+        $employee->role = $request->role;
         $employee->image = $image; // Set the image path to the new or existing one
 
         // Save the employee record

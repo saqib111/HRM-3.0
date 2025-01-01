@@ -31,63 +31,77 @@
                 </h5>
                 <hr />
             </div>
-            <form id="leave_application_form" action="{{route('leave.form.store')}}" method="POST">
-                @csrf
-                <div class="card-body mx-5">
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-12">
-                            <label class="col-form-label" for="leave_title">Leave Title</label>
-                            <input type="text" name="leave_title" id="leave_title" class="form-control leave-title" />
-                            <div class="leave_error text-danger"></div>
+            @if(auth()->user()->confirmation_status === "1")
+                <form id="leave_application_form" action="{{route('leave.form.store')}}" method="POST">
+                    @csrf
+                    <div class="card-body mx-5">
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-12">
+                                <label class="col-form-label" for="leave_title">Leave Title</label>
+                                <input type="text" name="leave_title" id="leave_title" class="form-control leave-title" />
+                                <div class="leave_error text-danger"></div>
+                            </div>
+                        </div>
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-12">
+                                <label class="col-form-label" for="description">Description (optional):</label>
+                                <textarea rows="5" cols="5" name="description" id="description"
+                                    class="form-control leave-description" placeholder="Enter text here"></textarea>
+                            </div>
+                        </div>
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-12">
+                                <input type="hidden" value="{{$formattedLeaveBalance}}" name="annual_leave_balance"
+                                    id="annual_leave_balance">
+                            </div>
+                        </div>
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-4" style="position: relative;">
+                                <i class="fa-solid fa-circle-plus add-fields"
+                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                <label class="col-form-label" for="full_day_leave">Full-Day Leave</label>
+                                <div class="text-danger" id="at_least_one"></div>
+                            </div>
+                        </div>
+                        <div id="dynamic-fields-container"></div>
+                        <hr>
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-4" style="position: relative;">
+                                <i class="fa-solid fa-circle-plus add-half-fields"
+                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                <label class="col-form-label" for="half_day_leave">Half-Day Leave</label>
+                            </div>
+                        </div>
+                        <div id="dynamic-half-days-container"></div>
+                        <hr>
+                        <div class="input-block mb-3 row">
+                            <div class="col-md-4" style="position: relative;">
+                                <i class="fa-solid fa-circle-plus add-off-fields"
+                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                <label class="col-form-label" for="off_day">OFF-Day (Optional)</label>
+                            </div>
+                        </div>
+                        <div id="dynamic-off-days-container"></div>
+                        <div class="input-block mb-3 row text-center">
+                            <div class="col-md-12">
+                                <button class="btn btn-primary btn-submit" type="button">Submit</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-12">
-                            <label class="col-form-label" for="description">Description (optional):</label>
-                            <textarea rows="5" cols="5" name="description" id="description"
-                                class="form-control leave-description" placeholder="Enter text here"></textarea>
-                        </div>
-                    </div>
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-12">
-                            <input type="hidden" value="{{$formattedLeaveBalance}}" name="annual_leave_balance"
-                                id="annual_leave_balance">
-                        </div>
-                    </div>
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-4" style="position: relative;">
-                            <i class="fa-solid fa-circle-plus add-fields"
-                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                            <label class="col-form-label" for="full_day_leave">Full-Day Leave</label>
-                            <div class="text-danger" id="at_least_one"></div>
-                        </div>
-                    </div>
-                    <div id="dynamic-fields-container"></div>
-                    <hr>
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-4" style="position: relative;">
-                            <i class="fa-solid fa-circle-plus add-half-fields"
-                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                            <label class="col-form-label" for="half_day_leave">Half-Day Leave</label>
-                        </div>
-                    </div>
-                    <div id="dynamic-half-days-container"></div>
-                    <hr>
-                    <div class="input-block mb-3 row">
-                        <div class="col-md-4" style="position: relative;">
-                            <i class="fa-solid fa-circle-plus add-off-fields"
-                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                            <label class="col-form-label" for="off_day">OFF-Day (Optional)</label>
-                        </div>
-                    </div>
-                    <div id="dynamic-off-days-container"></div>
-                    <div class="input-block mb-3 row text-center">
-                        <div class="col-md-12">
-                            <button class="btn btn-primary btn-submit" type="button">Submit</button>
-                        </div>
+                </form>
+            @else
+                <div class="card-body px-5">
+                    <div class="notice-box">
+                        <h4 class="notice-heading">Important Notice</h4>
+                        <p>Your leave application is currently restricted as you are still under probation. Please refer to
+                            your probation terms for further details.</p>
+                        <p class="text-center mt-3"><strong>Leave applications can only be submitted once your employment
+                                status
+                                is
+                                confirmed.</strong></p>
                     </div>
                 </div>
-            </form>
+            @endif
         </div>
     </div>
 </div>
@@ -118,6 +132,7 @@
     </div>
 </div>
 <!-- Unpaid Leave Confirmation Modal Ends -->
+<input type="hidden" id="allowed_ul" value="{{ $allowedUL }}">
 @endsection
 
 @section('script-z')
@@ -127,6 +142,42 @@
         let birthdayLeaveCount = 0;
         let marriageLeaveCount = 0;
 
+        // Define the leave categories HTML globally
+        let leaveCategoryHtml = '';
+
+        // Example: Get the allowed_ul value (this could be passed via a data attribute or AJAX)
+        let allowedUL = parseInt($('#allowed_ul').val()); // Assuming you have a hidden input or some way to get this value.
+
+        // Function to update the leave categories
+        function updateLeaveCategories(allowedUL) {
+            // If allowed_ul is 0, show only these three leaves
+            if (allowedUL === 0) {
+                leaveCategoryHtml = `
+                <option value="1">Annual Leave</option>
+                <option value="2">Birthday Leave</option>
+                <option value="3">Marriage Leave</option>
+            `;
+            } else {
+                // If allowed_ul is 1, show all the leaves
+                leaveCategoryHtml = `
+                <option value="1">Annual Leave</option>
+                <option value="2">Birthday Leave</option>
+                <option value="3">Marriage Leave</option>
+                <option value="4">Unpaid Leave</option>
+                <option value="5">Hospitalisation Leave</option>
+                <option value="6">Compassionate Leave</option>
+                <option value="7">Maternity Leave</option>
+                <option value="8">Paternity Leave</option>
+            `;
+            }
+
+            // Update the dropdown with the new options
+            $('.leave-category').html(leaveCategoryHtml);
+        }
+
+        // Call the function to set the initial state based on allowed_ul value
+        updateLeaveCategories(allowedUL);
+
         // Add dynamic leave category fields when plus icon is clicked
         $('.add-fields').click(function () {
             let dynamicFields = `
@@ -135,14 +186,7 @@
                     <label class="col-form-label" for="full_day_leave">Leave Category:</label>
                     <select name="full_day_leave[]" id="full_day_leave" class="form-control form-select leave-category">
                         <option disabled selected>Select Category</option>
-                        <option value="1">Annual Leave</option>
-                        <option value="2">Birthday Leave</option>
-                        <option value="3">Marriage Leave</option>
-                        <option value="4">Unpaid Leave</option>
-                        <option value="5">Hospitalisation Leave</option>
-                        <option value="6">Compassionate Leave</option>
-                        <option value="7">Maternity Leave</option>
-                        <option value="8">Paternity Leave</option>
+                            ${leaveCategoryHtml} <!-- This is where the dynamically generated options go -->
                     </select>
                     <div class="leave_error text-danger"></div>
                 </div>

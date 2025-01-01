@@ -185,6 +185,7 @@ class UserProfileController extends Controller
         $updatePersonal->nationality = $request->nationality;
         $updatePersonal->telegram = $request->telegram;
         $updatePersonal->office = $request->office;
+        $updatePersonal->allowed_ul = $request->allowed_ul;
         $updatePersonal->save();
 
         return response()->json([
@@ -200,6 +201,7 @@ class UserProfileController extends Controller
                 'telegram' => $updatePersonal->telegram,
                 'office' => $updatePersonal->office,
                 'week_days' => $mainUser->week_days,
+                'allowed_ul' => $updatePersonal->allowed_ul,
             ]
         ]);
     }

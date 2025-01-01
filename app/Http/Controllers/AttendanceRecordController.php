@@ -115,6 +115,7 @@ class AttendanceRecordController extends Controller
             )
             ->where('ar.user_id', $id)
             ->whereMonth('ar.shift_in', Carbon::now()->month)
+            ->orderBy('ar.shift_in', 'asc') // Sort by `shift_in` on the server side
             ->get();
 
         foreach ($data as $d) {
@@ -330,12 +331,6 @@ class AttendanceRecordController extends Controller
             return response()->json(['error' => 'The "From Date" cannot be greater than the "To Date".'], 400);
         }
 
-
-        $currentMonthEnd = Carbon::now()->endOfMonth();
-        if ($to->gt($currentMonthEnd)) {
-            return response()->json(['error' => 'The "To Date" cannot exceed the current month.'], 400);
-        }
-
         $from = $from->format('Y-m-d H:i:s');
         $to = $to->format('Y-m-d H:i:s');
 
@@ -367,6 +362,7 @@ class AttendanceRecordController extends Controller
             )
             ->where('ar.user_id', $id)
             ->whereBetween('ar.shift_in', [$from, $to])
+            ->orderBy('ar.shift_in', 'asc') // Sort by `shift_in` on the server side
             ->get();
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
@@ -1041,6 +1037,7 @@ class AttendanceRecordController extends Controller
             )
             ->where('ar.user_id', $id)
             ->whereMonth('ar.shift_in', Carbon::now()->month)
+            ->orderBy('ar.shift_in', 'asc') // Sort by `shift_in` on the server side
             ->get();
 
         foreach ($data as $d) {
@@ -1300,12 +1297,28 @@ class AttendanceRecordController extends Controller
                 ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
                 ->where('ld.leader_id', '=', $id);
         }
-
+        // Apply search condition if a search term is provided
         if ($request->has('search') && $request->input('search')['value']) {
             $search = $request->input('search')['value'];
-            $query->where('name', 'like', "%$search%")
-                ->orWhere('email', 'like', "%$search%");
+
+            // Split the search term into multiple parts (e.g., first name, last name)
+            $searchParts = explode(' ', $search);
+
+            $query->where(function ($query) use ($searchParts) {
+                // If more than one search term, ensure all terms match across fields
+                foreach ($searchParts as $part) {
+                    $query->where(function ($query) use ($part) {
+                        $query->where('u.username', 'like', "%$part%")
+                            ->orWhere('u.employee_id', 'like', "%$part%")
+                            ->orWhere('u.email', 'like', "%$part%");
+                    });
+                }
+            });
         }
+
+
+        // Add distinct() to ensure we don't get duplicate records
+        $query->distinct();
 
 
 
@@ -1520,12 +1533,6 @@ class AttendanceRecordController extends Controller
             return response()->json(['error' => 'The "From Date" cannot be greater than the "To Date".'], 400);
         }
 
-
-        $currentMonthEnd = Carbon::now()->endOfMonth();
-        if ($to->gt($currentMonthEnd)) {
-            return response()->json(['error' => 'The "To Date" cannot exceed the current month.'], 400);
-        }
-
         $from = $from->format('Y-m-d H:i:s');
         $to = $to->format('Y-m-d H:i:s');
 
@@ -1557,6 +1564,7 @@ class AttendanceRecordController extends Controller
             )
             ->where('ar.user_id', $id)
             ->whereBetween('ar.shift_in', [$from, $to])
+            ->orderBy('ar.shift_in', 'asc') // Sort by `shift_in` on the server side
             ->get();
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;

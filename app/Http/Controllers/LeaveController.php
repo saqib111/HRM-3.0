@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveController extends Controller
 {
@@ -21,7 +22,10 @@ class LeaveController extends Controller
         $annualLeaveBalance = $annualLeaves->leave_balance;
         // Format the leave balance to remove unnecessary trailing zeros
         $formattedLeaveBalance = rtrim(rtrim($annualLeaveBalance, '0'), '.');
-        return view('leave_application.leave_form', compact('formattedLeaveBalance'));
+        $userProfile = Auth::user()->userprofile;
+        // Ensure that we have a valid profile and 'allowed_ul' value
+        $allowedUL = $userProfile->allowed_ul;
+        return view('leave_application.leave_form', compact('formattedLeaveBalance', 'allowedUL'));
     }
 
     public function store_leave(Request $request)
@@ -565,6 +569,53 @@ class LeaveController extends Controller
             'revoked_created_time' => $leave->revoked_created_time ?? "YYYY-MM-DD HH:MM:SS",
 
 
+        ]);
+    }
+    // Leave Application Delete
+    public function leave_deletion(Request $request)
+    {
+        // Validate the request
+        $validatedData = $request->validate([
+            'leave_id' => 'required|integer',
+            'leave_action' => 'required|string',
+        ]);
+
+        $leave_id = $validatedData['leave_id'];
+        $leave_action = $validatedData['leave_action'];
+
+        // Initialize the tester variable
+        $tester = "";
+
+        // Perform action based on the leave action
+        if ($leave_action === "delete_application_request") {
+            $leave_delete = LeaveManagement::find($leave_id);
+
+            // Check if the record exists
+            if (!$leave_delete) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leave application not found.',
+                ], 404);
+            }
+
+            // Check the status of the leave
+            if ($leave_delete->status_1 === "pending") {
+                $leave_delete->delete();
+                $tester = "Leave application deleted successfully.";
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leave application status is not pending.',
+                ], 400);
+            }
+        }
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'leave_id' => $leave_id,
+            'leave_action' => $leave_action,
+            'tester' => $tester,
         ]);
     }
 

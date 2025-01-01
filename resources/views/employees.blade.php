@@ -364,6 +364,33 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3 valid">
+                                <label class="col-form-label" for="edit_confirmation_status">Probation Period <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select " name="confirmation_status" id="edit_confirmation_status">
+                                    <option disabled>Select Probation Status</option>
+                                    <option value="0">Under Probation</option>
+                                    <option value="1">Confirmed Staff</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="col-sm-6">
+                            <div class="input-block mb-3 valid">
+                                <label class="col-form-label" for="edit_role">Role <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select " name="role" id="edit_role">
+                                    <option disabled>Select Role</option>
+                                    <option value="2">HR</option>
+                                    <option value="3">Payroll</option>
+                                    <option value="4">Leader</option>
+                                    <option value="5">Employee</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="old">
 
 
@@ -485,7 +512,20 @@
             { data: 'employee_id', name: 'employee_id', orderable: false },
             { data: 'username', name: 'username', orderable: false },
             { data: 'email', name: 'email', orderable: false },
-            { data: 'joining_date', name: 'joining_date', orderable: false },
+            // { data: 'joining_date', name: 'joining_date', orderable: false },
+            {
+                data: 'joining_date',
+                name: 'joining_date',
+                orderable: false,
+                render: function (data) {
+                    if (!data) return ""; // Handle null or undefined values
+                    const date = new Date(data);
+                    const day = date.getDate();
+                    const month = date.toLocaleString('default', { month: 'long' }); // Get the full month name
+                    const year = date.getFullYear();
+                    return `${day} ${month} ${year}`; // Format: 8 April 2019
+                }
+            },
             { data: 'company_name', name: 'company_name', orderable: false },
             { data: 'department_name', name: 'department_name', orderable: false },
             { data: 'designation_name', name: 'designation_name', orderable: false },
@@ -809,7 +849,7 @@
                     'Manage Department': ['show_departments', 'create_department', 'update_department', 'delete_department'],
                     'Manage Designation': ['show_designations', 'create_designation', 'update_designation', 'delete_designation'],
                     'Manage Team': ['create_team', 'show_teams', 'update_team', 'delete_team'],
-                    'Manage Shift': ['view_manage_shift', 'view_attendance', 'update_attendance_schedule', 'delete_attendance_schedule', 'bulk_delete_attendance_schedule'],
+                    'Manage Shift': ['view_manage_shift', 'view_attendance', 'update_attendance_schedule', 'delete_attendance_schedule', 'bulk_delete_attendance_schedule', 'show_late_employee_details'],
                     'Annual Leave Balance': ['show_al_balance', 'update_al_balance'],
                     'Fingerprint Record': ['show_fingerprint_record', 'update_fingerprint_status', 'delete_fingerprint_record'],
                     'Manage Leaves': ['unassigned_leaves', 'pending_leaves', 'hr_work', 'revoked_leaves', 'leave_approvals'],
@@ -1075,6 +1115,8 @@
                 $('#edit_department').val(response[0].department_id).trigger('change');
                 $('#edit_designation').val(response[0].designation_id).trigger('change');
                 $('#edit_brand').val(response[1]).trigger('change');
+                $('#edit_confirmation_status').val(response[0].confirmation_status).trigger('change');
+                $('#edit_role').val(response[0].role).trigger('change');
                 $('#edit_oldimage').val(response[0].image);
                 $('#id').val(response[0].id);
 
@@ -1135,6 +1177,8 @@
         var department = $('#edit_department').val();
         var designation = $('#edit_designation').val();
         var brand = $('#edit_brand').val();
+        var confirmation_status = $('#edit_confirmation_status').val();
+        var role = $('#edit_role').val();
         var old_image = $('#edit_oldimage').val();
         var image = $('#edit_image')[0].files[0];
 

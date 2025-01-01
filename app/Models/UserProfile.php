@@ -19,6 +19,7 @@ class UserProfile extends Model
         'nationality',
         'religion',
         'telegram',
+        'allowed_ul',
     ];
 
 

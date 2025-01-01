@@ -21,7 +21,6 @@
     }
 
     body {
-        font-family: "Arial", sans-serif;
         background-color: #eaeaea;
         padding: 20px;
     }
@@ -147,14 +146,14 @@
                                 <label for="datepicker2">Select Shift End Dates:</label>
                                 <input type="text" id="date-picker2" name="end-date[]" class="form-control" />
                                 <input type="hidden" name="enddate[]" id="enddate">
-
+                                <div id="shift_date_error" style="color: red;"></div>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
                                 <label for="datepicker2">Select Shift End Time:</label>
                                 <input type="time" id="end-time" name="end_time" class="form-control" />
-
+                                <div id="show_error_msg" style="color: red;"></div>
                             </div>
                         </div>
 
@@ -333,14 +332,66 @@
 
         clearValidationStates();
 
-
         if (!validateField('#shiftname', 'Shift Name')) isValid = false;
-        if (!validateField('#startdate', 'Shift Start Date')) isValid = false;
+        if (!validateField('#date-picker', 'Shift Start Date')) isValid = false;
         if (!validateField('#time-input', 'Start Time')) isValid = false;
-        if (!validateField('#enddate', 'Shift End Date')) isValid = false;
+        if (!validateField('#date-picker2', 'Shift End Date')) isValid = false;
         if (!validateField('#end-time', 'End Time')) isValid = false;
 
+        var startDate = $('#startdate').val();
+        var endDate = $('#enddate').val();
+        var start_time = $("#time-input").val();
+        var end_time = $("#end-time").val();
 
+        var startDateTime = new Date("1970-01-01T" + start_time + "Z"); // Using a fixed date (1970-01-01) for time comparison
+        var endDateTime = new Date("1970-01-01T" + end_time + "Z");
+        if (endDateTime <= startDateTime) {
+            endDateTime.setDate(endDateTime.getDate() + 1);
+        }
+        var timeDiffInSeconds = (endDateTime - startDateTime) / 1000;
+
+        // ********************* SHIFT DATES *********************
+        var startDateArray = startDate.split(',');  // Array of start dates
+        var endDateArray = endDate.split(',');      // Array of end dates
+
+        // Convert the strings to Date objects for comparison and manipulation
+        var startDateObj = new Date(startDateArray[0]); // First shift start date
+        var lastStartDateObj = new Date(startDateArray[startDateArray.length - 1]); // Last shift start date
+        var endDateObj = new Date(endDateArray[0]); // First shift end date
+        var lastEndDateObj = new Date(endDateArray[endDateArray.length - 1]); // Last shift end date
+
+        if (endDateObj < startDateObj) {
+            $("#date-picker2").css("border", "1px solid red");
+            $("#shift_date_error").html("Invalid shift dates.");
+            isValid = false;
+        } else if (endDateObj.getTime() === startDateObj.getTime()) {
+            $("#date-picker2").css("border", "");
+            $("#shift_date_error").html("");
+        } else if ((endDateObj - startDateObj) === 86400000) { // 86400000 ms = 1 day
+            $("#date-picker2").css("border", "");
+            $("#shift_date_error").html("");
+        } else {
+            console.log("Invalid shift dates.");
+            $("#date-picker2").css("border", "1px solid red");
+            $("#shift_date_error").html("Invalid shift dates.");
+            isValid = false;
+        }
+        if (lastEndDateObj.getTime() !== lastStartDateObj.getTime() && (lastEndDateObj - lastStartDateObj) !== 86400000) {
+            $("#date-picker2").css("border", "1px solid red");
+            $("#shift_date_error").html("Invalid shift dates");
+            isValid = false;
+        }
+
+        // Check if shift exceeds 9 hours
+        if (timeDiffInSeconds > 32400) {
+            $("#show_error_msg").html("Shift Can Not Exceed 09:00 Hours");
+            $("#end-time").css("border", "1px solid red");
+            $("#end-time").removeClass("is-valid");
+            isValid = false;
+        } else {
+            $("#show_error_msg").html("");
+            $("#end-time").css("border", "");
+        }
 
         if (isValid) {
             showLoader();
@@ -349,7 +400,6 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-
             $.ajax({
                 url: "{{ route('schedule.store') }}",
                 type: 'POST',

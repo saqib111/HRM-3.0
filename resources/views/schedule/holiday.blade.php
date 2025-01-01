@@ -23,7 +23,6 @@
     }
 
     body {
-        font-family: "Arial", sans-serif;
         background-color: #eaeaea;
         padding: 20px;
     }
@@ -169,7 +168,6 @@
 @endsection
 @section('script-z')  
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="{{asset('assets/js/custom-multi.js')}}"></script>
 <script>
     $(document).ready(function () {
         $.ajax({
@@ -349,8 +347,8 @@
     $(document).ready(function () {
         let isLoading = false;
         let debounceTimer = null;
+        let allDataLoaded = false; // Flag to track if all data is loaded
 
-        // Function to handle custom select behavior
         function initCustomSelect(customSelectId) {
             let selectedOptions = []; // Store selected options for each select instance
 
@@ -379,7 +377,7 @@
                 const containerHeight = optionsContainer.outerHeight();
                 const threshold = 100;
 
-                if (scrollHeight - (scrollTop + containerHeight) <= threshold && !isLoading) {
+                if (scrollHeight - (scrollTop + containerHeight) <= threshold && !isLoading && !allDataLoaded) {
                     const customSelect = $("#" + customSelectId);
                     const searchTerm = customSelect.find(".search-tags").val();
                     let currentPage = customSelect.data("current-page") || 1;
@@ -417,7 +415,6 @@
                 e.stopPropagation();
             });
 
-
             function loadOptions(customSelect, searchTerm = "", page = 1) {
                 const optionsContainer = customSelect.find(".options");
                 const noResultMessage = customSelect.find(".no-result-message");
@@ -425,7 +422,7 @@
                 optionsContainer.append('<div class="loading">Loading...</div>');
 
                 return $.ajax({
-                    url: "{{route('emp.edit')}}", // Replace with your actual endpoint
+                    url: "/team-member/get_members",  // Replace with your actual endpoint
                     type: "GET",
                     data: { searchTerm, page },
                     success: function (data) {
@@ -457,10 +454,10 @@
 
                                                 // Append the tag to the UI
                                                 const tagHTML = `
-                                            <span class="tag" data-value="${item.id}">
-                                                ${item.username}
-                                                <span class="remove-tag" data-value="${item.id}">&times;</span>
-                                            </span>`;
+                                        <span class="tag" data-value="${item.id}">
+                                            ${item.username}
+                                            <span class="remove-tag" data-value="${item.id}">&times;</span>
+                                        </span>`;
                                                 customSelect.find(".selected-options").append(tagHTML);
                                             }
                                         } else {
@@ -484,6 +481,11 @@
                             noResultMessage.show();
                         }
 
+                        // If no data is returned, set allDataLoaded to true
+                        if (data.data.length === 0) {
+                            allDataLoaded = true;
+                        }
+
                         customSelect.addClass("open");
                         customSelect.find(".search-tags").focus();
                     },
@@ -494,62 +496,40 @@
                 });
             }
 
-
-            // Function to update the selected options in the UI
-            function updateSelectedOptions(customSelect) {
-                let tagsHTML = "";
-                selectedOptions.forEach(function (opt, index) {
-                    if (index < 4) {
-                        // Ensure data-value is set properly here
-                        tagsHTML += `<span class="tag" data-value="${opt.id}">${opt.username}<span class="remove-tag" data-value="${opt.id}">&times;</span></span>`;
-                    }
-                });
-
-                customSelect.find(".selected-options").html(tagsHTML);
-
-                const selectedValues = selectedOptions.map((opt) => opt.id);
-                customSelect.find(".tags_input").val(selectedValues.join(", "));
-            }
-
             // Remove selected option when clicking the "x" button
-            $(document).on(
-                "click",
-                "#" + customSelectId + " .remove-tag",
-                function (e) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
+            $(document).on("click", "#" + customSelectId + " .remove-tag", function (e) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
 
-                    const customSelect = $("#" + customSelectId);
-                    const valueToRemove = $(this).data("value");
+                const customSelect = $("#" + customSelectId);
+                const valueToRemove = $(this).data("value");
 
-                    // Update the selected options array to exclude the removed value
-                    selectedOptions = selectedOptions.filter(
-                        (opt) => opt.id.toString() !== valueToRemove.toString()
-                    );
+                // Update the selected options array to exclude the removed value
+                selectedOptions = selectedOptions.filter(
+                    (opt) => opt.id.toString() !== valueToRemove.toString()
+                );
 
-                    // Remove the tag from the UI
-                    customSelect
-                        .find(`.selected-options .remove-tag[data-value="${valueToRemove}"]`)
-                        .parent()
-                        .remove();
+                // Remove the tag from the UI
+                customSelect
+                    .find(`.selected-options .remove-tag[data-value="${valueToRemove}"]`)
+                    .parent()
+                    .remove();
 
-                    // Uncheck the corresponding option in the dropdown
-                    customSelect
-                        .find(`.option[data-value="${valueToRemove}"]`)
-                        .removeClass("active");
+                // Uncheck the corresponding option in the dropdown
+                customSelect
+                    .find(`.option[data-value="${valueToRemove}"]`)
+                    .removeClass("active");
 
-                    // Update the hidden input value with the new selected options
-                    const updatedValues = selectedOptions.map((opt) => opt.id);
-                    customSelect.find(".tags_input").val(updatedValues.join(","));
+                // Update the hidden input value with the new selected options
+                const updatedValues = selectedOptions.map((opt) => opt.id);
+                customSelect.find(".tags_input").val(updatedValues.join(","));
 
-                    // Log the updated values for debugging
-                    console.log("Updated selected options:", updatedValues);
-                }
-            );
+                // Log the updated values for debugging
+                console.log("Updated selected options:", updatedValues);
+            });
 
             // Close dropdown when clicking anywhere outside
             $(document).click(function (e) {
-                // Ensure the click is outside of the custom select
                 if (!$(e.target).closest(".custom-select").length) {
                     $("#" + customSelectId).removeClass("open");
                 }
@@ -561,103 +541,17 @@
 
             // Clear search box when clicking the clear button
             $("#" + customSelectId + " .clear").on("click", function () {
-                const searchInput = $(this)
-                    .closest(".custom-select")
-                    .find(".search-tags");
-
+                const searchInput = $(this).closest(".custom-select").find(".search-tags");
                 searchInput.val(""); // Clear the search field
                 searchInput.trigger("input"); // Trigger the input event to update the options list
             });
         }
 
-        // Initialize both select boxes with unique IDs
+        // Initialize select box
         initCustomSelect("empID");
-
-
-        // FUNCTION TO STORE ASSIGNERS Data.
-        // Function to send the data to the server for storage
-        $(document).ready(function () {
-            // Define the function to send data
-            function storeAssignersData() {
-                console.log("Store assigners data logic goes here.");
-                const firstAssigner = [];
-                const secondAssigner = [];
-
-                // Collect the selected users for both assigners
-                $("#empID .tag").each(function () {
-                    const value = $(this).data("value"); // Ensure you're getting the data-value correctly
-                    firstAssigner.push(value);
-                });
-
-
-                $("#empID.tag").each(function () {
-                    console.log(
-                        "First Assigner Data Value: ",
-                        $(this).data("value")
-                    );
-                });
-
-
-
-                // Get the leaveApprovalId
-                const leaveApprovalId = $("#leaveApprovalId").val();
-
-                // Prepare the data to send
-                const data = {
-                    first_assigned_user: firstAssigner,
-                    second_assigned_user: secondAssigner,
-                    leaveApprovalId: leaveApprovalId,
-                };
-
-                console.log("Data being sent:", data); // Log the data to ensure it's correct
-
-                // Send the data via AJAX
-                showLoader();
-                $.ajax({
-                    url: "/assigned-leave-approvals/store", // Adjust the URL to match your route
-                    type: "POST",
-                    data: data,
-                    success: function (response) {
-                        if (response.success) {
-                            hideLoader();
-                            $("#assign_leave").modal("hide");
-                            $("#leave_approvals_table")
-                                .DataTable()
-                                .ajax.reload(null, false);
-                            clearCustomSelects();
-                        } else {
-                            alert("Error saving assigned users.");
-                        }
-                    },
-                    error: function () {
-                        hideLoader();
-                        alert("An error occurred while saving assigned users.");
-                    },
-                });
-                function clearCustomSelects() {
-                    $("#empID .selected-options").html("");
-                    $("#empID .tags_input").val("");
-
-
-
-                    // Optionally: If you need to reset the selected options array
-                    selectedOptions = [];
-
-                    // Reset the state of both select dropdowns
-                    $("#empID").removeClass("open");
-
-                }
-            }
-
-            // Attach click event handler to the submit button
-            $(".submit-btn").click(function () {
-                storeAssignersData(); // Call the function when the button is clicked
-            });
-        });
     });
 
     //end
-
 
 </script>
 @endsection

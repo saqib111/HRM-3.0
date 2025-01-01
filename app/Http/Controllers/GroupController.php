@@ -232,4 +232,42 @@ class GroupController extends Controller
         }
         return (['name' => $name, 'total' => count($username), 'group_name' => $data->name]);
     }
+
+    public function getTeamMember(Request $request)
+    {
+        // Get the search term and page number
+        $searchTerm = $request->input('searchTerm', '');
+        $page = $request->input('page', 1);
+
+        // Get the authenticated user's ID and role
+        $userId = auth()->id();
+        $userRole = auth()->user()->role;  // Assuming 'role' is a column in the users table
+
+        // Initialize the query for fetching users
+        $usersQuery = User::query();
+
+        // Check the user's role
+        if ($userRole == 1) {
+            // If role is 1, show all users
+            $usersQuery->select('id', 'username');
+        } else {
+            // If role is 2, 3, 4, or 5, show only the team members based on the leader_employees table
+            $usersQuery->join('leader_employees', 'leader_employees.employee_id', '=', 'users.id')
+                ->where('leader_employees.leader_id', $userId);
+        }
+
+        // Apply search filter if a search term is provided
+        if ($searchTerm) {
+            $usersQuery->where('users.username', 'like', '%' . $searchTerm . '%');
+        }
+
+        // Paginate the results (10 items per page) and select only 'id' and 'username' columns
+        $users = $usersQuery->paginate(10, ['users.id', 'users.username'], 'page', $page);
+
+        // Return the results as JSON
+        return response()->json([
+            'data' => $users->items(),   // Return the employees' data
+            'last_page' => $users->lastPage(),
+        ]);
+    }
 }

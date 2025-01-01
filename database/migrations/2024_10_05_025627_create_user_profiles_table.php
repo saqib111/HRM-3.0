@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->string('nationality')->nullable();
             $table->string('religion')->nullable();
             $table->string('telegram')->nullable();
-            $table->enum('allowed_url', ['0', '1'])->default(0);
+            $table->enum('allowed_ul', ['0', '1'])->default(0);
             $table->string('gender')->nullable();
             $table->string('remarks')->nullable();
             $table->string('leave_assign_user_id')->nullable();

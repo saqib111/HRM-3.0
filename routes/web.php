@@ -25,7 +25,8 @@ use App\Http\Controllers\{
     FingerprintController,
     SettingController,
     RevokedLeaveController,
-    ChangepassController
+    ChangepassController,
+    LateEmployeeDetailsController
 };
 
 Route::get('/', function () {
@@ -80,6 +81,9 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::get('get-employee', [ScheduleController::class, 'getEmolyee'])->name('employee.get');
     Route::get('attendance-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.record');
     Route::get('groupuser-data', [ScheduleController::class, 'groupNameData'])->name('groupname.data');
+    Route::get('/team-member/get_members', [GroupController::class, 'getTeamMember']);
+    // DELETE SELECTED SCHEDULE
+    Route::post('/delete-schedules', [ScheduleController::class, 'deleteSelectedSchedule'])->name('delete.schedules');
     // Schedule Ends
 
     // Schedule Ends
@@ -135,6 +139,7 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     // Route to fetch the data for Modal
     Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
     Route::post('/leave_action', [LeaveController::class, 'leave_action'])->name('leave.form.action');
+    Route::post('/leave_deletion', [LeaveController::class, 'leave_deletion'])->name('leave.form.deletion');
 
     // Route for Payrolls
     Route::get('/salary_deduction', [PayrollController::class, 'salary_deduction_index'])->name('payroll.salary_deduction');
@@ -279,6 +284,9 @@ Route::middleware(['auth', 'check_permission'])->group(function () {
     Route::get('/employee-list-attendance', [AttendanceRecordController::class, 'empployeeList'])->name('emp.list')->defaults('permission', 'view_manage_shift');
     Route::post('/delete-attendance-employee-record', [AttendanceRecordController::class, 'deleteAttendance'])->name('attendance.delete')->defaults('permission', 'bulk_delete_attendance_schedule');
     Route::post('/delete-attendance-single-record', [AttendanceRecordController::class, 'deleteSingleAttendance'])->name('attendance.delete.single')->defaults('permission', 'delete_attendance_schedule');
+    // LATE EMPLOYEE DETAILS ROUTES
+    Route::get("late-employee-details", [LateEmployeeDetailsController::class, "lateEmployees"])->name("late.employee")->defaults('permission', 'show_late_employee_details'); //VIEW
+    Route::get("late-employee-records", [LateEmployeeDetailsController::class, "lateEmployeeRecord"])->name("late.employee.record")->defaults('permission', 'show_late_employee_details'); //GET DETAILS
 });
 
 Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(function () {
@@ -292,5 +300,11 @@ Route::get('/search-leave', [LeaveController::class, 'search']);
 Route::get('custom-leave-detail', [LeaveController::class, 'customLeaveDetail'])->name('custom-leave-detail');
 // ALL LEAVES ROUTE
 Route::get("all-leaves-detail", [LeaveController::class, "allLeaves"])->name("all-leaves-detail");
+
+
+//Documentation route
+Route::get('/documentation', function () {
+    return view('documentation.index');
+})->name('documentation');
 
 require __DIR__ . '/auth.php';

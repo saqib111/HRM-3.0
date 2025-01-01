@@ -121,22 +121,35 @@
     .recent-activity .res-activity-list {
         height: 180px !important;
     }
+
+    .main-employee-title {
+        display: flex;
+        gap: 20px
+    }
+
+    .employee-title {
+        font-size: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        color: rgb(56, 53, 53);
+        font-family: sans-serif;
+    }
 </style>
 @endsection
 @section('content')
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="page-header">
     <div class="row">
-        <div class="col-sm-4">
-            <h3 class="page-title">Attendance </h3>
+        <div class="col-sm-12">
+            <div class="main-employee-title">
+                <h3 class="page-title">Attendance </h3>
+                <div class="employee-title">( {{auth()->user()->employee_id}} | {{auth()->user()->username}} )</div>
+            </div>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
                 <li class="breadcrumb-item active">Attendance </li>
             </ul>
-        </div>
-        <div class="col-sm-8">
-            <span class="mt-4 text-danger text-muted" style=""> Welcome! {{auth()->user()->username}} [
-                {{auth()->user()->employee_id}} ] </span>
         </div>
     </div>
 </div>

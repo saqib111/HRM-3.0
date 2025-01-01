@@ -21,7 +21,6 @@
     }
 
     body {
-        font-family: "Arial", sans-serif;
         background-color: #eaeaea;
         padding: 20px;
     }

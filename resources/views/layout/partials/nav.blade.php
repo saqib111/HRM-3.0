@@ -81,9 +81,9 @@
                                 class="menu-arrow"></span></a>
                         <ul>
                             <!-- <li>
-                                                                                                                                                                            <a href="{{ route('company.index')}}"
-                                                                                                                                                                                class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
-                                                                                                                                                                        </li> -->
+                                                                                                                                                                                                <a href="{{ route('company.index')}}"
+                                                                                                                                                                                                    class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
+                                                                                                                                                                                            </li> -->
                             @if($user->role == 1 || in_array('show_brands', $permissions))
                                 <li>
                                     <a href="{{ route('brand.index')}}"
@@ -150,7 +150,13 @@
                         </a>
                     </li>
                 @endif
-
+                @if($user->role == 1 || in_array('show_late_employee_details', $permissions))
+                    <li class="{{ request()->routeIs('late.employee') ? 'active' : '' }}">
+                        <a href="{{route('late.employee')}}"><i class="fa-solid fa-user-clock"></i>
+                            <span>Late Employee Details</span>
+                        </a>
+                    </li>
+                @endif
                 <!-- Leave Application -->
                 <li class="menu-title">
                     <span>Leave Application</span>
@@ -209,14 +215,16 @@
                         </a>
                     </li>
                 @endif
-                <li class="menu-title">
-                    <span>Payroll</span>
-                </li>
-                <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
-                    <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
-                            Deduction</span>
-                    </a>
-                </li>
+                @if($user->role == 1 || $user->role == 2 || $user->role == 3)
+                    <li class="menu-title">
+                        <span>Payroll</span>
+                    </li>
+                    <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
+                        <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
+                                Deduction</span>
+                        </a>
+                    </li>
+                @endif
                 @if($user->role == 1 || in_array('expired_visa', $permissions))
                     <li class="menu-title">
                         <span>Visa Documents</span>
@@ -227,6 +235,16 @@
                         </a>
                     </li>
                 @endif
+
+                <li class="menu-title">
+                    <span>Documentation</span>
+                </li>
+                <li class="{{ request()->routeIs('expired-visa-information.index') ? 'active' : '' }}">
+                    <a href="{{ route('documentation') }}"><i class="fa fa-newspaper"></i>
+                        <span>System
+                            Documentation</span>
+                    </a>
+                </li>
             </ul>
 
         </div>

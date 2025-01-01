@@ -201,6 +201,10 @@ class LeaderEmployeeController extends Controller
 
         return DataTables::of($collection)
             ->addIndexColumn()
+            ->filterColumn('name', function ($query, $keyword) {  // Change filter to use the correct column
+                // Filter based on the 'u.username' which is aliased as 'name'
+                $query->where('u.username', 'LIKE', "%{$keyword}%");
+            })
             ->addColumn('action', function ($row) use ($canUpdateTeam, $canDeleteTeam) {
                 return [
                     'edit' => $canUpdateTeam,

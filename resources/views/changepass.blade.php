@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="{{ asset('/assets/css/line-awesome.min.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/css/material.css') }}">
     <link rel="stylesheet" href="{{ asset('/assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('/assets/css/myAllCustomStyles.css') }}">
 
     <style>
         .mainSec {
@@ -324,49 +325,6 @@
             animation: zoom 3s infinite;
         }
 
-        /* scanner image  */
-        .scanner-container {
-            text-align: center;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            margin-left: 65px;
-            margin-top: 45px;
-            justify-content: center;
-        }
-
-        /* Fingerprint */
-        .fingerprint {
-            position: relative;
-            width: 190px;
-            height: 210px;
-            margin-left: 10%;
-            border-radius: 50%;
-            background: transparent;
-            overflow: hidden;
-            margin: 0 auto;
-            animation: zoom 3s infinite;
-        }
-
-        /* Scanning Line */
-        .line {
-            position: absolute;
-            left: 50%;
-            /* Center horizontally */
-            transform: translateX(-50%);
-            /* Correct horizontal alignment */
-            width: 100%;
-            /* Line width */
-            height: 3px;
-            margin-top: 4px;
-            margin-left: 20px;
-            /* Line height */
-            background: #60b6c5;
-            opacity: 0.8;
-            animation: scan 2s infinite;
-        }
-
         /* Animation: Scanning Line */
         @keyframes scan {
 
@@ -394,10 +352,25 @@
         }
 
         /* end image scanner */
+
+        .hover-shadow:hover {
+            transform: scale(1.1);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 
 <body>
+
+
+    <div id="loader" class="loader" style="display: none;">
+        <div class="loader-animation"></div>
+    </div>
 
     <!-- Section: Design Block -->
     <section class="background-radial-gradient overflow-hidden mainSec">
@@ -405,11 +378,7 @@
             <div class="row gx-lg-5 align-items-center mb-5 innerDiv">
                 <div class="col-lg-6 mb-5 mb-lg-0 rs_display_none" style="z-index: 10">
                     <div class="sideimgcontainer">
-                        <div class="scanner-container">
-                            <div class="fingerprint">
-                                <div class="line"></div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
 
@@ -460,8 +429,8 @@
                                         placeholder="Confirm new password" class="form-control" />
                                     <span id="error-password_confirmation" class="text-danger"></span>
                                 </div>
-
-                                <div id="success-message" class="alert alert-success mt-3 d-none"></div>
+                                <div id="loader" style="display: none;">Updating...</div>
+                                {{-- <div id="success-message" class="alert alert-success mt-3 d-none"></div> --}}
                                 <!-- Submit button -->
                                 <button type="submit">
                                     Login
@@ -501,18 +470,26 @@
 
                 let isValid = true;
 
+                // Reset borders before validation
+                $('#currentPassword').css('border', '');
+                $('#newPassword').css('border', '');
+                $('#confirmPassword').css('border', '');
+
                 // Validate current password
                 if (currentPassword === '') {
                     $('#error-current_password').text('Current password is required.');
+                    $('#currentPassword').css('border', '1px solid red');
                     isValid = false;
                 }
 
                 // Validate new password
                 if (newPassword === '') {
                     $('#error-password').text('New password is required.');
+                    $('#newPassword').css('border', '1px solid red');
                     isValid = false;
                 } else if (newPassword.length < 8 || newPassword.length > 30) {
                     $('#error-password').text('Password length must be between 8 and 30 characters.');
+                    $('#newPassword').css('border', '1px solid red');
                     isValid = false;
                 }
                 // else if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
@@ -523,9 +500,11 @@
                 // Validate confirm password
                 if (confirmPassword === '') {
                     $('#error-password_confirmation').text('Confirm password is required.');
+                    $('#confirmPassword').css('border', '1px solid red');
                     isValid = false;
                 } else if (newPassword !== confirmPassword) {
                     $('#error-password_confirmation').text('Passwords do not match.');
+                    $('#confirmPassword').css('border', '1px solid red');
                     isValid = false;
                 }
 
@@ -533,45 +512,57 @@
                 if (!isValid) return;
 
                 // Submit the form via AJAX
-                $.ajax({
-                    url: "{{ route('changed.password') }}",
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (response) {
-                        console.log(response);
-                        // Handle success (password changed)
-                        if (response.message) {
-                            $('#success-message').removeClass('d-none').text(response.message);
-                            if (response.userRole === "1") {
-                                setTimeout(() => window.location.href =
-                                    "{{ route('dashboard') }}", 200);
+                if (isValid) {
+                    $('#loader').show();
+                    $('#submitButton').prop('disabled', true);
+                    $.ajax({
+                        url: "{{ route('changed.password') }}",
+                        method: 'POST',
+                        data: $(this).serialize(),
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function (response) {
+                            console.log(response);
+                            $('#loader').hide(); // Hide loader
+                            $('#submitButton').prop('disabled', false);
+                            // Handle success (password changed)
+                            if (response.message) {
+                                // $('#success-message').removeClass('d-none').text(response
+                                //     .message);
+                                if (response.userRole === "1") {
+                                    setTimeout(() => window.location.href =
+                                        "{{ route('dashboard') }}", 200);
+                                } else {
+                                    setTimeout(() => window.location.href =
+                                        "{{ route('attendanceemployee.record') }}", 200);
+                                }
+                            }
+                        },
+                        error: function (xhr) {
+                            console.log('Error:', xhr.responseText); // Debug error response
+                            $('#loader').hide(); // Hide loader
+                            $('#submitButton').prop('disabled', false);
+                            // Handle errors
+                            if (xhr.status === 400) {
+                                // Display backend validation errors (incorrect password, etc.)
+                                $('#error-current_password').text(xhr.responseJSON
+                                    .error); // For example, incorrect password
+                                $('#error-current_password').show();
+                                $('#currentPassword').css('border', '1px solid red');
+                            } else if (xhr.status === 422) {
+                                // Form validation errors
+                                $.each(xhr.responseJSON.errors, function (key, value) {
+                                    $('#error-' + key).text(value[0]);
+                                });
                             } else {
-                                setTimeout(() => window.location.href =
-                                    "{{ route('attendanceemployee.record') }}", 200);
+                                alert('An unexpected error occurred. Please try again later.');
                             }
                         }
-                    },
-                    error: function (xhr) {
-                        // Handle errors
-                        if (xhr.status === 400) {
-                            // Display backend validation errors (incorrect password, etc.)
-                            $('#error-current_password').text(xhr.responseJSON
-                                .error); // For example, incorrect password
-                            $('#error-current_password').show();
-                        } else if (xhr.status === 422) {
-                            // Form validation errors
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                $('#error-' + key).text(value[0]);
-                            });
-                        } else {
-                            alert('An unexpected error occurred. Please try again later.');
-                        }
-                    }
-                });
+                    });
+                }
             });
+
         });
     </script>
 

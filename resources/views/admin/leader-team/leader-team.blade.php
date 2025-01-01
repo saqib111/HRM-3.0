@@ -249,7 +249,7 @@
 
         const columns = [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'name', title: 'Leader Name', orderable: false, searchable: false },
+            { data: 'name', title: 'Leader Name', orderable: false, searchable: true },
             {
                 data: 'employee_names',
                 title: 'Employee Name',

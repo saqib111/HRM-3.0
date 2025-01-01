@@ -164,6 +164,11 @@ function getUserName($id)
     return $username->username;
 }
 
+function getUserEmpId($id)
+{
+    $employee_id = User::select('id', 'employee_id')->where('id', $id)->first();
+    return $employee_id->employee_id;
+}
 
 function dateSelect($start, $end)
 {

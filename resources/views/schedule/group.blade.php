@@ -265,7 +265,7 @@
 @endsection
 @section('script-z')  
 <!-- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
-<script src="{{asset('assets/js/custom-multi.js')}}"></script>
+<script src="{{asset('assets/js/teamMembers.js')}}"></script>
 
 <script>
 

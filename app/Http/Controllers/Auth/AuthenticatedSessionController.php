@@ -22,50 +22,59 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        // Manually authenticate the user by checking credentials
-        $credentials = $request->only('email', 'password');  // Adjust this if you need other fields
+        $request->validate([
+            'email' => 'required|email',
+            'password' => ['required', 'string', 'min:8'],
+        ]);
 
-        // Try to authenticate the user
+        $credentials = $request->only('email', 'password');
+
         if (Auth::attempt($credentials)) {
-            // Retrieve the authenticated user
             $user = auth()->user();
 
-            // Check if the user's status is disabled (status = "0")
+            // Check if user is disabled
             if ($user->status === "0") {
-                // Log out the user immediately since their account is disabled
                 Auth::logout();
-
-                // Redirect to login page with error message
-                return redirect()->route('login')
-                    ->withErrors(['status_disabled' => 'Your account has been disabled by the administrator. Please contact HR.']);
+                return response()->json([
+                    'message' => 'Your account has been disabled by the administrator. Please contact HR.',
+                ], 402);
             }
 
-            // Check if the user needs to change their password
+            // Check if user needs to change their password
             if ($user->userpass == "0") {
-                return redirect()->route('change.password'); // Redirect to change password page
+                return response()->json([
+                    'redirect_url' => route('change.password'),
+                    'message' => 'Please change your password.',
+                ], 402);
             }
 
-            // Regenerate the session to prevent session fixation
+            // Regenerate session and determine redirection
             $request->session()->regenerate();
+            $redirectRoute = match ($user->role) {
+                "1" => route('dashboard'),
+                "2", "3", "4", "5" => route('attendanceemployee.record'),
+                default => null,
+            };
 
-            // Redirect based on the user's role
-            switch ($user->role) {
-                case "1":
-                    return redirect()->intended(route('dashboard'));
-                case "2":
-                case "3":
-                case "4":
-                case "5":
-                    return redirect()->intended(route('attendanceemployee.record'));
-                default:
-                    return redirect()->route('login')->withErrors(['role' => 'Unauthorized role']);
+            // Handle unauthorized role
+            if (!$redirectRoute) {
+                return response()->json([
+                    'message' => 'Unauthorized role',
+                ], 403);
             }
+
+            return response()->json([
+                'redirect_url' => $redirectRoute,
+                'message' => 'Login successful',
+            ], 200);
         }
 
-        // If authentication fails, redirect back to login with error message
-        return redirect()->route('login')->withErrors(['credentials' => 'Invalid credentials.']);
+        // Invalid credentials response
+        return response()->json([
+            'message' => 'Invalid credentials',
+        ], 401);
     }
 
 

@@ -21,4 +21,9 @@ class AttendanceRecord extends Model
         'status',
         'dayoff'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
