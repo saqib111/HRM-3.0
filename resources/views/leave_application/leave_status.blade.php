@@ -572,6 +572,10 @@
                     leaveType = 'Paternity Leave';
                     bgColorClass = 'bg-light-yellow';
                     break;
+                case 9:
+                    leaveType = 'Medical Leave(Malaysian Special)';
+                    bgColorClass = 'bg-info';
+                    break;
                 default:
                     bgColorClass = 'bg-light-gray';
                     leaveType = 'Other Leave';

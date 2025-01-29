@@ -227,8 +227,8 @@
             },
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'employee_id', name: 'employee_id', orderable: false, searchable: false },
-                { data: 'username', name: 'username', orderable: false, searchable: false },
+                { data: 'employee_id', name: 'employee_id', orderable: false, searchable: true },
+                { data: 'username', name: 'username', orderable: false, searchable: true },
                 {
                     data: 'title',
                     render: function (data) {
@@ -530,5 +530,16 @@
                 storeUnassignersData(); // Execute the AJAX call to save data
             }
         });
+
     }
+    $(document).ready(function () {
+        $('#assign_leave').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        $(".closed_btn").on("click", function () {
+            $("#assign_leave").modal('hide');
+        });
+    });
 </script>@endsection

@@ -106,11 +106,13 @@ class RevokedLeaveController extends Controller
         $request->validate([
             'leave_id' => 'required|integer|exists:leave_management,id', // Ensure the leave_id exists in the database
             'leave_action' => 'required|string|in:revoke_request', // Only allow the action that should trigger the update
+            'revoked_al_balance' => 'required|numeric|min:0',           // Ensure revoked balance is numeric and non-negative
         ]);
 
         // Retrieve the validated data from the request
         $leaveId = $request->leave_id;
         $leaveAction = $request->leave_action;
+        $revoked_al_balance = $request->revoked_al_balance;
 
         // Get the authenticated user's ID (the person revoking the leave)
         $activeRevokeId = auth()->user()->id;
@@ -118,49 +120,12 @@ class RevokedLeaveController extends Controller
         // Fetch the leave request information from the database
         $leaveRequest = LeaveManagement::findOrFail($leaveId); // Will throw an exception if the leave doesn't exist
 
-        // Check if leave_details field (JSON) exists and contains leave data
-        $leaveDetails = json_decode($leaveRequest->leave_details, true);
-
-        // Initialize a variable to store the total number of days for leave_type_id == 1 (Full Day)
-        $totalDaysToAddBack = 0;
-
-        // Check if leave details exist and are in the correct format
-        if ($leaveDetails && is_array($leaveDetails)) {
-            // Iterate through the leave details and delete the corresponding leaves from approved_leaves
-            foreach ($leaveDetails as $detail) {
-                if (isset($detail['start_date']) && isset($detail['end_date'])) {
-                    // If the leave is of type 'full_day' and the leave_type_id is 1, we'll add it back to the balance
-                    if ($detail['type'] === 'full_day' && $detail['leave_type_id'] == 1) {
-                        // Calculate the number of days between start_date and end_date
-                        $startDate = Carbon::parse($detail['start_date']);
-                        $endDate = Carbon::parse($detail['end_date']);
-                        $daysCount = $startDate->diffInDays($endDate) + 1; // +1 to include the start date
-
-                        // Accumulate the total days to add back to the AnnualLeave balance
-                        $totalDaysToAddBack += $daysCount;
-
-                        // Optionally, mark the leave as revoked in details
-                        $detail['status'] = 'revoked'; // Mark the leave as revoked in details
-                    }
-
-                    // Find and delete the approved leaves for the same user and leave dates
-                    ApprovedLeave::where('user_id', $leaveRequest->user_id)
-                        ->whereIn('leave_type', [1, 2, 3, 4, 5, 6, 7, 8]) // Ensure matching leave types
-                        ->whereBetween('date', [$detail['start_date'], $detail['end_date']])
-                        ->delete(); // Deletes all matching records
-                }
-            }
-
-            // Update leave_details with revoked status for the revoked leaves
-            $leaveRequest->leave_details = json_encode($leaveDetails);
-        }
-
         // Assuming AnnualLeaves table has a `user_id` field to match with LeaveManagement user_id
         $annualLeave = AnnualLeaves::where('user_id', $leaveRequest->user_id)->first();
 
         if ($annualLeave) {
             // Add the total days to add back to the AnnualLeave balance
-            $annualLeave->leave_balance += $totalDaysToAddBack;
+            $annualLeave->leave_balance += $revoked_al_balance;
             $annualLeave->save(); // Save the updated balance to the AnnualLeaves table
         } else {
             // If no AnnualLeaves entry is found, handle as needed

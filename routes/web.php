@@ -26,7 +26,11 @@ use App\Http\Controllers\{
     SettingController,
     RevokedLeaveController,
     ChangepassController,
-    LateEmployeeDetailsController
+    LateEmployeeDetailsController,
+    WhiteListIPsController,
+    ManageIpRestrictionsController,
+    DocumentationController,
+    ExcelAttendanceController
 };
 
 Route::get('/', function () {
@@ -36,6 +40,7 @@ Route::get('/login', function () {
     return view('index');
 });
 Route::post('loginto', [AuthenticatedSessionController::class, 'store'])->name('loginto');
+Route::view('/access-denied-ip', 'blacklistip');
 
 Route::middleware('auth')->group(function () {
     Route::controller(ChangepassController::class)->group(function () {
@@ -86,6 +91,13 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::post('/delete-schedules', [ScheduleController::class, 'deleteSelectedSchedule'])->name('delete.schedules');
     // Schedule Ends
 
+    // Excel Schedule Upload
+    Route::get('/importshcedule', function () {
+        return view('excelSchedule.importschedule');
+    });
+    Route::post('/import', [ExcelAttendanceController::class, 'importdata'])->name('import');
+    // End Excel Schedule Upload
+
     // Schedule Ends
     Route::get('leader', [LeaderEmployeeController::class, 'leader'])->name('leader');
     Route::get('team-data', [LeaderEmployeeController::class, 'teamData'])->name('team.data');
@@ -95,12 +107,17 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::get('attendance-employee-record', [AttendanceRecordController::class, 'attendanceRecord'])->name('attendance.detail');
     Route::post('search-record', [AttendanceRecordController::class, 'searchRecord'])->name('search.record');
     Route::post('attendance-checkin', [AttendanceRecordController::class, 'attendanceCheckIn'])->name('attendance.checkin');
-    Route::post('/punch-in', [AttendanceRecordController::class, 'punchIn']);
+    Route::post('/punch-in', [AttendanceRecordController::class, 'punchIn'])->name('punchInAttendance');
     Route::post('/check-employee-authentication', [AttendanceRecordController::class, 'checkEmpAuhentication'])->name('check.emp');
     Route::get('/get-punch-time', [AttendanceRecordController::class, 'checkStatus'])->name('check.attendance');
-    Route::post('/punch-out', [AttendanceRecordController::class, 'punchOut'])->name('punch.out');
+    Route::post('/punch-out', [AttendanceRecordController::class, 'punchOut'])->name('punchOutAttendance');
     Route::get('/statistics', [AttendanceRecordController::class, 'statistics'])->name('statistics');
 
+    // Route to reload the specific section after Punch IN
+    Route::get('/reload-timesheet', [AttendanceRecordController::class, 'reloadTimesheet'])->name('reload.timesheet');
+
+    // EMERGENCY CHECK-OUT
+    Route::post("/emergency-checkout", [AttendanceRecordController::class, "emergencyCheckOut"])->name("emergencyPunchOutAttendance");
 
     Route::get('team-data-datatable', [LeaderEmployeeController::class, 'teamDatatable'])->name('data.datatable');
     Route::get('team-edit/{id}', [LeaderEmployeeController::class, 'teamEdit'])->name('edit.team');
@@ -108,7 +125,8 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::get('test/{id}', [ScheduleController::class, 'test']);
     Route::get('/employee-attendance-list', [AttendanceRecordController::class, 'attendanceRecordEdit'])->name('emp.edit');
     Route::get('/get-schedule/{id}', [AttendanceRecordController::class, 'getSchedule']);
-    Route::post('/schedule-update', [AttendanceRecordController::class, 'updateAttendance'])->name('schedule.update');
+    // Route::post('/schedule-update', [AttendanceRecordController::class, 'updateAttendance'])->name('schedule.update');
+    Route::post('/schedule-update', [AttendanceRecordController::class, 'updateAttendance'])->name('scheduleAttendance.update');
     Route::get('/statistics-admin/{id}', [AttendanceRecordController::class, 'statisticsAdmin'])->name('statistics.emp');
     Route::post('search-record-admin', [AttendanceRecordController::class, 'searchAdmin'])->name('search.admin');
     // Attendance Ends
@@ -138,6 +156,7 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
 
     // Route to fetch the data for Modal
     Route::get('/leave_application/{id}', [LeaveController::class, 'getLeaveApplication']);
+    Route::get('/notification', [LeaveController::class, 'notifibadged'])->name('notify');
     Route::post('/leave_action', [LeaveController::class, 'leave_action'])->name('leave.form.action');
     Route::post('/leave_deletion', [LeaveController::class, 'leave_deletion'])->name('leave.form.deletion');
 
@@ -170,7 +189,6 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::get('/user-permissions/{userId}', [RolesPermissionsController::class, 'getUserPermissions'])->name('get.user.permissions');
     Route::post('/user-permissions/{userId}', [RolesPermissionsController::class, 'saveUserPermissions'])->name('save.user.permissions');
     Route::get('/brand_loads', [AdminController::class, 'loadBrands'])->name('brand.load');
-
 });
 
 
@@ -269,6 +287,19 @@ Route::middleware(['auth', 'check_permission'])->group(function () {
     //Revoked Route
     Route::get('/revoked_application', [RevokedLeaveController::class, 'getRevokedLeave'])->name('revoked_leave.index')->defaults('permission', 'revoked_leaves');
     Route::post('/revoked_application', [RevokedLeaveController::class, 'RevokedLeaveBtn'])->name('revoked_leave.btn')->defaults('permission', 'revoked_leaves');
+
+    // ************ WHITELIST IPS ***************
+    Route::get("/whitelist-ips", [WhiteListIPsController::class, "view"])->name("view")->defaults("permission", "view_whitelist_IPs");
+    Route::post("/whitelist-ips/add", [WhiteListIPsController::class, "addIPs"])->name("addIPs")->defaults("permission", "view_whitelist_IPs");
+    Route::get("/whitelist-ips/getips", [WhiteListIPsController::class, "getIPs"])->name("getIPs")->defaults("permission", "view_whitelist_IPs");
+    Route::get("/whitelist-ips/editips", [WhiteListIPsController::class, "editIPs"])->name("editIPs")->defaults("permission", "view_whitelist_IPs");
+    Route::post("/whitelist-ips/deleteips", [WhiteListIPsController::class, "deleteIPs"])->name("deleteIPs")->defaults("permission", "view_whitelist_IPs");
+    Route::post("/whitelist-ips/updateips", [WhiteListIPsController::class, "updateIPs"])->name("updateIPs")->defaults("permission", "view_whitelist_IPs");
+
+    // ************** MANAGE IP RESTRICTIONS ****************
+    Route::get("manage-ip-restrictions", [ManageIpRestrictionsController::class, "view"])->name("view.manageIPs")->defaults("permission", "view_manage_IP_restrictions");
+    Route::get("manage-ip-restrictions/getdata", [ManageIpRestrictionsController::class, "getUsersData"])->name("getData.manageIPs")->defaults("permission", "view_manage_IP_restrictions");
+    Route::post("manage-ip-restrictions/status", [ManageIpRestrictionsController::class, "updateStatus"])->name("updateStatus.manageIPs")->defaults("permission", "view_manage_IP_restrictions");
 });
 
 // ROUTES FOR USER PROFILE
@@ -287,6 +318,8 @@ Route::middleware(['auth', 'check_permission'])->group(function () {
     // LATE EMPLOYEE DETAILS ROUTES
     Route::get("late-employee-details", [LateEmployeeDetailsController::class, "lateEmployees"])->name("late.employee")->defaults('permission', 'show_late_employee_details'); //VIEW
     Route::get("late-employee-records", [LateEmployeeDetailsController::class, "lateEmployeeRecord"])->name("late.employee.record")->defaults('permission', 'show_late_employee_details'); //GET DETAILS
+    // Late Employee Single Auth Detail
+    Route::get("/deduction-details", [LateEmployeeDetailsController::class, "deductionDetails"])->name("deduction.details");
 });
 
 Route::middleware(['auth', 'check_team_permission', 'check_permission'])->group(function () {
@@ -303,8 +336,8 @@ Route::get("all-leaves-detail", [LeaveController::class, "allLeaves"])->name("al
 
 
 //Documentation route
-Route::get('/documentation', function () {
-    return view('documentation.index');
-})->name('documentation');
+Route::middleware(["auth", "check_permission"])->group(function () {
+    Route::get("/documentation", [DocumentationController::class, "showDocumentation"])->name("documentation");
+});
 
 require __DIR__ . '/auth.php';

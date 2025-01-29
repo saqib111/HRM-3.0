@@ -299,7 +299,9 @@
                 type: 'GET'
             },
             columns: columns, // Dynamically defined columns
-            order: [[0, 'desc']] // Default order by the first column
+            order: [[0, 'desc']], // Default order by the first column
+            pageLength: 17, // Set the default number of records to show
+            lengthMenu: [10, 17, 25, 50, 100] // Options for records per page
         });
     }
 
@@ -724,7 +726,25 @@
             }
         });
     }
+    $(document).ready(function () {
+        $('#add_team').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
 
+        $(".closed_btn").on("click", function () {
+            $("#add_team").modal('hide');
+        });
+
+        $('#edit_team').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        $(".closed_btn").on("click", function () {
+            $("#edit_team").modal('hide');
+        });
+    });
 
 </script>
 

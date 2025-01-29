@@ -16,7 +16,9 @@
         <div class="col-md-4">
             <h3 class="page-title">Leave Balance</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Leave Balance</li>
             </ul>
         </div>
@@ -134,7 +136,9 @@
                         return row.can_update; // Show column only if `can_update` is true
                     }
                 }
-            ]
+            ],
+            pageLength: 15, // Set the default number of records to show
+            lengthMenu: [10, 15, 25, 50, 100] // Options for records per page
         });
     }
     $(document).ready(function () {

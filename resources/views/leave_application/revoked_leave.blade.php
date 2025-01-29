@@ -357,6 +357,7 @@
 
     $('#revoved_btn').click(function () {
       const id = $(this).data('id');
+      var revoked_al_balance = $('#total_al_days').text().match(/\d+(\.\d+)?/)[0];
       showLoader(); // Start loader
 
       // Fetch leave details using AJAX
@@ -366,6 +367,7 @@
         data: {
           leave_id: id,
           leave_action: 'revoke_request',
+          revoked_al_balance: revoked_al_balance,
           _token: $('meta[name="csrf-token"]').attr('content'),
         },
         success: function (response) {
@@ -536,6 +538,10 @@
           case 8:
             leaveType = 'Paternity Leave';
             bgColorClass = 'bg-light-yellow';
+            break;
+          case 9:
+            leaveType = 'Medical Leave(Malaysian Special)';
+            bgColorClass = 'bg-info';
             break;
           default:
             bgColorClass = 'bg-light-gray';

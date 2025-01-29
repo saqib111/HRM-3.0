@@ -65,6 +65,70 @@ return [
             'replace_placeholders' => true,
         ],
 
+
+        // Creating Logs
+        'create_employee' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\CreateEmployeeLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'update_employee' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\UpdateEmployeeLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'checkin_checkout' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\CheckinCheckoutLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'update_ALBalance' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\ALBalanceLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'update_schedule' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\UpdateScheduleLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'create_schedule' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\CreateScheduleLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'delete_schedule' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\DeleteScheduleLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'permissions' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\PermissionLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'employee_info' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\EmployeeInformationLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'team_info' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\TeamLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        'ip_restriction' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\IPRestrictionLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+        // Ending Logs
+
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
@@ -89,7 +153,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],

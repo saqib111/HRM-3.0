@@ -1,0 +1,14 @@
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-27 23:31:09
+No attendance record found for User ID: 1622 on 2025-01-27
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-27 11:31:46
+No attendance record found for User ID: 1622 on 2025-01-27
+

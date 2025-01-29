@@ -135,6 +135,16 @@
         color: rgb(56, 53, 53);
         font-family: sans-serif;
     }
+
+    .deduction {
+        max-width: 70%;
+    }
+
+    .modal-open .modal-backdrop {
+        backdrop-filter: blur(4px);
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 1 !important;
+    }
 </style>
 @endsection
 @section('content')
@@ -157,38 +167,16 @@
 <input type="hidden" name="user_id" value="{{auth()->user()->id}}" id="userID">
 <input type="hidden" name="id" value="" id="id">
 <div class="row">
-
     <div class="col-md-4">
-        <div class="card punch-status">
-            <div class="card-body">
-                <h5 class="card-title">Timesheet <small class="text-muted" id="punchDate">{{date('dS M Y')}}</small>
-                </h5>
-                <div class="punch-det">
-                    <h6>Punch In at</h6>
-                    <p id="punchInTime">--</p>
-                </div>
-                <div class="progress-container">
-                    <svg class="progress-circle" viewBox="0 0 110 110">
-                        <circle cx="55" cy="55" r="50" fill="none" stroke="#eee" stroke-width="8"></circle>
-                        <circle class="progress-bar" cx="55" cy="55" r="50" stroke-dasharray="314"
-                            stroke-dashoffset="314" fill="none" stroke="#3498db" stroke-width="8"
-                            stroke-linecap="round"></circle>
-                    </svg>
-                    <div class="time-counter" id="timeCounter">0:00 hrs</div>
-                </div>
-                <div class="punch-btn-section d-flex justify-content-center mt-3">
-                    <button id="punchInBtn" class="btn btn-primary punch-btn mx-2">Punch In</button>
-                    <button id="punchOutBtn" class="btn btn-primary punch-btn mx-2" disabled>Punch Out</button>
-                </div>
-
-            </div>
+        <div id="timesheetSection">
+            @include('partials.timesheet')
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="card att-statistics">
             <div class="card-body">
-                <h5 class="card-title">Statistics</h5>
+                <h5 class="card-title">Salary Deduction</h5>
                 <div class="stats-list">
 
                     <div class="stats-info">
@@ -208,10 +196,11 @@
 
                     <div class="stats-info">
                         <p>Total Deduction <strong> <small><span id="total"> </span></small></strong></p>
-
                     </div>
-
-
+                    <div class="deductions text-center p-0 mt-3 mb-0">
+                        <button class="btn btn-danger btn-sm" id="deductions_btn"
+                            style="background: #a90500 !important,">View Deduction Details</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -273,6 +262,8 @@
         </div>
     </div>
 </form>
+
+<!-- TABLE STARTS -->
 <div class="row">
     <div class="col-lg-12">
         <div class="table-responsive">
@@ -287,11 +278,10 @@
         </div>
     </div>
 </div>
+<!-- TABLE END -->
 
 <!--Login Modal start-->
-
-
-<div class="modal fade " id="loginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+<div class="modal fade " id="PunchInModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
     aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content ">
@@ -300,32 +290,67 @@
             </div>
             <div class="modal-body ">
                 <div class="form-title text-center">
-                    <h4>Verify Employee</h4>
+                    <h4 id="verify_heading">Verify Employee</h4>
+                    <p class="text-muted mt-3" id="emergency_text"></p>
                 </div>
                 <div class="d-flex flex-column text-center ">
-                    <form id="emp-check" method="POST" enctype="multipart/form-data">
-                        @csrf
-
+                    <form id="verify_user" method="POST">
                         <div class="form-group mb-4">
-                            <input type="password" class="form-control" id="password" placeholder="Password..."
-                                autocomplete="one-time-code">
+                            <input type="password" class="form-control" id="password" placeholder="Password...">
+                            <div id="display_error" class="text-danger mt-2" style="display: none; text-align: left;">
+                                Please enter password
+                            </div>
                         </div>
-                        <button
+                        <button type="submit"
                             class="btn btn-info btn-block btn-round ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Verify&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
                     </form>
-
-
-
-                    </di>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 </div>
-
+</div>
 <!--End -->
+
+
+<!-- DEDUCTION DETAILS MODAL STARTS -->
+<div class="modal fade mt-4" id="deduction_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl deduction">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-center" id="exampleModalLabel">Salary Deduction Details</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="table-responsive">
+                    <table class="table mt-0" id="deduction_table">
+                        <thead class="sticky-top" style="background-color: #f8f9fa;">
+                            <tr>
+                                <th>Start Date</th>
+                                <th>Shift In</th>
+                                <th>End Date</th>
+                                <th>Shift Out</th>
+                                <th>CheckIn Date</th>
+                                <th>Check In</th>
+                                <th>CheckOut Date</th>
+                                <th>Check Out</th>
+                                <th>Duty Hours</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- <tr>
+                       DYNAMIC DATA FROM THE AJAX
+                    </tr> -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- DEDUCTION DETAILS MODAL ENDS -->
 
 <!-- PreLoader -->
 <div id="loader" class="loader" style="display: none;">
@@ -334,8 +359,6 @@
 
 @endsection
 @section('script-z')  
-<!-- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
-
 
 <script>
 
@@ -356,7 +379,6 @@
             type: 'GET',
 
             success: function (response) {
-                console.log(response)
 
                 $('#attendance-employee').DataTable({
                     destroy: true,
@@ -463,6 +485,8 @@
                         },
 
                     ], order: [],
+                    pageLength: 31, // Set the default number of records to show
+                    lengthMenu: [10, 25, 31, 50, 100], // Options for records per page
                     createdRow: function (row, data, dataIndex) {
 
                         const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -616,7 +640,6 @@
                 success: function (response) {
                     hideLoader();
                     var inf = response.in;
-                    console.log(inf)
                     $('#day').empty();
                     $('#absent_fine').empty();
                     $('#late_fine').empty();
@@ -858,265 +881,16 @@
                     });
 
                 },
-
                 error: function (err) {
                     hideLoader();
 
                     createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Wrong Date selected.last 3 months data Only');
                 }
             });
-
-
-
         }
-
-
     });
 </script>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const punchInBtn = document.getElementById('punchInBtn');
-        const punchOutBtn = document.getElementById('punchOutBtn');
-        const punchInTimeDisplay = document.getElementById('punchInTime');
-        const timeCounter = document.getElementById('timeCounter');
-        const progressCircle = document.querySelector('.progress-bar');
-        let punchInTime = null;
-        let shiftDuration = 9;
-        let intervalId = null;
-        let endShift = null;
-        let shitFinish = null;
-        fetch('/get-punch-time')
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-                if (data.punch_in_time == "nothing") {
-
-                    clearInterval(intervalId);
-                    punchInTime = null;
-                    punchInTimeDisplay.textContent = '';
-                    timeCounter.textContent = '0:00 hrs';
-                    progressCircle.style.strokeDashoffset = 314;
-
-
-                    punchOutBtn.style.display = 'none';
-                    punchInBtn.style.display = 'none';
-                    $('.punch-btn-section').append(
-
-                        `<div class="btn btn-primary punch-btn"> No Schedule</div> `
-                    );
-
-                } else if (data.punch_in_time == 'show') {
-
-                    clearInterval(intervalId);
-                    punchInTime = null;
-                    punchInTimeDisplay.textContent = '';
-                    timeCounter.textContent = '0:00 hrs';
-                    progressCircle.style.strokeDashoffset = 314;
-
-
-                    punchOutBtn.style.display = 'none';
-                    punchInBtn.style.display = 'block';
-                }
-                else {
-                    punchInTime = new Date(data.punch_in_time);
-                    endShift = new Date(data.punch_in_time).setMinutes(0, 0, 0);
-                    shiftFinish = new Date(data.shiftEnd);
-                    shiftDuration = data.shift_duration || shiftDuration;
-
-                    punchInBtn.style.display = 'none';
-                    punchOutBtn.style.display = 'block';
-                    punchOutBtn.disabled = true;
-
-                    punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
-
-
-                    startShiftProgress(true);
-
-                }
-            });
-
-
-
-        // punchInBtn.addEventListener('click', punchIn);
-        punchInBtn.addEventListener('click', function () {
-            var checkIn = 'checkIn';
-            employeeCheck(checkIn);
-
-        });
-
-        function employeeCheck(data) {
-
-            password = $('#password').val('');
-
-            clearValidationStates();
-            valdateCancel();
-
-            $('#loginModal').modal('show');
-            $('#emp-check').on('submit', function (event) {
-                event.preventDefault();
-
-                var password = $('#password').val();
-
-                var formData = new FormData();
-
-                formData.append('password', password);
-                var isValid = true;
-                clearValidationStates();
-
-                if (!validateField('#password')) isValid = false;
-                if (isValid) {
-                    showLoader();
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        }
-                    });
-                    $.ajax({
-                        url: '{{route('check.emp')}}',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function (response) {
-
-                            //$('#loginModal').modal('hide');
-                            hideLoader();
-                            if (response.status == 'success') {
-                                $('#loginModal').modal('hide');
-                                if (data == "checkIn") { punchIn(); }
-                                if (data == "checkOut") { punchOut(); }
-
-                            }
-                            else {
-                                valdateCancel();
-                                clearValidationStates();
-
-                                $('#password').addClass('is-invalid');
-                                createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Invalid User.');
-                            }
-
-
-                        },
-                        error: function (error) {
-                            hideLoader();
-                            createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Invalid User.');
-                        }
-                    });
-
-                }
-
-            });
-
-        }
-
-
-        function punchIn() {
-            fetch('/punch-in', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        statistics();
-                        dataTab();
-
-                        punchInTime = new Date(data.punch_in_time);
-                        punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
-
-                        punchInBtn.style.display = 'none';
-                        punchOutBtn.style.display = 'block';
-                        punchOutBtn.disabled = true;
-                        startShiftProgress(true);
-
-
-
-                    }
-                    else {
-                        createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Your shift is over.');
-                        clearInterval(intervalId);
-                        punchInTime = null;
-                        punchInTimeDisplay.textContent = '';
-                        timeCounter.textContent = '0:00 hrs';
-                        progressCircle.style.strokeDashoffset = 314;
-
-
-                        punchOutBtn.style.display = 'none';
-                        punchInBtn.style.display = 'block';
-                    }
-                });
-        }
-
-
-
-        function startShiftProgress(initial = false) {
-
-            function updateProgress() {
-                const now = new Date();
-                const elapsedTimeInMinutes = Math.floor((now - punchInTime) / (60 * 1000));
-                const elapsedTimeInHours = elapsedTimeInMinutes / 60;
-
-                const hours = Math.floor(elapsedTimeInHours);
-                const minutes = Math.floor((elapsedTimeInHours - hours) * 60);
-                timeCounter.textContent = `${hours}:${String(minutes).padStart(2, '0')} hrs`;
-
-
-                const progressPercentage = Math.min((elapsedTimeInMinutes / (shiftDuration * 60)) * 100, 100);
-                progressCircle.style.strokeDashoffset = 314 - (314 * progressPercentage) / 100;
-
-                const shiftEndTime = new Date(endShift + shiftDuration * 60 * 60 * 1000);
-                const shiftEnding = new Date(shiftFinish + shiftDuration * 60 * 60 * 1000);
-                if (now >= shiftEnding) {
-                    punchOutBtn.disabled = false;
-                    clearInterval(intervalId);
-                }
-            }
-
-
-            if (initial) updateProgress();
-
-
-            intervalId = setInterval(updateProgress, 60000);
-        }
-
-        punchOutBtn.addEventListener('click', function () {
-            var checkOut = "checkOut";
-            employeeCheck(checkOut);
-
-        });
-
-        function punchOut() {
-            fetch('/punch-out', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-
-                    if (data.status == 'success') {
-                        statistics();
-                        dataTab();
-                        clearInterval(intervalId);
-                        punchInTime = null;
-                        punchInTimeDisplay.textContent = '';
-                        timeCounter.textContent = '0:00 hrs';
-                        progressCircle.style.strokeDashoffset = 314;
-
-
-                        punchOutBtn.style.display = 'none';
-                        punchInBtn.style.display = 'block';
-
-                    }
-                });
-        }
-    });
     function refreshDate() {
         $('#fromDate').val('');
         $('#toDate').val('');
@@ -1125,7 +899,6 @@
 
     }
     function statistics() {
-
         fetch('/statistics', {
             method: 'GET',
             headers: {
@@ -1156,54 +929,330 @@
 
             });
     }
-    function clearValidationStates() {
-        $('.form-control').removeClass('is-invalid is-valid');
-        $('.text-danger').remove();
-
-    }
-    function valdateCancel() {
-
-        $('#email').removeClass('is-invalid is-valid');
-        $('#password').removeClass('is-invalid is-valid');
-
-        $('.text-danger').remove();
-    }
-    function validateField(selector, fieldName) {
-        let value = $(selector).val();
-        let parent = $(selector).closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!value) {
-            $(selector).addClass('is-invalid');
-            parent.append(`<span class="text-danger">${fieldName} field cannot be empty.</span>`);
-            return false;
-        } else {
-            $(selector).removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
-    function validateEmail(selector) {
-        let email = $(selector).val();
-        let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        let parent = $(selector).closest('.input-block');
-        parent.find('.text-danger').remove();
-
-        if (!email || !regex.test(email)) {
-            $(selector).addClass('is-invalid');
-            parent.append(`<span class="text-danger">Invalid email address.</span>`);
-            return false;
-        } else {
-            $(selector).removeClass('is-invalid').addClass('is-valid');
-            return true;
-        }
-    }
 </script>
+<script>
+    $(document).ready(function () {
+        attachEventListeners(); // Ensure initial event binding
 
 
+        let isRequestInProgress = false; // Prevent multiple requests
+        let punchAction = ''; // Track whether it's "Punch IN" or "Punch OUT"
 
+        function reloadTimesheet() {
+            $.ajax({
+                url: '{{ route('reload.timesheet') }}',
+                type: 'GET',
+                success: function (response) {
+                    $('#timesheetSection').html(response); // Replace timesheet content
+                },
+                error: function () {
+                    console.error("Failed to reload timesheet.");
+                }
+            });
+        }
+
+        // 📌 Function to Attach Event Listeners After Content Reload
+        function attachEventListeners() {
+            console.log("🔄 Attaching event listeners after reload...");
+
+            // ✅ Use event delegation to bind event handlers to dynamically loaded elements
+            $(document).off('click', '#punchInBtn').on('click', '#punchInBtn', function () {
+                openVerifyModal("Punch IN");
+            });
+
+            $(document).off('click', '#punchOutBtn').on('click', '#punchOutBtn', function () {
+                openVerifyModal("Punch OUT");
+            });
+
+            $(document).off('click', '#emergencyCheckOutBtn').on('click', '#emergencyCheckOutBtn', function () {
+                openVerifyModal("Emergency Punch OUT");
+            });
+        }
+
+
+        // 📌 Ensure `openVerifyModal` is globally accessible
+        window.openVerifyModal = function (action) {
+            punchAction = action;
+            $('#PunchInModal').modal('show');
+
+            if (punchAction === "Emergency Punch OUT") {
+                $('#verify_heading').html('<i class="fa-solid fa-triangle-exclamation" style="color: #f50a0a;"></i><span style="color: #f50a0a;" class="ms-2 fs-5">Warning!</span>');
+                $('#emergency_text').html("<span style='color: #f50a0a;'>Emergency checkout</span> may have a salary deduction according to company policies!");
+            } else {
+                $('#verify_heading').html("Verify Employee");
+                $('#emergency_text').html("");
+            }
+        };
+
+        const punchInBtn = document.getElementById('punchInBtn');
+        const punchOutBtn = document.getElementById('punchOutBtn');
+        const punchInTimeDisplay = document.getElementById('punchInTime');
+        const timeCounter = document.getElementById('timeCounter');
+        const progressCircle = document.querySelector('.progress-bar');
+        let punchInTime = null;
+        let shiftDuration = 9;
+        let intervalId = null;
+        let endShift = null;
+        let shitFinish = null;
+        // Fetch Punch IN/OUT status on page load
+        fetch('/get-punch-time')
+            .then(response => response.json())
+            .then(data => {
+                if (data.punch_in_time == "nothing") {
+                    clearInterval(intervalId);
+                    punchInTime = null;
+                    punchInTimeDisplay.textContent = '';
+                    timeCounter.textContent = '0:00 hrs';
+                    progressCircle.style.strokeDashoffset = 314;
+
+                    punchInBtn.style.display = 'none';
+                    $('.punch-btn-section').append(
+                        `<div class="btn btn-primary punch-btn"> No Schedule</div>`
+                    );
+                } else if (data.punch_in_time == 'show') {
+                    clearInterval(intervalId);
+                    punchInTime = null;
+                    punchInTimeDisplay.textContent = '';
+                    timeCounter.textContent = '0:00 hrs';
+                    progressCircle.style.strokeDashoffset = 314;
+
+                    punchInBtn.style.display = 'block';
+                } else {
+                    punchInTime = new Date(data.punch_in_time);
+                    shiftFinish = new Date(data.shiftEnd);
+                    shiftDuration = data.shift_duration || shiftDuration;
+
+                    punchInBtn.style.display = 'none';
+
+                    punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
+                    startShiftProgress(true);
+                }
+            });
+
+        // 📌 Handle Password Verification and AJAX requests for both Punch IN & Punch OUT
+        $('#verify_user').submit(function (e) {
+            e.preventDefault();
+
+            if (isRequestInProgress) return; // Prevent multiple submissions
+
+            let password = $('#password').val();
+            let isValid = password !== "";
+
+            // Show validation error if password is empty
+            if (!isValid) {
+                $('#display_error').show();
+                $('#password').css("border", "1px solid red");
+                return;
+            } else {
+                $('#display_error').hide();
+                $('#password').css("border", "");
+
+            }
+
+            isRequestInProgress = true; // Block further requests
+            showLoader();
+            $('#verify_user button[type="submit"]').prop('disabled', true); // Disable submit button
+
+            // 🔹 First AJAX: Password Verification
+            $.ajax({
+                url: '{{ route('check.emp') }}',
+                type: 'POST',
+                data: {
+                    password: password,
+                    _token: $('meta[name="csrf-token"]').attr('content') // CSRF Token
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        $('#PunchInModal').modal('hide'); // Close modal on success
+
+                        var url = "";
+                        if (punchAction === "Punch IN") {
+                            url = "{{route('punchInAttendance')}}";
+                        } else if (punchAction === "Punch OUT") {
+                            url = "{{route('punchOutAttendance')}}";
+                        } else if (punchAction === "Emergency Punch OUT") {
+                            url = "{{route('emergencyPunchOutAttendance')}}";
+                        }
+                        // 🔹 Second AJAX: Punch IN or Punch OUT
+                        $.ajax({
+                            url: url,
+                            type: 'POST',
+                            data: {
+                                status: punchAction,
+                                _token: $('meta[name="csrf-token"]').attr('content') // CSRF Token
+                            },
+                            success: function (result) {
+                                // 🚀 Reload the timesheet section after Punch IN
+                                reloadTimesheet();
+
+                                console.log(result);
+                                hideLoader();
+                                statistics();
+                                dataTab();
+                                isRequestInProgress = false; // Reset flag
+                                $('#verify_user button[type="submit"]').prop('disabled', false);
+                                $("#password").val("");
+
+
+                                if (result.status === "error") {
+                                    createToast('error', 'fa-solid fa-check-circle', 'Error', 'Your Shift is Over!');
+                                } else {
+                                    createToast('info', 'fa-solid fa-check-circle', 'Success', `${punchAction} successful.`);
+                                    if (punchAction === "Punch IN") {
+                                        $('#punchInBtn').css('display', 'none');
+                                    } else {
+                                        punchOutBtn.style.display = 'none';
+                                        punchInBtn.style.display = 'block';
+                                    }
+                                }
+
+                            },
+                            error: function () {
+                                hideLoader();
+                                isRequestInProgress = false; // Reset flag
+                                $('#verify_user button[type="submit"]').prop('disabled', false);
+                                createToast('error', 'fa-solid fa-circle-exclamation', 'Error', `${punchAction} failed.`);
+                            }
+                        });
+                    } else {
+                        hideLoader();
+                        isRequestInProgress = false; // Reset flag
+                        $('#verify_user button[type="submit"]').prop('disabled', false);
+                        $('#display_error').html("Password is incorrect!");
+                        $('#display_error').show();
+                        $("#password").css("border", "1px solid red")
+                    }
+                },
+                error: function () {
+                    hideLoader();
+                    isRequestInProgress = false; // Reset flag
+                    $('#verify_user button[type="submit"]').prop('disabled', false);
+                    $("#password").val("");
+                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Invalid User.');
+                }
+            });
+        });
+
+        function startShiftProgress(initial = false) {
+
+            function updateProgress() {
+                const now = new Date();
+                const elapsedTimeInMinutes = Math.floor((now - punchInTime) / (60 * 1000));
+                const elapsedTimeInHours = elapsedTimeInMinutes / 60;
+
+                const hours = Math.floor(elapsedTimeInHours);
+                const minutes = Math.floor((elapsedTimeInHours - hours) * 60);
+                timeCounter.textContent = `${hours}:${String(minutes).padStart(2, '0')} hrs`;
+
+
+                const progressPercentage = Math.min((elapsedTimeInMinutes / (shiftDuration * 60)) * 100, 100);
+                progressCircle.style.strokeDashoffset = 314 - (314 * progressPercentage) / 100;
+
+                const shiftEndTime = new Date(endShift + shiftDuration * 60 * 60 * 1000);
+                const shiftEnding = new Date(shiftFinish + shiftDuration * 60 * 60 * 1000);
+                if (now >= shiftEnding) {
+                    // punchOutBtn.disabled = false;
+                    clearInterval(intervalId);
+                }
+            }
+
+
+            if (initial) updateProgress();
+
+
+            intervalId = setInterval(updateProgress, 60000);
+        }
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $("#deductions_btn").click(function (e) {
+            e.preventDefault();
+            var id = {{auth()->user()->id}};
+            showLoader();
+            $.ajax({
+                url: "{{ route('deduction.details') }}",
+                type: 'GET',
+                data: { id: id },
+                success: function (data) {
+                    // Empty the table body before populating new rows
+                    $("#deduction_table tbody").empty();
+
+                    // Loop through the returned data and add rows to the table
+                    data.forEach(function (record) {
+                        // Format the dates and times
+                        let startDate = moment(record.shift_in).format('DD MMMM YYYY');
+                        let shiftIn = moment(record.shift_in).format('HH:mm:ss');
+                        let endDate = moment(record.shift_out).format('DD MMMM YYYY');
+                        let shiftOut = moment(record.shift_out).format('HH:mm:ss');
+                        let checkInDate = record.check_in ? moment(record.check_in).format('DD MMMM YYYY') : '';
+                        let checkInTime = record.check_in ? moment(record.check_in).format('HH:mm:ss') : '';
+                        let checkOutDate = record.check_out ? moment(record.check_out).format('DD MMMM YYYY') : '';
+                        let checkOutTime = record.check_out ? moment(record.check_out).format('HH:mm:ss') : '';
+
+                        let row = `
+                        <tr>
+                            <td>${startDate}</td>
+                            <td>${shiftIn}</td>
+                            <td>${endDate}</td>
+                            <td>${shiftOut}</td>
+                            <td>${checkInDate}</td>
+                            <td>${checkInTime}</td>
+                            <td>${checkOutDate}</td>
+                            <td>${checkOutTime}</td>
+                            <td>${record.duty_hours}</td> <!-- Correct placement of duty hours -->
+                            <td>${record.status}</td> <!-- Correct placement of status -->
+                        </tr>
+                        `;
+                        if (record.status === "Absent") {
+                            row = `
+                                <tr style="background-color: #870501; color: white;">
+                                <td style="background-color: #870501; color: white;">${startDate}</td>
+                                <td style="background-color: #870501; color: white;">${shiftIn}</td>
+                                <td style="background-color: #870501; color: white;">${endDate}</td>
+                                <td style="background-color: #870501; color: white;">${shiftOut}</td>
+                                <td style="background-color: #870501; color: white;">${checkInDate}</td>
+                                <td style="background-color: #870501; color: white;">${checkInTime}</td>
+                                <td style="background-color: #870501; color: white;">${checkOutDate}</td>
+                                <td style="background-color: #870501; color: white;">${checkOutTime}</td>
+                                <td style="background-color: #870501; color: white;">${record.duty_hours}</td> <!-- duty_hours for Absent -->
+                                <td style="background-color: #870501; color: white;">${record.status}</td> <!-- status for Absent -->
+                            </tr>
+                            `;
+                        } else {
+                            row = `
+                                <tr style="background-color: #A90500; color: white;">
+                                <td style="background-color: #A90500; color: white;">${startDate}</td>
+                                <td style="background-color: #A90500; color: white;">${shiftIn}</td>
+                                <td style="background-color: #A90500; color: white;">${endDate}</td>
+                                <td style="background-color: #A90500; color: white;">${shiftOut}</td>
+                                <td style="background-color: #A90500; color: white;">${checkInDate}</td>
+                                <td style="background-color: #A90500; color: white;">${checkInTime}</td>
+                                <td style="background-color: #A90500; color: white;">${checkOutDate}</td>
+                                <td style="background-color: #A90500; color: white;">${checkOutTime}</td>
+                                <td style="background-color: #A90500; color: white;">${record.duty_hours}</td> <!-- duty_hours in proper column -->
+                                <td style="background-color: #A90500; color: white;">${record.status}</td> <!-- status in proper column -->
+                            </tr>
+                            `;
+                        }
+
+                        // Append the row to the table
+                        $("#deduction_table tbody").append(row);
+                    });
+
+                    // Show the modal
+                    $("#deduction_modal").modal("show");
+                    hideLoader();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching data:', error);
+                    hideLoader();
+                }
+            });
+        });
+    });
+</script>
 </body>
 
 </html>
-
-
 @endsection

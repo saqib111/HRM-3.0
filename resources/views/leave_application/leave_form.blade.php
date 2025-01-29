@@ -1,5 +1,11 @@
 @extends('layout.mainlayout')
 @section('content')
+
+@php
+    // Decode the JSON string into a PHP array
+    $decodedAllowedUL = json_decode($allowedUL, true);
+@endphp
+
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 
 <div class="page-header">
@@ -31,64 +37,68 @@
                 </h5>
                 <hr />
             </div>
-            @if(auth()->user()->confirmation_status === "1")
-                <form id="leave_application_form" action="{{route('leave.form.store')}}" method="POST">
-                    @csrf
-                    <div class="card-body mx-5">
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-12">
-                                <label class="col-form-label" for="leave_title">Leave Title</label>
-                                <input type="text" name="leave_title" id="leave_title" class="form-control leave-title" />
-                                <div class="leave_error text-danger"></div>
-                            </div>
-                        </div>
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-12">
-                                <label class="col-form-label" for="description">Description (optional):</label>
-                                <textarea rows="5" cols="5" name="description" id="description"
-                                    class="form-control leave-description" placeholder="Enter text here"></textarea>
-                            </div>
-                        </div>
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-12">
-                                <input type="hidden" value="{{$formattedLeaveBalance}}" name="annual_leave_balance"
-                                    id="annual_leave_balance">
-                            </div>
-                        </div>
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-4" style="position: relative;">
-                                <i class="fa-solid fa-circle-plus add-fields"
-                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                                <label class="col-form-label" for="full_day_leave">Full-Day Leave</label>
-                                <div class="text-danger" id="at_least_one"></div>
-                            </div>
-                        </div>
-                        <div id="dynamic-fields-container"></div>
-                        <hr>
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-4" style="position: relative;">
-                                <i class="fa-solid fa-circle-plus add-half-fields"
-                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                                <label class="col-form-label" for="half_day_leave">Half-Day Leave</label>
-                            </div>
-                        </div>
-                        <div id="dynamic-half-days-container"></div>
-                        <hr>
-                        <div class="input-block mb-3 row">
-                            <div class="col-md-4" style="position: relative;">
-                                <i class="fa-solid fa-circle-plus add-off-fields"
-                                    style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
-                                <label class="col-form-label" for="off_day">OFF-Day (Optional)</label>
-                            </div>
-                        </div>
-                        <div id="dynamic-off-days-container"></div>
-                        <div class="input-block mb-3 row text-center">
-                            <div class="col-md-12">
-                                <button class="btn btn-primary btn-submit" type="button">Submit</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+            @if(
+                    auth()->user()->confirmation_status === "1" || in_array(4, $decodedAllowedUL) || in_array(5, $decodedAllowedUL)
+                    || in_array(6, $decodedAllowedUL) || in_array(7, $decodedAllowedUL) || in_array(8, $decodedAllowedUL)
+                )
+                            <form id="leave_application_form" action="{{route('leave.form.store')}}" method="POST">
+                                @csrf
+                                <div class="card-body mx-5">
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-12">
+                                            <label class="col-form-label" for="leave_title">Leave Title</label>
+                                            <input type="text" name="leave_title" id="leave_title" class="form-control leave-title" />
+                                            <div class="leave_error text-danger"></div>
+                                        </div>
+                                    </div>
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-12">
+                                            <label class="col-form-label" for="description">Description (optional):</label>
+                                            <textarea rows="5" cols="5" name="description" id="description"
+                                                class="form-control leave-description" placeholder="Enter text here"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-12">
+                                            <input type="hidden" value="{{$formattedLeaveBalance}}" name="annual_leave_balance"
+                                                id="annual_leave_balance">
+                                        </div>
+                                    </div>
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-4" style="position: relative;">
+                                            <i class="fa-solid fa-circle-plus add-fields"
+                                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                            <label class="col-form-label" for="full_day_leave">Full-Day Leave</label>
+                                            <div class="text-danger" id="at_least_one"></div>
+                                        </div>
+                                    </div>
+                                    <div id="dynamic-fields-container"></div>
+                                    <hr>
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-4" style="position: relative;">
+                                            <i class="fa-solid fa-circle-plus add-half-fields"
+                                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                            <label class="col-form-label" for="half_day_leave">Half-Day Leave (Select Duty
+                                                Hours)</label>
+                                        </div>
+                                    </div>
+                                    <div id="dynamic-half-days-container"></div>
+                                    <hr>
+                                    <div class="input-block mb-3 row">
+                                        <div class="col-md-4" style="position: relative;">
+                                            <i class="fa-solid fa-circle-plus add-off-fields"
+                                                style="position:absolute; top: 0px; left: -25px; font-size: 22px; color:#00c5fb; cursor: pointer;"></i>
+                                            <label class="col-form-label" for="off_day">OFF-Day (Optional)</label>
+                                        </div>
+                                    </div>
+                                    <div id="dynamic-off-days-container"></div>
+                                    <div class="input-block mb-3 row text-center">
+                                        <div class="col-md-12">
+                                            <button class="btn btn-primary btn-submit" type="button">Submit</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
             @else
                 <div class="card-body px-5">
                     <div class="notice-box">
@@ -142,40 +152,52 @@
         let birthdayLeaveCount = 0;
         let marriageLeaveCount = 0;
 
+        // Array of user IDs eligible for "Medical Leave (Malaysian Special)"
+        let malayisanSpecial = [1, 3, 4, 22, 26, 48, 50, 56, 58, 60, 73, 80, 88, 144, 163, 225, 277, 315, 351, 381, 672, 1011, 1031, 1080, 1081, 1082, 1104, 1105, 1135, 1136, 1303];
+        // Current logged-in user ID
+        let userId = {{ auth()->user()->id }}; // Get the authenticated user's ID from the backend
         // Define the leave categories HTML globally
+        let confirmation_status_value = {{$confirmation_status}};
+
         let leaveCategoryHtml = '';
 
-        // Example: Get the allowed_ul value (this could be passed via a data attribute or AJAX)
-        let allowedUL = parseInt($('#allowed_ul').val()); // Assuming you have a hidden input or some way to get this value.
+        let allowedUL = {!! $allowedUL !!}; // Convert JSON string into a JavaScript array
+        allowedUL = Array.isArray(allowedUL) ? allowedUL.map(Number) : []; // Ensure it's an array of numbers
 
         // Function to update the leave categories
         function updateLeaveCategories(allowedUL) {
-            // If allowed_ul is 0, show only these three leaves
-            if (allowedUL === 0) {
-                leaveCategoryHtml = `
-                <option value="1">Annual Leave</option>
-                <option value="2">Birthday Leave</option>
-                <option value="3">Marriage Leave</option>
-            `;
-            } else {
-                // If allowed_ul is 1, show all the leaves
-                leaveCategoryHtml = `
-                <option value="1">Annual Leave</option>
-                <option value="2">Birthday Leave</option>
-                <option value="3">Marriage Leave</option>
-                <option value="4">Unpaid Leave</option>
-                <option value="5">Hospitalisation Leave</option>
-                <option value="6">Compassionate Leave</option>
-                <option value="7">Maternity Leave</option>
-                <option value="8">Paternity Leave</option>
-            `;
+            // Initialize leaveCategoryHtml variable
+            leaveCategoryHtml = '';
+            // Add additional leaves based on allowedUL values (e.g., 4, 5, 6, 7, etc.)
+            if (confirmation_status_value) {
+                leaveCategoryHtml += `<option value="1">Annual Leave</option>`;
+                leaveCategoryHtml += `<option value="2">Birthday Leave</option>`;
+                leaveCategoryHtml += `<option value="3">Marriage Leave</option>`;
+            }
+            if (allowedUL.includes(4)) {
+                leaveCategoryHtml += `<option value="4">Unpaid Leave</option>`;
+            }
+            if (allowedUL.includes(5)) {
+                leaveCategoryHtml += `<option value="5">Hospitalisation Leave</option>`;
+            }
+            if (allowedUL.includes(6)) {
+                leaveCategoryHtml += `<option value="6">Compassionate Leave</option>`;
+            }
+            if (allowedUL.includes(7)) {
+                leaveCategoryHtml += `<option value="7">Maternity Leave</option>`;
+            }
+            if (allowedUL.includes(8)) {
+                leaveCategoryHtml += `<option value="8">Paternity Leave</option>`;
+            }
+            if (malayisanSpecial.includes(userId)) {
+                leaveCategoryHtml += `<option value="9">Medical Leave (Malaysian Special)</option>`;
             }
 
             // Update the dropdown with the new options
-            $('.leave-category').html(leaveCategoryHtml);
+            $('#leaveCategorySelect').html(leaveCategoryHtml);
         }
 
-        // Call the function to set the initial state based on allowed_ul value
+        // Call the function to set the initial state based on allowedUL value
         updateLeaveCategories(allowedUL);
 
         // Add dynamic leave category fields when plus icon is clicked

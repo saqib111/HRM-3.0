@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnnualLeaves;
+use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
 use App\Models\LeaveManagement;
 use App\Models\User;
@@ -24,8 +25,12 @@ class LeaveController extends Controller
         $formattedLeaveBalance = rtrim(rtrim($annualLeaveBalance, '0'), '.');
         $userProfile = Auth::user()->userprofile;
         // Ensure that we have a valid profile and 'allowed_ul' value
-        $allowedUL = $userProfile->allowed_ul;
-        return view('leave_application.leave_form', compact('formattedLeaveBalance', 'allowedUL'));
+        $allowedULJson = $userProfile->allowed_ul;
+        $allowedULArray = $allowedULJson ? explode(',', $allowedULJson) : []; // Convert to an array if not null
+        $allowedUL = json_encode($allowedULArray); // Convert to JSON
+
+        $confirmation_status = auth()->user()->confirmation_status;
+        return view('leave_application.leave_form', compact('formattedLeaveBalance', 'allowedUL', 'confirmation_status'));
     }
 
     public function store_leave(Request $request)
@@ -73,6 +78,9 @@ class LeaveController extends Controller
             $birthdayLeaveTaken = LeaveManagement::where('user_id', $user_id)
                 ->whereJsonContains('leave_details', [['leave_type_id' => 2]])
                 ->whereYear('created_at', $currentYear)
+                ->where('status_1', 'approved')
+                ->Where('status_2', 'approved')
+                ->where('revoked', '=', '0')
                 ->exists();
 
             if ($birthdayLeaveTaken) {
@@ -82,8 +90,13 @@ class LeaveController extends Controller
 
         // Check total "Marriage Leave" days taken in lifetime
         if (in_array(3, $request->full_day_leave ?? [])) { // 3 stands for "Marriage Leave"
+
+            // Get Marriage Leave days that were successfully approved (not revoked or rejected)
             $marriageLeaveDaysTaken = LeaveManagement::where('user_id', $user_id)
                 ->whereJsonContains('leave_details', [['leave_type_id' => 3]])
+                ->where('status_1', 'approved')
+                ->where('status_2', 'approved')
+                ->where('revoked', '0') // Exclude revoked leave
                 ->get()
                 ->sum(function ($leave) {
                     $details = json_decode($leave->leave_details, true);
@@ -106,7 +119,11 @@ class LeaveController extends Controller
                 }
             }
 
-            if ($marriageLeaveDaysTaken + $newMarriageLeaveDaysRequested > 3) {
+            // Total Marriage Leave Calculation (including new request)
+            $totalMarriageLeaveAfterRequest = $marriageLeaveDaysTaken + $newMarriageLeaveDaysRequested;
+
+            // If total exceeds 3 days, show error
+            if ($totalMarriageLeaveAfterRequest > 3) {
                 $errors['marriage_leave'] = 'Marriage Leave cannot exceed a total of 3 days in your lifetime.';
             }
         }
@@ -560,6 +577,8 @@ class LeaveController extends Controller
             // Get User ID
             'second_approval_id' => $second_approval_username ?? "Null",
             'second_approval_created_time' => $leave->second_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
+            // Get Manager_id for disappearing buttons incase of 2nd approval is different in Approved Tab
+            'manager_ids' => $leave->manager_ids,
             // Get HR ID
             'hr_approval_id' => $hr_approval_username ?? "Null",
             'hr_approval_created_time' => $leave->hr_approval_created_time ?? "YYYY-MM-DD HH:MM:SS",
@@ -726,6 +745,16 @@ class LeaveController extends Controller
                                         'start_time' => $leave['start_time'],
                                         'end_time' => $leave['end_time'],
                                     ]);
+
+                                    $halfDaySchedule = AttendanceRecord::whereDate('shift_in', $leave['date'])
+                                        ->where('user_id', '=', $leaveUpdate->user_id)
+                                        ->get();
+                                    foreach ($halfDaySchedule as $record) {
+                                        $record->shift_in = $leave['date'] . ' ' . $leave['start_time'];
+                                        $record->shift_out = $leave['date'] . ' ' . $leave['end_time'];
+                                        $record->save(); // Save the updated record
+                                    }
+
                                     $totalAnnualLeaveDays += 0.5;
                                     $annualLeave->leave_balance -= 0.5;
                                 } else {
@@ -1308,4 +1337,48 @@ class LeaveController extends Controller
     }
 
     // ***************************** CUSTOM LEAVE SEARCH  ******************************************************************
+
+    //Unassigned Leave Badge
+    public function notifibadged()
+    {
+
+        $loggedInUserId = auth()->user()->id;
+
+        $notificount = LeaveManagement::where(function ($query) {
+            $query->where('team_leader_ids')
+                ->orWhere('team_leader_ids', 'null');
+        })->count();
+
+        $teamLeaderPending = LeaveManagement::where(function ($query) use ($loggedInUserId) {
+            $query->whereJsonContains('team_leader_ids', $loggedInUserId)
+                ->where('status_1', 'pending')
+                ->whereNull('first_approval_id');
+        })->count();
+
+
+        $managerPending = LeaveManagement::where(function ($query) use ($loggedInUserId) {
+            $query->whereJsonContains('manager_ids', $loggedInUserId)
+                ->where('status_1', 'approved')
+                ->where('status_2', 'pending')
+                ->whereNotNull('first_approval_id')
+                ->whereNull('second_approval_id');
+        })->count();
+
+        $totalPendingLeaves = $teamLeaderPending + $managerPending;
+
+        $hrpending = LeaveManagement::whereNull('hr_approval_id')
+            ->whereNotNull('status_2')
+            ->where('status_2', 'approved')
+            ->where('status_1', 'approved')
+            ->where('revoked', '=', '0')
+            ->count();
+
+        return response()->json([
+            'notificount' => $notificount,
+            'totalPendingLeaves' => $totalPendingLeaves,
+            'hrpending' => $hrpending
+
+        ]);
+    }
+
 }

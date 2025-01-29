@@ -24,6 +24,20 @@ class CheckTeamPermission
             return $next($request);
         }
 
+        if ($user->role == 2) {
+            $user_role = DB::table("users")
+                ->where("id", "=", $employeeId)
+                ->select("role")
+                ->first();
+            // dd($user_role);
+            if ($user_role && ($user_role->role == 4 || $user_role->role == 5)) {
+                return $next($request);
+            } else {
+                abort(403, 'Unauthorized - No permissions assigned.');
+            }
+        }
+
+
         // Check if the user is a team leader and has access to this employee
         $isTeamMember = DB::table('leader_employees')
             ->where('leader_id', $user->id) // Check if the leader_id matches the authenticated user

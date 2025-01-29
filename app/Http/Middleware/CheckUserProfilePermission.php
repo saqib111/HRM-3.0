@@ -25,6 +25,13 @@ class CheckUserProfilePermission
             return $next($request);
         }
 
+        $profileId = $request->route("id");
+
+        // RESTRICT USER TO ITS PROFILE ONLY
+        if ($user->id == $profileId) {
+            return $next($request);
+        }
+
         // Get the permission passed in the route defaults (using 'permission' key)
         $requiredPermission = $request->route('permission');
         // If no permission is required, proceed with the request
@@ -47,14 +54,6 @@ class CheckUserProfilePermission
 
         // If the user has the required permission, allow the request to proceed
         if (in_array($requiredPermission, $permissions)) {
-            return $next($request);
-        }
-
-
-        $profileId = $request->route("id");
-
-        // RESTRICT USER TO ITS PROFILE ONLY
-        if ($user->id == $profileId) {
             return $next($request);
         }
 

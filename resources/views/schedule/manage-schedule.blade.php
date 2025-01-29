@@ -47,7 +47,9 @@
         <div class="col-md-4">
             <h3 class="page-title">Enable/Delete Schedule</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Enable/Delete Schedule</li>
             </ul>
         </div>
@@ -289,6 +291,7 @@
                         if (response.success) {
                             alert(response.message);
                             table.ajax.reload();
+                            $('#selectAll').prop('checked', false);
                         } else {
                             alert(response.message);
                         }

@@ -1,0 +1,6 @@
+Permissions Updated By: User ID: 315, Username: Affan Ahmed, Employee ID: AHNV00315
+Permissions Updated For: User ID: 888, Username: Mici Kim, Employee ID: AHNV00888
+Old Permissions: view_manage_shift,view_attendance,update_attendance_schedule,delete_attendance_schedule,bulk_delete_attendance_schedule,show_al_balance,show_fingerprint_record,update_fingerprint_status,pending_leaves,hr_work,show_all_employee_info,update_employee_info,expired_visa
+New Permissions: create_user,show_users,update_user,change_password,update_status,create_team,show_teams,update_team,view_manage_shift,view_attendance,update_attendance_schedule,delete_attendance_schedule,bulk_delete_attendance_schedule,show_al_balance,show_fingerprint_record,update_fingerprint_status,unassigned_leaves,pending_leaves,hr_work,leave_approvals,show_all_employee_info,update_employee_info,expired_visa
+Permissions updated successfully at 2025-01-18 14:55:29
+

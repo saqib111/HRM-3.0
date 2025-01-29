@@ -1,0 +1,32 @@
+New Employee Created By: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+New Created Employee Data:
+Employee ID: TST12345
+Employee Username: testerr
+Employee Email: tersd@tesdt.com
+Employee Joining Date: 2025-01-18
+Employee Company: Aurora
+Employee Department: Operation
+Employee Designation: Customer Support
+Employee Brand: Baji PKR
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-01-18 01:03:32
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+New Created Employee Data:
+Employee ID: testertt
+Employee Username: hsadkl
+Employee Email: hat.bsdk@aurpa.com
+Employee Joining Date: 2025-01-22
+Employee Company: Aurora
+Employee Department: Operation
+Employee Designation: Customer Support
+Employee Brand: Baji PKR
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-01-22 01:27:43
+Leave Type: 28
+New Employee Data Created Successfully
+
+

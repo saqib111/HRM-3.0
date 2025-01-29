@@ -1,0 +1,46 @@
+Schedule Updated By:User ID: 315, Username: Affan Ahmed, Employee ID: AHNV00315
+
+Old Data:Schedule ID: 32525
+Leader ID: 315, Leader Username: Affan Ahmed, Leader Employee ID: AHNV00315
+Schedule Updated For: User ID: 206, User Username: Riya Kong, User Employee ID: AHNV00206
+Old Check-in/Check-out Time:
+Check-in: 2025-01-23 20:00:00, Check-out: 
+Old Shift Time:
+Shift-in: 2025-01-23 08:00:00, Shift-out: 2025-01-23 17:00:00
+Old Manage Day: Business Trip
+
+New Data:Schedule ID: 32525
+Leader ID: 315, Leader Username: Affan Ahmed, Leader Employee ID: AHNV00315
+Schedule Updated For: User ID: 206, User Username: Riya Kong, User Employee ID: AHNV00206
+Updated Check-in/Check-out Time:
+Check-in: 2025-01-23 20:00, Check-out: 
+Updated Shift Time:
+Shift-in: 2025-01-23 08:00, Shift-out: 2025-01-23 17:00
+Updated Manage Day: Public Holiday
+
+Timestamp: 2025-01-24 19:08:56.
+Schedule Updated Successfully.
+
+Schedule Updated By:User ID: 315, Username: Affan Ahmed, Employee ID: AHNV00315
+
+Old Data:Schedule ID: 32525
+Leader ID: 315, Leader Username: Affan Ahmed, Leader Employee ID: AHNV00315
+Schedule Updated For: User ID: 206, User Username: Riya Kong, User Employee ID: AHNV00206
+Old Check-in/Check-out Time:
+Check-in: 2025-01-23 20:00:00, Check-out: 
+Old Shift Time:
+Shift-in: 2025-01-23 08:00:00, Shift-out: 2025-01-23 17:00:00
+Old Manage Day: Public Holiday
+
+New Data:Schedule ID: 32525
+Leader ID: 315, Leader Username: Affan Ahmed, Leader Employee ID: AHNV00315
+Schedule Updated For: User ID: 206, User Username: Riya Kong, User Employee ID: AHNV00206
+Updated Check-in/Check-out Time:
+Check-in: 2025-01-23 20:00, Check-out: 
+Updated Shift Time:
+Shift-in: 2025-01-23 08:00, Shift-out: 2025-01-23 17:00
+Updated Manage Day: Off Day
+
+Timestamp: 2025-01-24 19:09:10.
+Schedule Updated Successfully.
+

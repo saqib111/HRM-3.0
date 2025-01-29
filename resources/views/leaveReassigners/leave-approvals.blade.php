@@ -13,7 +13,9 @@
     <div class="col-sm-12">
       <h3 class="page-title">Leave Approvals</h3>
       <ul class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a
+            href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+        </li>
         <li class="breadcrumb-item active">Leave Approvals</li>
       </ul>
     </div>
@@ -162,7 +164,7 @@
         data: 'user_name',
         name: 'user_name',
         orderable: false,
-        searchable: false
+        searchable: true
       },
       {
         data: 'first_assigned_user_name',

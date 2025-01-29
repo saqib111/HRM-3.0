@@ -375,11 +375,6 @@
             <div class="row gx-lg-5 align-items-center mb-5 innerDiv">
                 <div class="col-lg-6 mb-5 mb-lg-0 rs_display_none" style="z-index: 10">
                     <div class="sideimgcontainer">
-                        {{-- <div class="scanner-container">
-                            <div class="fingerprint">
-                                <div class="line"></div>
-                            </div>
-                        </div> --}}
                     </div>
                 </div>
 
@@ -405,15 +400,15 @@
                                 <div class="form-outline mb-4">
                                     <label class="col-form-label" for="email">Email Address</label>
                                     <input type="text" name="email" id="email" placeholder="Please enter your email"
-                                        autocomplete="off" class="form-control" />
+                                        autocomplete="off" class="form-control" value="affan.ahmed@auroramy.com" />
                                     <span id="email-error" class="text-danger"></span>
                                 </div>
 
                                 <div class="form-outline mb-4">
                                     <label class="col-form-label" for="password">Password</label>
                                     <input type="password" name="password" id="password"
-                                        placeholder="Please enter your password" autocomplete="off"
-                                        class="form-control" />
+                                        placeholder="Please enter your password" autocomplete="off" class="form-control"
+                                        value="12345678" />
                                     <span id="password-error" class="text-danger"></span>
                                 </div>
 
@@ -506,6 +501,8 @@
                     } else {
                         alert(result.message);
                     }
+                } else if (response.status === 403) {
+                    window.location.href = "/access-denied-ip";
                 } else {
                     if (response.status === 401) {
                         document.getElementById('general-error').textContent = 'Your credentials are invalid. Please contact your administrator for assistance.';

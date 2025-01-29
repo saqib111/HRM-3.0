@@ -6,7 +6,9 @@
     <div class="col-md-4">
       <h3 class="page-title">Expired Visa Information</h3>
       <ul class="breadcrumb">
-        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+        <li class="breadcrumb-item"><a
+            href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+        </li>
         <li class="breadcrumb-item active">Expired Visa</li>
       </ul>
     </div>

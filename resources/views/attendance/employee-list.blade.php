@@ -8,7 +8,9 @@
         <div class="col-md-4">
             <h3 class="page-title">Edit schedule Employee List </h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active"> Employee List</li>
             </ul>
         </div>
@@ -56,8 +58,10 @@
 
                         return `<button class="btn btn-primary edit-button" data-id="${data}">Edit Schedule</button>`;
                     }
-                }
+                },
             ],
+            pageLength: 15, // Set the default number of records to show
+            lengthMenu: [10, 15, 25, 50, 100] // Options for records per page
         });
 
         $(document).on('click', '.edit-button', function () {

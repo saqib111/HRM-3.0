@@ -1,0 +1,23 @@
+Schedule Updated By:User ID: 32, Username: Allin Roger, Employee ID: AHNV00032
+
+Old Data:Schedule ID: 68053
+Leader ID: 32, Leader Username: Allin Roger, Leader Employee ID: AHNV00032
+Schedule Updated For: User ID: 24, User Username: Noah Ray, User Employee ID: AHNV00024
+Old Check-in/Check-out Time:
+Check-in: , Check-out: 
+Old Shift Time:
+Shift-in: 2025-01-02 09:00:00, Shift-out: 2025-01-02 18:00:00
+Old Manage Day: Off Day
+
+New Data:Schedule ID: 68053
+Leader ID: 32, Leader Username: Allin Roger, Leader Employee ID: AHNV00032
+Schedule Updated For: User ID: 24, User Username: Noah Ray, User Employee ID: AHNV00024
+Updated Check-in/Check-out Time:
+Check-in: , Check-out: 
+Updated Shift Time:
+Shift-in: 2025-01-02 09:00, Shift-out: 2025-01-02 18:00
+Updated Manage Day: Working Day
+
+Timestamp: 2025-01-28 19:12:44.
+Schedule Updated Successfully.
+

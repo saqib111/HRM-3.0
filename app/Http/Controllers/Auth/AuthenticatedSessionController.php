@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\ManageIpRestriction;
+use App\Models\WhiteListIPs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +35,30 @@ class AuthenticatedSessionController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = auth()->user();
+            $manage_ip_restrictions = ManageIpRestriction::where('user_id', '=', $user->id)->first();
+            $restrictedUser = $manage_ip_restrictions->status;
+
+            if ($restrictedUser == "0") {
+                // Define the allowed IPs
+                $fetchIPS = WhiteListIPs::pluck('ip_address'); // Extract only the 'ip_address' column
+                $allowedIPS = $fetchIPS->toArray(); // Convert the collection to an array
+                // $allowedIPS = ["49.156.37.182", "103.189.186.145", "202.93.15.164", "103.189.186.156", "103.25.92.130"];
+
+                // Get the requesting IP address
+                $ipAddress = $request->header('X-Forwarded-For')
+                    ?? $request->header('CF-Connecting-IP')
+                    ?? $request->header('X-Real-IP')
+                    ?? $request->ip();
+
+                // Check if the IP address is allowed
+                if (!in_array($ipAddress, $allowedIPS)) {
+                    // Restrict login if IP is not allowed
+                    Auth::logout(); // Logout the user
+                    return response()->json([
+                        'message' => 'Access denied, unauthorized ip address'
+                    ], 403);
+                }
+            }
 
             // Check if user is disabled
             if ($user->status === "0") {

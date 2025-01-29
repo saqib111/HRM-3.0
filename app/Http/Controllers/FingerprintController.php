@@ -18,7 +18,8 @@ class FingerprintController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $userId = (int) $request->input('user_id'); // Get and cast user_id to an integer
+            // Get and cast user_id(s) to an array (split by commas)
+            $userIds = explode(',', $request->input('user_id')); // e.g., "1.2.3.4,5" => [1, 2, 3, 4, 5]
 
             // Get start and end date from the request
             $startDate = $request->input('start_date') ?? Carbon::now()->startOfMonth()->toDateString();
@@ -28,25 +29,32 @@ class FingerprintController extends Controller
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
 
-            // Fetch user data using user_id
-            $user = User::find($userId);
-            if (!$user) {
-                return response()->json(['data' => []]); // Return empty data if no user is found
+            // Fetch user data for all user IDs
+            $users = User::whereIn('id', $userIds)->get();
+
+            if ($users->isEmpty()) {
+                return response()->json(['data' => []]); // Return empty data if no users are found
             }
 
             // Extract numeric part from employee_id (e.g., AHNV00315 -> 315)
-            preg_match('/\d+$/', $user->employee_id, $matches);
-            $employeeId = isset($matches[0]) ? (int) $matches[0] : null;
-
-            if (!$employeeId) {
-                return response()->json(['data' => []]); // Return empty data if no numeric employee_id is found
+            $employeeIds = [];
+            foreach ($users as $user) {
+                preg_match('/\d+$/', $user->employee_id, $matches);
+                $employeeId = isset($matches[0]) ? (int) $matches[0] : null;
+                if ($employeeId) {
+                    $employeeIds[] = $employeeId;
+                }
             }
 
-            // Fetch fingerprint records where the numeric employee_id matches
+            if (empty($employeeIds)) {
+                return response()->json(['data' => []]); // Return empty data if no valid employee_ids found
+            }
+
+            // Fetch fingerprint records where the numeric employee_id matches any of the user_ids
             $data = Fingerprint::join('users', function ($join) {
                 $join->on(DB::raw('CAST(SUBSTRING(users.employee_id, -5) AS UNSIGNED)'), '=', 'check_verify.user_id');
             })
-                ->where('check_verify.user_id', $employeeId)
+                ->whereIn('check_verify.user_id', $employeeIds) // Use whereIn for multiple user IDs
                 ->whereBetween('check_verify.fingerprint_in', [$startDate, $endDate])
                 ->select(
                     'check_verify.id',
@@ -74,17 +82,17 @@ class FingerprintController extends Controller
 
     public function searchUsers(Request $request)
     {
-        $search = $request->input('search');
+        $search = $request->input('search', '');
         $page = $request->input('page', 1);  // Get the current page, default to 1
+        $allUsers = $request->input('all', false);  // Check if we want to fetch all users without pagination
 
         // Check if the user is an admin or not (role == 1)
-        if (auth()->user()->role == 1) {
-            // If role is 1, return all active users
-            $data = User::when($search, function ($query) use ($search) {
+        if (auth()->user()->role == 1 || auth()->user()->role == 2) {
+            // If role is 1, fetch all active users matching the search
+            $query = User::when($search, function ($query) use ($search) {
                 return $query->where('username', 'LIKE', '%' . $search . '%');
             })
-                ->where('status', '1')
-                ->paginate(10, ['*'], 'page', $page);
+                ->where('status', '1');
         } else {
             // If role is not 1, fetch users from the team based on leader_employees table
             $leaderId = auth()->user()->id;  // Get the logged-in user's ID
@@ -100,16 +108,32 @@ class FingerprintController extends Controller
                         ->where('leader_id', $leaderId);  // Get team members
                 });
 
-            // Now, include the leader's own ID in the result set
+            // Include the leader's own ID in the result set
             $leaderQuery = User::when($search, function ($query) use ($search) {
                 return $query->where('username', 'LIKE', '%' . $search . '%');
             })
                 ->where('status', '1')
-                ->where('id', $leaderId);  // Ensure we get the leader's own record
+                ->where('id', $leaderId);  // Include leader's own record
 
             // Union the leader's own data with the team members' data
-            $data = $teamMembersQuery->union($leaderQuery)
-                ->paginate(10, ['*'], 'page', $page);
+            $query = $teamMembersQuery->union($leaderQuery);
+        }
+
+        // Determine whether to paginate or get all results
+        if ($allUsers) {
+            $data = $query->get();
+            $response = [
+                'data' => $data,
+                'total' => $data->count(),
+            ];
+        } else {
+            $data = $query->paginate(10, ['*'], 'page', $page);
+            $response = [
+                'data' => $data->items(),
+                'total' => $data->total(),
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+            ];
         }
 
         // Check if no data was found
@@ -118,25 +142,14 @@ class FingerprintController extends Controller
                 'message' => 'No users found',
                 'data' => [],
                 'total' => 0,
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
+                'current_page' => $allUsers ? null : $data->currentPage(),
+                'last_page' => $allUsers ? null : $data->lastPage(),
             ]);
         }
 
-        return response()->json([
-            'data' => $data->items(),
-            'total' => $data->total(),
-            'current_page' => $data->currentPage(),
-            'last_page' => $data->lastPage(),
-        ]);
+        return response()->json($response);
     }
 
-
-
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         //

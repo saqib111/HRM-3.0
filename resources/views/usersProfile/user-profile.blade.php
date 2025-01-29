@@ -1,6 +1,79 @@
 @extends('layout.mainlayout')
 @section('content')
 
+@section('css')
+<style>
+    /* Ensure the parent container is positioned correctly */
+    .multi-select-container {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        /* Full width for the container */
+    }
+
+    /* Style for the dropdown button */
+    .multi-select-btn {
+        padding: 10px 15px;
+        background-color: #ffffff;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        /* Full width for the button */
+        text-align: left;
+        box-sizing: border-box;
+        font-size: 14px;
+        color: #333333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Dropdown menu options */
+    .multi-select-options {
+        display: none;
+        position: absolute;
+        z-index: 1000;
+        background-color: white;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        width: 100%;
+        /* Match dropdown to button width */
+        max-height: 150px;
+        overflow-y: auto;
+        /* Scroll when content exceeds max-height */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 5px;
+        box-sizing: border-box;
+    }
+
+    /* Individual label styling */
+    .multi-select-options label {
+        display: block;
+        padding: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #333333;
+    }
+
+    /* Highlight a label on hover */
+    .multi-select-options label:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* Checkbox styling */
+    input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    /* Ensure that the checkbox list doesn't overflow horizontally */
+    .multi-select-options {
+        overflow-x: hidden;
+        /* Prevent horizontal overflow */
+    }
+</style>
+@endsection
+
 @php
     $user = auth()->user();
     $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
@@ -86,7 +159,7 @@
                                     </li>
 
                                     <li>
-                                        <div class="title">Week Off Days:</div>
+                                        <div class="title">Weekly Working Days:</div>
                                         <div class="text" id="weekDays">
                                             {{ $mainUser->week_days == 5 ? '5 Days' : '6 Days' }}
                                         </div>
@@ -107,7 +180,29 @@
                                     <li>
                                         <div class="title">UnPaid Leaves (UL):</div>
                                         <div class="text" id="allowed_ul">
-                                            {{ $profileUser->allowed_ul == 0 ? 'Not Allowed' : 'Allowed UL & Other Leaves' }}
+                                            @php
+                                                // Convert the comma-separated string into an array
+                                                $allowedUlArray = explode(',', $profileUser->allowed_ul);
+
+                                                // Map the numbers to their corresponding leave types
+                                                $leaveTypes = [
+                                                    4 => 'UL',  // Unpaid Leave
+                                                    5 => 'HL',  // Hospitalisation Leave
+                                                    6 => 'CL',  // Compassionate Leave
+                                                    7 => 'MTL', // Maternity Leave
+                                                    8 => 'PL'  // Paternity Leave
+                                                ];
+
+                                                // Map the numbers in allowedUlArray to their respective leave types
+                                                $mappedLeaveTypes = array_map(function ($number) use ($leaveTypes) {
+                                                    return isset($leaveTypes[(int) $number]) ? $leaveTypes[(int) $number] : $number;
+                                                }, $allowedUlArray);
+
+                                                // Join the leave types into a comma-separated string
+                                                $leaveNamesString = implode(', ', $mappedLeaveTypes);
+                                            @endphp
+
+                                            {{ $leaveNamesString }}
                                         </div>
                                     </li>
                                 </ul>
@@ -167,11 +262,23 @@
                             </li>
                             <li>
                                 <div class="title">Passport Issue Date:</div>
-                                <div class="text" id="p_issue_date">{{ $visaInfo->p_issue_date }}</div>
+                                <div class="text" id="p_issue_date">
+                                    @if($visaInfo->p_issue_date)
+                                        {{ \Carbon\Carbon::parse($visaInfo->p_issue_date)->format('d-M-Y') }}
+                                    @else
+
+                                    @endif
+                                </div>
                             </li>
                             <li>
                                 <div class="title">Passport Exp Date:</div>
-                                <div class="text" id="p_expiry_date">{{ $visaInfo->p_expiry_date }}</div>
+                                <div class="text" id="p_expiry_date">
+                                    @if($visaInfo->p_expiry_date)
+                                        {{ \Carbon\Carbon::parse($visaInfo->p_expiry_date)->format('d-M-Y') }}
+                                    @else
+
+                                    @endif
+                                </div>
                             </li>
                             <li>
                                 <div class="title">Visa No:</div>
@@ -179,11 +286,23 @@
                             </li>
                             <li>
                                 <div class="title">Visa Issue Date.</div>
-                                <div class="text" id="v_issue_date">{{ $visaInfo->v_issue_date }}</div>
+                                <div class="text" id="v_issue_date">
+                                    @if($visaInfo->v_issue_date)
+                                        {{ \Carbon\Carbon::parse($visaInfo->v_issue_date)->format('d-M-Y') }}
+                                    @else
+
+                                    @endif
+                                </div>
                             </li>
                             <li>
                                 <div class="title">Visa Expiry Date.</div>
-                                <div class="text" id="v_expiry_date">{{ $visaInfo->v_expiry_date }}</div>
+                                <div class="text" id="v_expiry_date">
+                                    @if($visaInfo->v_expiry_date)
+                                        {{ \Carbon\Carbon::parse($visaInfo->v_expiry_date)->format('d-M-Y') }}
+                                    @else
+
+                                    @endif
+                                </div>
                             </li>
                             <li>
                                 <div class="title">Foreign No:</div>
@@ -191,9 +310,14 @@
                             </li>
                             <li>
                                 <div class="title">Foreign Expiry Date:</div>
-                                <div class="text" id="f_expiry_date">{{ $visaInfo->f_expiry_date }}</div>
-                            </li>
+                                <div class="text" id="f_expiry_date">
+                                    @if($visaInfo->f_expiry_date)
+                                        {{ \Carbon\Carbon::parse($visaInfo->f_expiry_date)->format('d-M-Y') }}
+                                    @else
 
+                                    @endif
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -600,7 +724,7 @@
                         <!-- WEEK OFF-DAYS -->
                         <div class="col-md-6">
                             <div class="input-block mb-3">
-                                <label class="col-form-label" for="week_days_label">Week Off-Days</label>
+                                <label class="col-form-label" for="week_days_label">Weekly Working Days</label>
                                 <select class="form-select" name="week_days" id="week_days">
                                     <option disabled {{ empty($mainUser->week_days) ? 'selected' : '' }}>SELECT OPTION
                                     </option>
@@ -686,18 +810,41 @@
                         <div class="col-md-6">
                             <div class="input-block">
                                 <label class="col-form-label" for="allowed_ul">UnPaid Leaves (UL)</label>
-                                <select class="form-select" name="allowed_ul" id="allowed_ul">
-                                    <option disabled selected {{ empty($profileUser->allowed_ul) ? 'selected' : '' }}>
-                                        SELECT OPTION</option>
-                                    <option value="0" {{ $profileUser->allowed_ul == '0' ? 'selected' : '' }}>
-                                        Not Allowed</option>
-                                    <option value="1" {{ $profileUser->allowed_ul == '1' ? 'selected' : '' }}>
-                                        Allowed UL & Other Leaves</option>
-                                </select>
+                                <div class="multi-select-container">
+                                    <button type="button" class="multi-select-btn">Select Leave Types</button>
+                                    <div class="multi-select-options">
+                                        <label>
+                                            <input type="checkbox" id="select-all"> Select All
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" value="4" name="allowed_ul[]" {{ in_array(4, $allowedUlArray) ? 'checked' : '' }}>
+                                            Unpaid Leave (UL)
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" value="5" name="allowed_ul[]" {{ in_array(5, $allowedUlArray) ? 'checked' : '' }}>
+                                            Hospitalisation Leave (HL)
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" value="6" name="allowed_ul[]" {{ in_array(6, $allowedUlArray) ? 'checked' : '' }}>
+                                            Compassionate Leave (CL)
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" value="7" name="allowed_ul[]" {{ in_array(7, $allowedUlArray) ? 'checked' : '' }}>
+                                            Maternity Leave (MTL)
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" value="8" name="allowed_ul[]" {{ in_array(8, $allowedUlArray) ? 'checked' : '' }}>
+                                            Paternity Leave (PL)
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
             </div>
+
+
+
             <div class="submit-section">
                 <button type="submit" class="btn btn-primary submit-btn mb-3">Submit</button>
             </div>
@@ -975,7 +1122,7 @@
 
                                 <div class="col-md-6 align-item-center">
                                     <div class="input-block mb-3">
-                                        <label class="col-form-label">Rerlationship with Employee</label>
+                                        <label class="col-form-label">Relationship with Employee</label>
                                         <input class="form-control" type="text" name="emergency_relation"
                                             value="{{ $EmergencyUser->e_relationship }}">
 
@@ -1144,7 +1291,60 @@
 @endsection
 
 @section('script-z')
+
 <script>
+    $(document).ready(function () {
+        const $btn = $('.multi-select-btn');
+        const $options = $('.multi-select-options');
+        const $selectAll = $('#select-all');
+        const $checkboxes = $('input[type="checkbox"]').not('#select-all');
+
+        $btn.on('click', function () {
+            $options.toggle();
+        });
+
+        $(document).on('click', function (event) {
+            if (!$btn.is(event.target) && $btn.has(event.target).length === 0 && !$options.is(event.target) && $options.has(event.target).length === 0) {
+                $options.hide();
+            }
+        });
+
+        // Handle Select All functionality
+        $selectAll.change(function () {
+            if ($(this).is(':checked')) {
+                $checkboxes.prop('checked', true);
+            } else {
+                $checkboxes.prop('checked', false);
+            }
+            updateButtonText();
+        });
+
+        // Update button text based on selected checkboxes
+        $checkboxes.change(function () {
+            if ($checkboxes.length === $checkboxes.filter(':checked').length) {
+                $selectAll.prop('checked', true);
+            } else {
+                $selectAll.prop('checked', false);
+            }
+            updateButtonText();
+        });
+
+        function updateButtonText() {
+            var selectedValues = $checkboxes.filter(':checked').map(function () {
+                return $(this).val();
+            }).get();
+
+            if (selectedValues.length > 0) {
+                $btn.text(selectedValues.length + " Leave Type(s) Selected");
+            } else {
+                $btn.text('Select Leave Types');
+            }
+        }
+        updateButtonText();
+    });
+</script>
+<script>
+
     $(document).on('submit', 'form[id^="profileModal"]', function (e) {
         e.preventDefault();
 
@@ -1179,8 +1379,28 @@
                     // Update the week_days select dropdown value
                     $('#week_days').val(response.data.week_days);
 
-                    $('#allowed_ul').text(response.data.allowed_ul == 0 ? 'Not Allowed' : 'Allowed UL & Other Leaves');
-                    $('#allowed_ul').val(response.data.allowed_ul);
+                    // Update the allowed_ul field with the selected values (multiselect)
+                    // Check if the 'allowed_ul' field exists in the response and is an array
+                    var allowedUlArray = response.data.allowed_ul_array || [];
+
+                    // Mapping the allowedUlArray to their respective leave types
+                    var leaveTypes = {
+                        4: 'UL',  // Unpaid Leave
+                        5: 'HL',  // Hospitalisation Leave
+                        6: 'CL',  // Compassionate Leave
+                        7: 'MTL', // Maternity Leave
+                        8: 'PL'  // Paternity Leave
+                    };
+
+                    // Map the selected numbers to leave type names
+                    var selectedLeaveTypes = allowedUlArray.map(function (leaveId) {
+                        return leaveTypes[leaveId] || leaveId;
+                    });
+
+                    // Join the leave types into a string and update the #allowed_ul text
+                    var leaveNamesString = selectedLeaveTypes.join(', ');
+
+                    $('#allowed_ul').text(leaveNamesString);  // Update the text content of the #allowed_ul div
 
                     createToast('info', 'fa-solid fa-circle-check', 'Success',
                         'Profile Updated Successfully.');
@@ -1211,14 +1431,28 @@
                 if (updatedVisaInfo) {
                     hideLoader();
 
+                    // Helper function to format date in DD-MMM-YYYY format
+                    function formatDate(date) {
+                        if (!date) {
+                            return ''; // Return 'N/A' if the date is null or empty
+                        }
+                        var d = new Date(date);
+                        if (isNaN(d.getTime())) {
+                            return ''; // Return 'N/A' if the date is invalid
+                        }
+                        var options = { day: '2-digit', month: 'short', year: 'numeric' };
+                        return d.toLocaleDateString('en-GB', options); // Format as "DD-MMM-YYYY"
+                    }
+
+                    // Update the text with the formatted dates
                     $('#passport_no').text(updatedVisaInfo.passport_no);
-                    $('#p_issue_date').text(updatedVisaInfo.p_issue_date);
-                    $('#p_expiry_date').text(updatedVisaInfo.p_expiry_date);
+                    $('#p_issue_date').text(formatDate(updatedVisaInfo.p_issue_date));
+                    $('#p_expiry_date').text(formatDate(updatedVisaInfo.p_expiry_date));
                     $('#visa_no').text(updatedVisaInfo.visa_no);
-                    $('#v_issue_date').text(updatedVisaInfo.v_issue_date);
-                    $('#v_expiry_date').text(updatedVisaInfo.v_expiry_date);
+                    $('#v_issue_date').text(formatDate(updatedVisaInfo.v_issue_date));
+                    $('#v_expiry_date').text(formatDate(updatedVisaInfo.v_expiry_date));
                     $('#foreign_no').text(updatedVisaInfo.foreign_no);
-                    $('#f_expiry_date').text(updatedVisaInfo.f_expiry_date);
+                    $('#f_expiry_date').text(formatDate(updatedVisaInfo.f_expiry_date));
 
                     $('#personal_info_modal').modal('hide');
                     createToast('info', 'fa-solid fa-circle-check', 'Success',

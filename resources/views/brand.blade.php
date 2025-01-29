@@ -17,7 +17,9 @@
         <div class="col-md-4">
             <h3 class="page-title">Brand</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Brand</li>
             </ul>
         </div>

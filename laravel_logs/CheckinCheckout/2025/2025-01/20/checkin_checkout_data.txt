@@ -1,0 +1,14 @@
+ID: 519
+Username: Naeem Khan
+Employee ID: AHNV00519
+Status: Checkout
+Checkout Date & Time: 2025-01-20 12:07:55
+No active session found for User ID: 519 to punch out.
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-20 16:09:00
+Attendance session created for User ID: 315
+

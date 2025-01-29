@@ -38,13 +38,14 @@
 
     <!-- Logo -->
     <div class="header-left">
-        <a href="{{ url('admin-dashboard') }}" class="logo">
+        <a href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}" class="logo">
             <img src="{{ URL::asset('/assets/img/logo.svg') }}" alt="Logo">
         </a>
-        <a href="{{ url('admin-dashboard') }}" class="logo collapse-logo">
+        <a href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}"
+            class="logo collapse-logo">
             <img src="{{ asset('/assets/img/collapse-logo.svg') }}" alt="Logo">
         </a>
-        <a href="{{ url('admin-dashboard') }}" class="logo2">
+        <a href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}" class="logo2">
             <img src="{{ asset('/assets/img/logo2.png') }}" width="40" height="40" alt="Logo">
         </a>
     </div>

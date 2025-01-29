@@ -1,0 +1,32 @@
+Updated By: User ID: 315, Username:Affan Ahmed, Employee ID:AHNV00315
+Updated For: User ID: 578, Username:Jaziel Ng, Employee ID:AHNV00578
+Old Week Days:6 
+Updated Week Days: 6
+Personal Information:
+
+        Old Data:
+        Real Name: Ng Teck Poh
+        DateOfBirth: 20-Jan-2025
+        Accomodation: 
+        Gender: 
+        Phone: 
+        Nationality: Malaysia
+        Telegram: 
+        Office: Cebu
+        
+
+        New Data:
+        Real Name: Ng Teck Poh
+        DateOfBirth: 20-Jan-2025
+        Accomodation: 
+        Gender: 
+        Phone: 
+        Nationality: Malaysia
+        Telegram: 
+        Office: Cebu
+        
+Old UnPaid Leaves (UL): None
+Updated UnPaid Leaves (UL): UL
+Timestamp: 2025-01-20 15:30:09
+Personal Information Updated Successfully.
+

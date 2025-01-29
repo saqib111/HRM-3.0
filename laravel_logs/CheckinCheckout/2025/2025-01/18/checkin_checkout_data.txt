@@ -1,0 +1,28 @@
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkout
+Checkout Date & Time: 2025-01-18 15:56:37
+No active session found for User ID: 1622 to punch out.
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-18 15:58:26
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-18 15:58:28
+No attendance record found for User ID: 1622 on 2025-01-18
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkout
+Checkout Date & Time: 2025-01-18 21:00:02
+No active session found for User ID: 1622 to punch out.
+

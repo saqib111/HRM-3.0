@@ -1,0 +1,16 @@
+Updated By: ID: 315 | Username: Affan Ahmed | Employee ID: AHNV00315
+Updated Employee AL Balance: User ID: 1 | Username: Benison Wong | Employee ID: AHNV00001
+Leave Balance Update
+Old Leave Balance: 28.00
+New Leave Balance: 29.00
+Updated At: 2025-01-18 00:07:48
+
+
+Updated By: ID: 315 | Username: Affan Ahmed | Employee ID: AHNV00315
+Updated Employee AL Balance: User ID: 1 | Username: Benison Wong | Employee ID: AHNV00001
+Leave Balance Update
+Old Leave Balance: 29.00
+New Leave Balance: 28.00
+Updated At: 2025-01-18 00:08:22
+
+

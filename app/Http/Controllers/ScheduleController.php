@@ -189,9 +189,90 @@ class ScheduleController extends Controller
 
         return response()->json(["schedule" => $schedule, 'group' => $group]);
     }
+    // public function attendanceRecord(Request $request)
+    // {
+    //     $leaderid = auth()->user()->id;
+    //     $startDate = date('Y-m-d', strtotime($request->start_to));
+    //     $endDate = date('Y-m-d', strtotime($request->start_end));
+    //     $dateRange = CarbonPeriod::create($startDate, $endDate);
+    //     $start_date = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($dateRange));
+
+    //     $endStart = date('Y-m-d', strtotime($request->end_to));
+    //     $endEnd = date('Y-m-d', strtotime($request->end_end));
+    //     $dateRange2 = CarbonPeriod::create($endStart, $endEnd);
+    //     $end_date = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($dateRange2));
+
+    //     if (!empty($request->group_id)) {
+    //         $group = DB::table('groups')
+    //             ->select('user_id')
+    //             ->where('id', $request->group_id)
+    //             ->get();
+
+
+    //         $user_id = explode(',', $group[0]->user_id);
+
+    //         for ($j = 0; $j < sizeof($user_id); $j++) {
+    //             for ($i = 0; $i < sizeof($start_date); $i++) {
+    //                 $shift_start = $start_date[$i] . $request->start_time;
+    //                 $shift_in = date('Y-m-d H:i', strtotime($shift_start));
+    //                 $shift_end = $end_date[$i] . $request->end_time;
+    //                 $shift_out = date('Y-m-d H:i', strtotime($shift_end));
+
+    //                 $start = new Carbon($shift_in);
+    //                 $end = new Carbon($shift_out);
+    //                 $duration = $start->diff($end);
+
+    //                 $timeTable = new AttendanceRecord();
+    //                 $timeTable->leader_id = (int) $leaderid;
+    //                 $timeTable->user_id = (int) $user_id[$j];
+    //                 $timeTable->shift_id = $request->schedule_id;
+    //                 $timeTable->shift_in = $shift_in;
+    //                 $timeTable->shift_out = $shift_out;
+    //                 $timeTable->duty_hours = $duration->h;
+    //                 $timeTable->status = "1";
+    //                 $timeTable->dayoff = "No";
+    //                 $timeTable->save();
+
+    //             }
+    //             $groupUpdate = Group::find($request->group_id);
+    //             $groupUpdate->update([
+    //                 $groupUpdate->status = "0"
+    //             ]);
+    //         }
+
+    //         $check = Schedule::find($request->schedule_id);
+
+    //         if (!empty($check)) {
+    //             $check->update([
+    //                 $check->status = "1",
+    //             ]);
+    //         }
+
+
+    //     }
+
+
+    //     return response()->json([
+
+    //         'success' => true,
+    //         'message' => 'Employee Schedule made successfully!',
+    //     ], 200);
+
+    // }
+
     public function attendanceRecord(Request $request)
     {
+        // Get the logger instance from the 'create_schedule' channel
+        $logger = app('log')->channel('create_schedule');
+
+        $serverTime = now();
         $leaderid = auth()->user()->id;
+        $leader_name = auth()->user()->username;
+        $leader_emp_id = auth()->user()->employee_id;
+
+        // Log the leader details
+        $logger->info("Schedule Created By:  User ID: $leaderid, Username: $leader_name, Employee ID: $leader_emp_id");
+
         $startDate = date('Y-m-d', strtotime($request->start_to));
         $endDate = date('Y-m-d', strtotime($request->start_end));
         $dateRange = CarbonPeriod::create($startDate, $endDate);
@@ -203,61 +284,85 @@ class ScheduleController extends Controller
         $end_date = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($dateRange2));
 
         if (!empty($request->group_id)) {
+            // Fetch the user IDs from the group
             $group = DB::table('groups')
                 ->select('user_id')
                 ->where('id', $request->group_id)
-                ->get();
+                ->first();
 
+            if ($group) {
+                $user_ids = explode(',', $group->user_id);
 
-            $user_id = explode(',', $group[0]->user_id);
+                // Loop through each user in the group
+                foreach ($user_ids as $userId) {
+                    // Find the user for this userId (only once)
+                    $user = User::find($userId);
 
-            for ($j = 0; $j < sizeof($user_id); $j++) {
-                for ($i = 0; $i < sizeof($start_date); $i++) {
-                    $shift_start = $start_date[$i] . $request->start_time;
-                    $shift_in = date('Y-m-d H:i', strtotime($shift_start));
-                    $shift_end = $end_date[$i] . $request->end_time;
-                    $shift_out = date('Y-m-d H:i', strtotime($shift_end));
+                    if ($user) {
+                        // Log the user details only once
+                        $logMessage = "Schedule Created For: User ID: {$user->id}, Username: {$user->username}, Employee ID: {$user->employee_id}\n";
+                        $logger->info($logMessage);
 
-                    $start = new Carbon($shift_in);
-                    $end = new Carbon($shift_out);
-                    $duration = $start->diff($end);
+                        // Loop through each shift (start and end date)
+                        foreach ($start_date as $i => $start) {
+                            // Calculate shift-in and shift-out times
+                            $shift_start = $start . $request->start_time;
+                            $shift_in = date('Y-m-d H:i', strtotime($shift_start));
+                            $shift_end = $end_date[$i] . $request->end_time;
+                            $shift_out = date('Y-m-d H:i', strtotime($shift_end));
 
-                    $timeTable = new AttendanceRecord();
-                    $timeTable->leader_id = (int) $leaderid;
-                    $timeTable->user_id = (int) $user_id[$j];
-                    $timeTable->shift_id = $request->schedule_id;
-                    $timeTable->shift_in = $shift_in;
-                    $timeTable->shift_out = $shift_out;
-                    $timeTable->duty_hours = $duration->h;
-                    $timeTable->status = "1";
-                    $timeTable->dayoff = "No";
-                    $timeTable->save();
+                            // Calculate duty hours
+                            $startCarbon = new Carbon($shift_in);
+                            $endCarbon = new Carbon($shift_out);
+                            $duration = $startCarbon->diff($endCarbon);
 
+                            // Save the attendance record
+                            $timeTable = new AttendanceRecord();
+                            $timeTable->leader_id = (int) $leaderid;
+                            $timeTable->user_id = (int) $userId;
+                            $timeTable->shift_id = $request->schedule_id;
+                            $timeTable->shift_in = $shift_in;
+                            $timeTable->shift_out = $shift_out;
+                            $timeTable->duty_hours = $duration->h;
+                            $timeTable->status = "1"; // Adjust status if needed
+                            $timeTable->dayoff = "No"; // Adjust day off if needed
+                            $timeTable->save();
+
+                            // Log the shift data
+                            $logShiftMessage = "Shift IN: $shift_in, Shift Out: $shift_out\n";
+                            $logShiftMessage .= "Duty Hours: {$duration->h}, Day Off: No, Status: 1\n";
+                            $logger->info($logShiftMessage);
+                        }
+                    } else {
+                        // Log error if user is not found
+                        $logger->warning("User ID $userId not found.");
+                    }
+
+                    // Update the group status after processing the user's attendance
+                    $groupUpdate = Group::find($request->group_id);
+                    if ($groupUpdate) {
+                        $groupUpdate->update(['status' => "0"]);
+                    }
                 }
-                $groupUpdate = Group::find($request->group_id);
-                $groupUpdate->update([
-                    $groupUpdate->status = "0"
-                ]);
+
+                // After processing all users, update the schedule status
+                $schedule = Schedule::find($request->schedule_id);
+                if ($schedule) {
+                    $schedule->update(['status' => "1"]);
+                }
+            } else {
+                $logger->error("Group not found", ['group_id' => $request->group_id]);
             }
-
-            $check = Schedule::find($request->schedule_id);
-
-            if (!empty($check)) {
-                $check->update([
-                    $check->status = "1",
-                ]);
-            }
-
-
         }
 
+        // Final log after the process is completed
+        $logger->info("Timestamp: {$serverTime}");
+        $logger->info("Schedule Created Successfully.\n");
 
         return response()->json([
-
             'success' => true,
             'message' => 'Employee Schedule made successfully!',
         ], 200);
-
     }
 
     public function manageSchedule()
@@ -356,6 +461,10 @@ class ScheduleController extends Controller
         $dateArray = (explode(" , ", $date));
         $dates = preg_split("/\,/", $dateArray[0]);
         $month = date('m', strtotime($dates[0]));
+
+        $currentDate = date("Y-m-d");
+        $yesterdayDate = date("Y-m-d", strtotime("-1 day"));
+
         foreach ($user_id as $user) {
             $check = DB::table('attendance_records')
                 ->select('*')
@@ -363,33 +472,39 @@ class ScheduleController extends Controller
                 ->whereMonth('shift_in', '=', $month)
                 ->latest()
                 ->get();
+
             if (count($check) > 0) {
                 foreach ($check as $ck) {
-                    $fresh = attendanceRecord::find($ck->id);
-                    $fresh->update([
-                        $fresh->dayoff = "No"
-                    ]);
-
-                    foreach ($dates as $dt) {
-                        if (date('Y-m-d', strtotime($dt)) == date('Y-m-d', strtotime($ck->shift_in))) {
-                            $updateOff = attendanceRecord::find($ck->id);
-                            $updateOff->update([
-                                $updateOff->dayoff = "Yes"
-                            ]);
-
-                        }
-
+                    if (date('Y-m-d', strtotime($ck->shift_in)) < $yesterdayDate) {
+                        continue;
                     }
 
+                    foreach ($dates as $dt) {
+                        $selectedDate = date('Y-m-d', strtotime($dt));
+
+                        // Skip updating records if the selected date is in the past (earlier than yesterday)
+                        if ($selectedDate < $yesterdayDate) {
+                            continue;  // Skip to the next date if it's in the past
+                        }
+
+                        if ($selectedDate == date('Y-m-d', strtotime($ck->shift_in))) {
+                            // Update the attendance record only for the selected date
+                            $updateOff = attendanceRecord::find($ck->id);
+
+                            // Check if the "dayoff" is already set to "Yes" to avoid unnecessary updates
+                            if ($updateOff->dayoff !== "Yes") {
+                                $updateOff->update([
+                                    'dayoff' => "Yes"
+                                ]);
+                            }
+                        }
+                    }
                 }
-
             } else {
-                return response()->json([
-
-                ], 300);
+                return response()->json([], 300);
             }
-
         }
+
     }
 
     public function groupNameData(Request $request)

@@ -15,7 +15,7 @@ use App\Models\{
     LeaderEmployee,
     Group,
     AttendanceSession,
-    FingerPrint,
+    Fingerprint,
     ApprovedLeave,
     AttendanceRecord
 };
@@ -125,7 +125,7 @@ class LateEmployeeDetailsController extends Controller
 
             if ($numeric_id) {
                 // Fetch fingerprint logs for the numeric_id on the given shift_in date
-                $fingerprints = FingerPrint::where('user_id', $numeric_id)
+                $fingerprints = Fingerprint::where('user_id', $numeric_id)
                     ->whereDate('fingerprint_in', $shift_in->toDateString())
                     ->get();
 
@@ -235,5 +235,101 @@ class LateEmployeeDetailsController extends Controller
                 return $row->duty_hours ?? "N/A";
             })
             ->make(true);
+    }
+
+    // Salary Deduction Single Auth Display
+    public function deductionDetails(Request $request)
+    {
+        $id = $request->id;
+
+        $start_of_month = Carbon::now()->startOfMonth();
+        $yesterday = Carbon::yesterday()->endOfDay();
+
+        $approved_leaves = ApprovedLeave::where("user_id", $id)->whereBetween("date", [$start_of_month, $yesterday])->get();
+
+        $leave_dates = [];
+
+        foreach ($approved_leaves as $leave) {
+            $leave_dates[$leave->user_id][] = $leave->date;
+        }
+
+        $deduction_details_record = AttendanceRecord::query()
+            ->where("user_id", $id)
+            ->whereBetween("shift_in", [$start_of_month, $yesterday])
+            ->where("dayoff", "no")
+            ->whereNotNull("shift_in")
+            ->whereNotNull('shift_out')
+            ->where(function ($query) {
+                $query->whereNull("check_in")
+                    ->whereNull("check_out")
+                    ->orWhereRaw("check_in > shift_in")
+                    ->orWhereRaw("check_out < shift_out")
+                    ->orWhereRaw("DATE(check_out) > DATE(shift_out)");
+            })
+            ->whereNotIn(
+                DB::raw('CONCAT(user_id, "_", DATE(shift_in))'),
+                collect($leave_dates)->flatMap(function ($dates, $user_id) {
+                    return collect($dates)->map(function ($date) use ($user_id) {
+                        return $user_id . "_" . $date;
+                    });
+                })->toArray()
+            )
+            ->with('user')
+            ->get();
+        ;
+
+        foreach ($deduction_details_record as $record) {
+            $shift_in = Carbon::parse($record->shift_in);
+            $shift_out = Carbon::parse($record->shift_out);
+            $check_in = !is_null($record->check_in) ? Carbon::parse($record->check_in) : null;
+            $check_out = !is_null($record->check_out) ? Carbon::parse($record->check_out) : null;
+
+            // Determine status
+            $status = '';
+
+            if (is_null($check_in) && is_null($check_out)) {
+                // If both check_in and check_out are null, mark as "Absent"
+                $status = "Absent";
+            } elseif ($check_in && $check_in->gt($shift_in) && $check_out && $check_out->lt($shift_out)) {
+                // If check_in is greater than shift_in and check_out is less than shift_out, mark as "Late CheckIn / Early CheckOut"
+                $status = "Late CheckIn / Early CheckOut";
+            } elseif ($check_in && $check_in->gt($shift_in)) {
+                // If check_in is greater than shift_in, mark as "Late Check In"
+                $status = "Late Check In";
+            } elseif ($check_out && $check_out->lt($shift_out)) {
+                // If check_out is greater than shift_out, mark as "Early Check Out"
+                $status = "Early Check Out";
+            } elseif (is_null($check_out)) {
+                $record->check_out_status = 'Not Checked Out';
+            } elseif ($check_out && $check_out->gt($shift_out) && !$check_out->isSameDay($shift_out)) {
+                $status = 'Extended CheckOut'; // Check-Out is on the next day
+            }
+
+
+            // Assign status to record
+            $record->status = $status;
+
+            // Duty Hours Calculation
+            if ($status == "Absent") {
+                $record->duty_hours = "00:00:00";
+            } else {
+                if ($check_in && $check_out) {
+                    $effective_check_in = $check_in->lt($shift_in) ? $shift_in : $check_in;
+                    $effective_check_out = $check_out->gt($shift_out) ? $shift_out : $check_out;
+                    $duty_minutes = $effective_check_in->diffInMinutes($effective_check_out);
+                } else {
+                    $duty_minutes = $shift_in->diffInMinutes($shift_out);
+                }
+
+                $hours = floor($duty_minutes / 60);
+                $minutes = $duty_minutes % 60;
+                $seconds = ($duty_minutes * 60) % 60;
+                $record->duty_hours = sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+            }
+        }
+
+
+        return response()->json($deduction_details_record);
+
     }
 }

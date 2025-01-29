@@ -1,0 +1,18 @@
+Added By: User ID: 315 , Username:Affan Ahmed , Employee ID: AHNV00315
+Added new IP address: 89.12.103.12, Name: WiCam
+Timestamp: 2025-01-25 13:38:20
+
+Deleted By: User ID: 315 , Username:Affan Ahmed , Employee ID: AHNV00315
+Deleted IP address: 89.12.103.12 - Name: WiCam
+IP Deleted Successfully - Timestamp: 2025-01-25 13:38:41
+
+Updated By: User ID: 315 - Username:Affan Ahmed - Employee ID: AHNV00315
+Updated status for ID: 1 => Username: Benison Wong (Employee ID: AHNV00001) 
+Old status: Allowed - New status: Restricted
+Timestamp: 2025-01-25 13:38:54
+
+Updated By: User ID: 315 - Username:Affan Ahmed - Employee ID: AHNV00315
+Updated status for ID: 1 => Username: Benison Wong (Employee ID: AHNV00001) 
+Old status: Restricted - New status: Allowed
+Timestamp: 2025-01-25 13:46:00
+

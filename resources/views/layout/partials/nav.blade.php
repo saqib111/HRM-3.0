@@ -13,6 +13,26 @@
     .two-col-bar .sidebar-menu ul li.menu-title span:before {
         background: #00c5fb;
     }
+
+    .notification-badge {
+        position: absolute;
+        top: 50%;
+        right: 40px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        font-size: 11px;
+        width: 25px;
+        text-align: center;
+        height: 25px;
+        padding: 4px 2px 0px 0px;
+        font-weight: bold;
+        transform: translate(50%, -50%);
+    }
+
+    .hidden {
+        display: none;
+    }
 </style>
 
 @php
@@ -69,6 +89,11 @@
                                         <span>Employees</span>
                                     </li>
                 @endif
+                <li class="{{ request()->routeIs('importshcedule') ? 'active' : '' }}">
+                    <a href="{{ url('importshcedule') }}"><i class="fa fa-newspaper"></i>
+                        <span>Import Schedule</span>
+                    </a>
+                </li>
                 @if($user->role == 1 || in_array('show_all_employee_info', $permissions))
                     <li class="{{ request()->routeIs('all.employees') ? 'active' : '' }}">
                         <a href="{{route('all.employees')}}"><i class="la la-key"></i> <span>Employee Info</span>
@@ -81,9 +106,9 @@
                                 class="menu-arrow"></span></a>
                         <ul>
                             <!-- <li>
-                                                                                                                                                                                                <a href="{{ route('company.index')}}"
-                                                                                                                                                                                                    class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
-                                                                                                                                                                                            </li> -->
+                                                                                                                                                                                                                                                                                    <a href="{{ route('company.index')}}"
+                                                                                                                                                                                                                                                                                        class="{{ request()->routeIs('company.index') ? 'active' : '' }}">Company</a>
+                                                                                                                                                                                                                                                                                </li> -->
                             @if($user->role == 1 || in_array('show_brands', $permissions))
                                 <li>
                                     <a href="{{ route('brand.index')}}"
@@ -180,25 +205,31 @@
                                         <span>Manage Leaves</span>
                                     </li>
                 @endif
-                @if($user->role == 1 || in_array('unassigned_leaves', $permissions))
+                @if ($user->role == 1 || in_array('unassigned_leaves', $permissions))
                     <li class="{{ request()->routeIs('leave_application.unassigned') ? 'active' : '' }}">
-                        <a href="{{route('leave_application.unassigned')}}"><i class="fa fa-file"></i> <span>
-                                Unassigned
-                                Leaves</span> </a>
+                        <a href="{{ route('leave_application.unassigned') }}" style="position: relative;">
+                            <i class="fa fa-file"></i>
+                            <span>Unassigned Leaves</span>
+                            <span id="notifibadge" class="notification-badge hidden"></span>
+                        </a>
                     </li>
                 @endif
-                @if($user->role == 1 || in_array('pending_leaves', $permissions))
+                @if ($user->role == 1 || in_array('pending_leaves', $permissions))
                     <li class="{{ request()->routeIs('leave_application.data') ? 'active' : '' }}">
-                        <a href="{{route('leave_application.data')}}"><i class="fa fa-person-circle-exclamation"></i> <span>
+                        <a href="{{ route('leave_application.data') }}"><i class="fa fa-person-circle-exclamation"></i>
+                            <span>
                                 Pending
-                                Leaves</span> </a>
+                                Leaves</span>
+                            <span id="pendingLeavesBadge" class="notification-badge hidden"></span>
+                        </a>
                     </li>
                 @endif
-                @if($user->role == 1 || in_array('hr_work', $permissions))
+                @if ($user->role == 1 || in_array('hr_work', $permissions))
                     <li class="{{ request()->routeIs('leave.hr_work') ? 'active' : '' }}">
-                        <a href="{{route('leave.hr_work')}}"><i class="fa fa-users-cog"></i> <span>
+                        <a href="{{ route('leave.hr_work') }}"><i class="fa fa-users-cog"></i> <span>
                                 HR Work
-                                (Leaves)</span> </a>
+                                (Leaves)</span>
+                            <span id="hrpendingbadge" class="notification-badge hidden"></span> </a>
                     </li>
                 @endif
                 @if($user->role == 1 || in_array('revoked_leaves', $permissions))
@@ -215,16 +246,28 @@
                         </a>
                     </li>
                 @endif
-                @if($user->role == 1 || $user->role == 2 || $user->role == 3)
-                    <li class="menu-title">
-                        <span>Payroll</span>
-                    </li>
-                    <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
-                        <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
-                                Deduction</span>
-                        </a>
-                    </li>
-                @endif
+                <!-- IT ACCESS -->
+                <li class="menu-title">
+                    <span>IP Restrictions</span>
+                </li>
+                <li class="{{ request()->routeIs('view') ? 'active' : '' }}">
+                    <a href="{{route('view')}}"><i class="fa fa-user-check"></i>
+                        <span>Whitelist IPs</span>
+                    </a>
+                </li>
+                <li class="{{ request()->routeIs('view.manageIPs') ? 'active' : '' }}">
+                    <a href="{{route('view.manageIPs')}}"><i class="fa fa-user-check"></i>
+                        <span>Manage IP Restrictions</span>
+                    </a>
+                </li>
+                <li class="menu-title">
+                    <span>Payroll</span>
+                </li>
+                <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
+                    <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
+                            Deduction</span>
+                    </a>
+                </li>
                 @if($user->role == 1 || in_array('expired_visa', $permissions))
                     <li class="menu-title">
                         <span>Visa Documents</span>

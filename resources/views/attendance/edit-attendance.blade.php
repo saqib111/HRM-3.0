@@ -143,6 +143,16 @@
         font-family: sans-serif;
     }
 
+    .deduction {
+        max-width: 70%;
+    }
+
+    .modal-open .modal-backdrop {
+        backdrop-filter: blur(4px);
+        background-color: rgba(0, 0, 0, 0.5);
+        opacity: 1 !important;
+    }
+
     @media only screen and (max-width:1124px) {
         .row-wd {
             width: 100%;
@@ -177,7 +187,9 @@
                 </div>
             </div>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Attendance </li>
             </ul>
         </div>
@@ -213,7 +225,7 @@
     <div class="col-md-4">
         <div class="card att-statistics">
             <div class="card-body">
-                <h5 class="card-title">Statistics</h5>
+                <h5 class="card-title">Salary Deduction</h5>
                 <div class="stats-list">
                     <div class="stats-info">
                         <p>Late <strong><span id="day"></span> </strong></p>
@@ -232,7 +244,10 @@
 
                     <div class="stats-info">
                         <p>Total Deduction <strong> <small><span id="total"> </span></small></strong></p>
-
+                    </div>
+                    <div class="deductions text-center p-0 mt-3 mb-0">
+                        <button class="btn btn-danger btn-sm" id="deductions_btn" data-id="{{$id}}">View Deduction
+                            Details</button>
                     </div>
                 </div>
             </div>
@@ -369,64 +384,101 @@
                 <form id="schedule" method="post" enctype="multipart/form-data">
                     @csrf
                     <div class="row">
-
-
-
+                        <!-- Shift Start Date -->
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker">Select Shift Start Dates:</label>
-                                <input type="text" id="date-picker" name="startdate[]" class="form-control" />
-                                <input type="hidden" name="startdate[]" id="startdate">
-
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3">
-                                <label for="datepicker">Select Shift Start Time:</label>
-                                <input type="time" id="time-input" name="start_time" class="form-control" />
-
+                                <label for="startdate[]">Select Shift Start Date:</label>
+                                <input type="datetime-local" id="date-picker" name="startdate[]" class="form-control" />
                             </div>
                         </div>
 
+                        <!-- Shift End Date -->
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker2">Select Shift End Dates:</label>
-                                <input type="text" id="date-picker2" name="enddate[]" class="form-control" />
-                                <input type="hidden" name="enddate[]" id="enddate">
-
+                                <label for="date-picker2">Select Shift End Date:</label>
+                                <input type="datetime-local" id="date-picker2" name="enddate[]" class="form-control" />
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="input-block mb-3">
-                                <label for="datepicker2">Select Shift End Time:</label>
-                                <input type="time" id="end-time" name="end_time" class="form-control" />
-
+                        @if($user->role == 1 || in_array('edit_checkin_checkout', $permissions))
+                            <!-- Check-In Date and Time -->
+                            <div class="col-sm-6">
+                                <div class="input-block mb-3">
+                                    <label for="checkInDatetime">Select Check-In Date and Time:</label>
+                                    <input type="datetime-local" id="checkInDatetime" name="check_in_datetime"
+                                        class="form-control" />
+                                </div>
                             </div>
-                        </div>
+                            <!-- Check-Out Date and Time -->
+                            <div class="col-sm-6">
+                                <div class="input-block mb-3">
+                                    <label for="checkOutDatetime">Select Check-Out Date and Time:</label>
+                                    <input type="datetime-local" id="checkOutDatetime" name="check_out_datetime"
+                                        class="form-control" />
+                                </div>
+                            </div>
+                        @endif
+                        <!-- Manage Day -->
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
                                 <label for="manage_day">Manage Day:</label>
                                 <select class="form-select" id="manage_day" name="manage_day">
                                     <option value="Yes">OFF</option>
                                     <option value="No">Working Day</option>
-                                    <option value="BT">Business Trip</option>
-                                    <option value="PH">Public Holiday</option>
+                                    @if($user->role === "1")
+                                        <option value="BT">Business Trip</option>
+                                        <option value="PH">Public Holiday</option>
+                                    @endif
                                 </select>
                             </div>
                         </div>
                         <input type="hidden" id="row_id" name="row_id">
                     </div>
-
                     <div class="submit-section">
-                        <button class="btn btn-primary" id="">Submit</button>
+                        <button class="btn btn-primary" type="submit">Submit</button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
 
+<!-- DEDUCTION DETAILS MODAL STARTS -->
+<div class="modal fade mt-4" id="deduction_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl deduction">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-center" id="exampleModalLabel">Salary Deduction Details</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="table-responsive">
+                    <table class="table mt-0" id="deduction_table">
+                        <thead class="sticky-top" style="background-color: #f8f9fa;">
+                            <tr>
+                                <th>Start Date</th>
+                                <th>Shift In</th>
+                                <th>End Date</th>
+                                <th>Shift Out</th>
+                                <th>CheckIn Date</th>
+                                <th>Check In</th>
+                                <th>CheckOut Date</th>
+                                <th>Check Out</th>
+                                <th>Duty Hours</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- <tr>
+                       DYNAMIC DATA FROM THE AJAX
+                    </tr> -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- DEDUCTION DETAILS MODAL ENDS -->
 
 </div>
 
@@ -453,13 +505,12 @@
     function dataTab(id) {
         var date = moment();
         var format = date.format("D MMMM Y");
+        var serverDate = moment("{{ now()->toDateString() }}", "YYYY-MM-DD"); // Get the server's current date
 
         $.ajax({
             url: "{{route('edit.attendance', '')}}" + "/" + id,
             type: 'GET',
             success: function (response) {
-                console.log(response);
-
                 let isSuperadmin = {{ auth()->user()->role == 1 ? 'true' : 'false' }};
                 let canEdit = isSuperadmin || {{ in_array('update_attendance_schedule', $permissions) ? 'true' : 'false' }};
                 let canDelete = isSuperadmin || {{ in_array('delete_attendance_schedule', $permissions) ? 'true' : 'false' }};
@@ -545,28 +596,84 @@
                                 return `<div class="text-center">${result}</div>`;
                             }
                         },
+                        // {
+                        //     data: null,
+                        //     title: 'Action',
+                        //     render: function (data, type, row) {
+                        //         let buttons = '';
+                        //         if (canEdit) {
+                        //             buttons += `<i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>`;
+                        //         }
+                        //         if (canDelete) {
+                        //             buttons += `<i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>`;
+                        //         }
+                        //         return buttons || ' '; // Return buttons if any exist, otherwise return empty string
+                        //     },
+                        //     orderable: false,
+                        //     className: 'text-center',
+                        //     visible: canEdit || canDelete // Dynamically show/hide the column based on permissions
+                        // },
+                        // {
+                        //     data: null,
+                        //     title: canBulkDelete ? '<input type="checkbox" id="select-all" />' : '',
+                        //     render: function (data, type, row) {
+                        //         return canBulkDelete
+                        //             ? `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`
+                        //             : '';
+                        //     },
+                        //     orderable: false,
+                        //     className: 'text-center',
+                        //     visible: canBulkDelete // Show/hide column based on permission
+                        // }
                         {
                             data: null,
                             title: 'Action',
                             render: function (data, type, row) {
                                 let buttons = '';
-                                if (canEdit) {
-                                    buttons += `<i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>`;
+
+                                // Parse the start_date to a Moment.js object
+                                let recordDate = moment(row.start_date, "DD MMMM YYYY");
+                                let currentMonthStart = moment().startOf('month'); // Start of the current month
+
+                                // Check if emergency checkout is used, then show restricted
+                                if (row.emergency_checkout == 1 && !isSuperadmin) {
+                                    buttons = '<span style="color: red;">Emergency Checkout</span>';
                                 }
-                                if (canDelete) {
-                                    buttons += `<i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>`;
+
+                                // Check if the recordDate is within the current or future months
+                                else if (isSuperadmin || recordDate.isSameOrAfter(currentMonthStart, 'month')) {
+                                    // Allow actions for Superadmin or records in the current month
+                                    if (canEdit) {
+                                        buttons += `<i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>`;
+                                    }
+                                    if (canDelete) {
+                                        buttons += `<i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>`;
+                                    }
+                                } else {
+                                    // Restrict actions for past records (non-Superadmin)
+                                    buttons = '<span style="color: red;">Restricted</span>';
                                 }
+
                                 return buttons || ' '; // Return buttons if any exist, otherwise return empty string
                             },
                             orderable: false,
-                            className: 'text-center',
-                            visible: canEdit || canDelete // Dynamically show/hide the column based on permissions
+                            className: 'text-center'
                         },
                         {
                             data: null,
                             title: canBulkDelete ? '<input type="checkbox" id="select-all" />' : '',
                             render: function (data, type, row) {
-                                return canBulkDelete
+
+                                let recordDate = moment(row.start_date, "DD MMMM YYYY");
+                                let currentMonthStart = moment().startOf('month'); // Start of the current month
+
+                                // BULK DELETE
+                                if (row.emergency_checkout == 1 && !isSuperadmin) {
+                                    return '';
+                                }
+
+                                // Allow bulk delete for Superadmin or records in the current or future months
+                                return canBulkDelete && (isSuperadmin || recordDate.isSameOrAfter(currentMonthStart, 'month'))
                                     ? `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`
                                     : '';
                             },
@@ -576,7 +683,8 @@
                         }
                     ],
                     order: [],
-
+                    pageLength: 31, // Set the default number of records to show
+                    lengthMenu: [10, 25, 31, 50, 100], // Options for records per page
                     createdRow: function (row, data, dataIndex) {
                         // Target columns from "Start Date" to "Duty Hours" (indexes 1-9)
                         const leaveColumns = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -813,6 +921,7 @@
         var format = date.format("D MMMM Y");
         var fromDate = $('#fromDate').val();
         var toDate = $('#toDate').val();
+        var serverDate = moment("{{ now()->toDateString() }}", "YYYY-MM-DD"); // Get the server's current date
 
         if ((fromDate != "") && (toDate != "")) {
             var formData = new FormData();
@@ -833,6 +942,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
+                    let isSuperadmin = {{ auth()->user()->role == 1 ? 'true' : 'false' }};
+                    let canEdit = isSuperadmin || {{ in_array('update_attendance_schedule', $permissions) ? 'true' : 'false' }};
+                    let canDelete = isSuperadmin || {{ in_array('delete_attendance_schedule', $permissions) ? 'true' : 'false' }};
+                    let canBulkDelete = isSuperadmin || {{ in_array('bulk_delete_attendance_schedule', $permissions) ? 'true' : 'false' }};
+
                     hideLoader();
                     var inf = response.in;
                     $('#day').empty();
@@ -929,26 +1043,71 @@
                                     return `<div class="text-center">${result}</div>`;
                                 }
                             },
+                            // {
+                            //     data: null,
+                            //     title: 'Action',
+                            //     render: function (data, type, row) {
+                            //         return `
+                            //         <i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>
+                            //         <i class="fas fa-trash delete-btn text-danger" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>
+                            //     `;
+                            //     },
+                            //     orderable: false
+                            // },
+                            // {
+                            //     data: null,
+                            //     title: '<input type="checkbox" id="select-all" />',
+                            //     render: function (data, type, row) {
+                            //         return `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`;
+                            //     },
+                            //     orderable: false
+                            // },
                             {
                                 data: null,
                                 title: 'Action',
                                 render: function (data, type, row) {
-                                    console.log(row)
-                                    return `
-                                    <i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>
-                                    <i class="fas fa-trash delete-btn text-danger" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>
-                                `;
+                                    let buttons = '';
+
+                                    // Parse the start_date to a Moment.js object
+                                    let recordDate = moment(row.start_date, "DD MMMM YYYY");
+                                    let currentMonthStart = moment().startOf('month'); // Start of the current month
+
+                                    // Check if the recordDate is within the current or future months
+                                    if (isSuperadmin || recordDate.isSameOrAfter(currentMonthStart, 'month')) {
+                                        // Allow actions for Superadmin or records in the current month
+                                        if (canEdit) {
+                                            buttons += `<i class="fas fa-edit edit-btn" data-id="${row.id}" style="cursor: pointer; color:black!important; margin-right: 10px;"></i>`;
+                                        }
+                                        if (canDelete) {
+                                            buttons += `<i class="fas fa-trash delete-btn" data-id="${row.id}" style="cursor: pointer;color:#dd0028!important;"></i>`;
+                                        }
+                                    } else {
+                                        // Restrict actions for past records (non-Superadmin)
+                                        buttons = '<span style="color: red;">Restricted</span>';
+                                    }
+
+                                    return buttons || ' '; // Return buttons if any exist, otherwise return empty string
                                 },
-                                orderable: false
+                                orderable: false,
+                                className: 'text-center'
                             },
                             {
                                 data: null,
-                                title: '<input type="checkbox" id="select-all" />',
+                                title: canBulkDelete ? '<input type="checkbox" id="select-all" />' : '',
                                 render: function (data, type, row) {
-                                    return `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`;
+
+                                    let recordDate = moment(row.start_date, "DD MMMM YYYY");
+                                    let currentMonthStart = moment().startOf('month'); // Start of the current month
+
+                                    // Allow bulk delete for Superadmin or records in the current or future months
+                                    return canBulkDelete && (isSuperadmin || recordDate.isSameOrAfter(currentMonthStart, 'month'))
+                                        ? `<input type="checkbox" class="row-checkbox" data-id="${row.id}" />`
+                                        : '';
                                 },
-                                orderable: false
-                            },
+                                orderable: false,
+                                className: 'text-center',
+                                visible: canBulkDelete // Show/hide column based on permission
+                            }
                         ],
                         order: [],
                         createdRow: function (row, data, dataIndex) {
@@ -1111,117 +1270,34 @@
     });
     $(document).on('click', '.edit-btn', function () {
         const rowId = $(this).data('id');
-        $('#id').append(rowId);
 
+        // Make AJAX call to fetch the schedule details
         $.ajax({
             url: `/get-schedule/${rowId}`,
             type: 'GET',
             success: function (response) {
+                if (response) {
+                    // Populate the modal form fields with the fetched data
+                    $('#date-picker').val(response.start_date); // Set start date
+                    $('#date-picker2').val(response.end_date); // Set end date
+                    $('#checkInDatetime').val(response.check_in); // Set check-in date and time
+                    $('#checkOutDatetime').val(response.check_out); // Set check-out date and time
+                    $('#manage_day').val(response.dayoff); // Set day-off status
+                    $('#row_id').val(rowId); // Set hidden row ID
 
-                $('#date-picker').val(response.start_date);
-                $('#time-input').val(response.start_time);
-                $('#date-picker2').val(response.end_date);
-                $('#end-time').val(response.end_time);
-                $('#manage_day').val(response.dayoff);
-                $('#row_id').val(rowId);
-
-                $('#schedule').modal('show');
+                    // Show the modal for editing
+                    $('#schedule').modal('show');
+                } else {
+                    alert('No data found for this record.');
+                }
             },
             error: function (error) {
                 console.error('Error fetching data:', error);
                 alert('Failed to fetch data for editing.');
-            }
+            },
         });
     });
-    function convertTo24HourFormat(time) {
-        if (!time) return '';
 
-        const [timePart, ampm] = time.split(' ');
-        let [hours, minutes] = timePart.split(':').map(Number);
-
-        if (ampm.toUpperCase() === 'PM' && hours !== 12) {
-            if (hours > 12) {
-                hours -= 12;
-            }
-        } else if (ampm.toUpperCase() === 'AM' && hours === 12) {
-            hours = 0;
-        }
-
-        console.log(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}${ampm}`)
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
-
-
-    const datePicker = flatpickr("#date-picker", {
-        mode: "single",
-        dateFormat: "Y-m-d",
-        onChange: function (selectedDates) {
-
-            const dates = datePicker.selectedDates;
-
-            const timeValue = timeInput.value;
-
-            const [startDate, endDate] = dates;
-            const [hours, minutes] = timeValue.split(":").map(Number);
-            const ampm = hours < 12 ? "AM" : "PM";
-            const formattedHours = hours % 12 || 12;
-
-            let resultArray = [];
-
-            let currentDate = new Date(startDate);
-
-            while (currentDate <= endDate) {
-                const dateString = `${currentDate.getFullYear()}-${(
-                    currentDate.getMonth() + 1
-                )
-                    .toString()
-                    .padStart(2, "0")}-${currentDate
-                        .getDate()
-                        .toString()
-                    } `;
-                resultArray.push(dateString);
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            $('#startdate').val(resultArray);
-
-
-        },
-    });
-    const datePicker2 = flatpickr("#date-picker2", {
-        mode: "single",
-        dateFormat: "Y-m-d",
-        onChange: function (selectedDates) {
-
-
-
-            const enddate = datePicker2.selectedDates;
-            const endtime = endTime.value;
-
-            const [startDate1, endDate1] = enddate;
-            const [hours, minutes] = endtime.split(":").map(Number);
-            const ampm = hours < 12 ? "AM" : "PM";
-            const formattedHours = hours % 12 || 12;
-
-            let resultArray2 = [];
-
-            let currentDate = new Date(startDate1);
-
-            while (currentDate <= endDate1) {
-                const dateString = `${currentDate.getFullYear()}-${(
-                    currentDate.getMonth() + 1
-                )
-                    .toString()
-                    .padStart(2, "0")}-${currentDate
-                        .getDate()
-                        .toString()
-                    } `;
-                resultArray2.push(dateString);
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            $('#enddate').val(resultArray2);
-
-        },
-    });
     $(document).on('submit', '#schedule', function (e) {
         e.preventDefault();
         const formData = $(this).serialize();
@@ -1231,21 +1307,112 @@
             }
         });
         $.ajax({
-            url: '{{route('schedule.update')}}',
+            url: '{{ route('scheduleAttendance.update') }}',
             type: 'POST',
             data: formData,
             success: function (response) {
-                console.log(uid);
-
                 if (response.success) {
-
                     $('#schedule').modal('hide');
-
                     dataTab(uid);
-                    createToast('info', 'fa-solid fa-circle-check', 'info', 'Schedule Updated successfully.');
+                    createToast('info', 'fa-solid fa-circle-check', 'info',
+                        'Schedule Updated successfully.');
+                } else {
+                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', response
+                        .message);
                 }
             },
+            error: function (xhr) {
+                const errors = xhr.responseJSON.errors;
+                for (const key in errors) {
+                    createToast('error', 'fa-solid fa-circle-exclamation', 'Error', errors[key][0]);
+                }
+            }
+        });
+    });
 
+    // DEDUCTIONS MODAL
+    $("#deductions_btn").click(function (e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        showLoader();
+        $.ajax({
+            url: "{{route('deduction.details')}}",
+            type: "GET",
+            data: { id: id },
+            success: function (data) {
+                // Empty the table body before populating new rows
+                $("#deduction_table tbody").empty();
+
+                // Loop through the returned data and add rows to the table
+                data.forEach(function (record) {
+                    // Format the dates and times
+                    let startDate = moment(record.shift_in).format('DD MMMM YYYY');
+                    let shiftIn = moment(record.shift_in).format('HH:mm:ss');
+                    let endDate = moment(record.shift_out).format('DD MMMM YYYY');
+                    let shiftOut = moment(record.shift_out).format('HH:mm:ss');
+                    let checkInDate = record.check_in ? moment(record.check_in).format('DD MMMM YYYY') : '';
+                    let checkInTime = record.check_in ? moment(record.check_in).format('HH:mm:ss') : '';
+                    let checkOutDate = record.check_out ? moment(record.check_out).format('DD MMMM YYYY') : '';
+                    let checkOutTime = record.check_out ? moment(record.check_out).format('HH:mm:ss') : '';
+
+                    let row = `
+                    <tr>
+                        <td>${startDate}</td>
+                        <td>${shiftIn}</td>
+                        <td>${endDate}</td>
+                        <td>${shiftOut}</td>
+                        <td>${checkInDate}</td>
+                        <td>${checkInTime}</td>
+                        <td>${checkOutDate}</td>
+                        <td>${checkOutTime}</td>
+                        <td>${record.duty_hours}</td> <!-- Correct placement of duty hours -->
+                        <td>${record.status}</td> <!-- Correct placement of status -->
+                    </tr>
+                    `;
+                    if (record.status === "Absent") {
+                        row = `
+                            <tr style="background-color: #870501; color: white;">
+                            <td style="background-color: #870501; color: white;">${startDate}</td>
+                            <td style="background-color: #870501; color: white;">${shiftIn}</td>
+                            <td style="background-color: #870501; color: white;">${endDate}</td>
+                            <td style="background-color: #870501; color: white;">${shiftOut}</td>
+                            <td style="background-color: #870501; color: white;">${checkInDate}</td>
+                            <td style="background-color: #870501; color: white;">${checkInTime}</td>
+                            <td style="background-color: #870501; color: white;">${checkOutDate}</td>
+                            <td style="background-color: #870501; color: white;">${checkOutTime}</td>
+                            <td style="background-color: #870501; color: white;">${record.duty_hours}</td> <!-- duty_hours for Absent -->
+                            <td style="background-color: #870501; color: white;">${record.status}</td> <!-- status for Absent -->
+                        </tr>
+                        `;
+                    } else {
+                        row = `
+                            <tr style="background-color: #A90500; color: white;">
+                            <td style="background-color: #A90500; color: white;">${startDate}</td>
+                            <td style="background-color: #A90500; color: white;">${shiftIn}</td>
+                            <td style="background-color: #A90500; color: white;">${endDate}</td>
+                            <td style="background-color: #A90500; color: white;">${shiftOut}</td>
+                            <td style="background-color: #A90500; color: white;">${checkInDate}</td>
+                            <td style="background-color: #A90500; color: white;">${checkInTime}</td>
+                            <td style="background-color: #A90500; color: white;">${checkOutDate}</td>
+                            <td style="background-color: #A90500; color: white;">${checkOutTime}</td>
+                            <td style="background-color: #A90500; color: white;">${record.duty_hours}</td> <!-- duty_hours in proper column -->
+                            <td style="background-color: #A90500; color: white;">${record.status}</td> <!-- status in proper column -->
+                        </tr>
+                        `;
+                    }
+
+                    // Append the row to the table
+                    $("#deduction_table tbody").append(row);
+                });
+
+                // Show the modal
+                $("#deduction_modal").modal("show");
+                hideLoader();
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+                hideLoader();
+            }
         });
     });
 

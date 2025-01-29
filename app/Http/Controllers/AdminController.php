@@ -20,6 +20,7 @@ use App\Models\{
     Dependant,
     AssignedLeaveApprovals,
     Emergency,
+    ManageIpRestriction,
 
 };
 use Illuminate\Support\Facades\{
@@ -27,7 +28,7 @@ use Illuminate\Support\Facades\{
     Session,
     Http
 };
-
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -41,9 +42,14 @@ class AdminController extends Controller
     }
     public function addEmployee(Request $request)
     {
+        // Get the authenticated user details
+        $authUser = auth()->user();
+
+        // Correct - just pass the message, no extra arguments
+        Log::channel('create_employee')->info('New Employee Created By: ID = ' . $authUser->id . ' | UserName: ' . $authUser->username . ' | Employee ID: ' . $authUser->employee_id);
+
         // Define validation rules
         $rules = [
-            // 'email' => 'required|email|max:50',
             'email' => 'required|email|max:50|unique:users,email',
             'employee_id' => 'required|unique:users,employee_id',
             'username' => 'required|max:50',
@@ -52,7 +58,7 @@ class AdminController extends Controller
             'designation' => 'required',
             'brand' => 'required|string',
             'joining_date' => 'required|date',
-            'leave_type' => 'required', // Ensure leave type is provided and valid
+            'leave_type' => 'required',
         ];
 
         // Add image validation only if the file is present
@@ -69,10 +75,11 @@ class AdminController extends Controller
             $image = $request->file('image');
             $img = uploadImage($image); // Attempt to upload the image
         }
-        // Process the selected brands array into a comma-separated string
-        // $brands = implode(',', $request->input('brand')); // Convert array to comma-separated string
 
+        // Process the selected brands array into a comma-separated string
         $brands = $request->input('brand');
+
+        // Save user data
         $user = new User();
         $user->employee_id = $request->employee_id;
         $user->username = $request->username;
@@ -85,6 +92,29 @@ class AdminController extends Controller
         $user->brand = $brands; // Save the comma-separated brands
         $user->image = $img; // Store the image path
         $user->save();
+
+        // Fetch the brands based on brand IDs (assuming brand IDs are stored as a comma-separated string)
+        $brandIds = explode(',', $user->brand); // Split the comma-separated brand IDs into an array
+        $brands = DB::table('brands')->whereIn('id', $brandIds)->get(); // Fetch all brands with the specified IDs
+
+        // Get brand names
+        $brandNames = $brands->pluck('name')->toArray(); // Get all brand names into an array
+        $brandNamesString = implode(', ', $brandNames); // Convert the array of brand names into a comma-separated string
+
+        Log::channel('create_employee')->info(
+            "New Created Employee Data:\n" .
+            "Employee ID: {$user->employee_id}\n" .
+            "Employee Username: {$user->username}\n" .
+            "Employee Email: {$user->email}\n" .
+            "Employee Joining Date: {$user->joining_date}\n" .
+            "Employee Company: {$user->company->name}\n" .
+            "Employee Department: {$user->department->name}\n" .
+            "Employee Designation: {$user->designation->name}\n" .
+            "Employee Brand: {$brandNamesString}\n" .
+            "Employee Image: {$user->image}\n" .
+            "Created Date and Time: {$user->created_at->toDateTimeString()}"
+        );
+
         $user_id = $user->id;
 
         // Add profile and visa information
@@ -100,15 +130,17 @@ class AdminController extends Controller
         $assignedLeave->user_id = $user_id;
         $assignedLeave->save();
 
-
         $emergency = new Emergency();
         $emergency->user_id = $user_id;
         $emergency->save();
 
-
         $dependant = new Dependant();
         $dependant->user_id = $user_id;
         $dependant->save();
+
+        $manage_ip = new ManageIpRestriction();
+        $manage_ip->user_id = $user_id;
+        $manage_ip->save();
 
         // Calculate Annual Leaves
         $leave_type_days = (int) $request->leave_type; // Fetch the leave type (14 or 28)
@@ -140,6 +172,12 @@ class AdminController extends Controller
         $annualLeave->leave_balance = $calculated_leaves; // Set calculated leave balance
         $annualLeave->last_year_balance = 0; // Set default value for last year's balance
         $annualLeave->save(); // Save the annual leave information
+
+        // Consolidate both the annual leave calculation log and success message into one entry
+        Log::channel('create_employee')->info(
+            "Leave Type: {$leave_type_days}\n" .  // Log leave type (14 or 28 days)
+            "New Employee Data Created Successfully\n\n"
+        );
 
         return response()->json([
             'success' => true,
@@ -281,6 +319,57 @@ class AdminController extends Controller
         // Find the employee by ID
         $employee = User::find($request->id);
 
+        // Get the authenticated user details
+        $authUser = auth()->user();
+
+        // Log original employee details before update in a readable format
+        Log::channel('update_employee')->info('Record Updated By:: ID = ' . $authUser->id . ' | UserName: ' . $authUser->username . ' | Employee ID: ' . $authUser->employee_id);
+
+        // Get the associated human-readable values once before the update
+        $companyName = DB::table('companies')->where('id', $employee->company_id)->value('name');
+        $departmentName = DB::table('departments')->where('id', $employee->department_id)->value('name');
+        $designationName = DB::table('designations')->where('id', $employee->designation_id)->value('name');
+
+        // Assuming $employee->brand contains comma-separated brand IDs (e.g., "2,3")
+        $brandIds = explode(',', $employee->brand); // Split the brand IDs into an array
+        $brandNames = DB::table('brands')
+            ->whereIn('id', $brandIds)   // Select records where 'id' is in the $brandIds array
+            ->pluck('name')               // Get only the 'name' column
+            ->toArray();                  // Convert the result to an array
+        $brandNamesString = implode(', ', $brandNames);
+
+        // Get role mapping to retrieve the role name
+        $roleMapping = [
+            1 => 'SuperAdmin',
+            2 => 'Payroll',
+            3 => 'HR',
+            4 => 'Leader',
+            5 => 'Employee'
+        ];
+        $roleName = $roleMapping[$employee->role] ?? 'Unknown Role';
+
+        // Log old record
+        Log::channel('update_employee')->info(
+            "Old record:\n" .
+            "employee_id = {$employee->employee_id}\n" .
+            "username = {$employee->username}\n" .
+            "email = {$employee->email}\n" .
+            "email_verified_at = {$employee->email_verified_at}\n" .
+            "joining_date = {$employee->joining_date}\n" .
+            "confirmation_status = " . ($employee->confirmation_status == 1 ? 'Confirmed Staff' : 'Under Probation') . "\n" .
+            "image = {$employee->image}\n" .
+            "company_id = {$companyName}\n" .
+            "department_id = {$departmentName}\n" .
+            "designation_id = {$designationName}\n" .
+            "brand = {$brandNamesString}\n" .
+            "week_days = {$employee->week_days} Days\n" .
+            "status = " . ($employee->status == 1 ? 'Active' : 'Not Active') . "\n" .
+            "role = {$roleName}\n" .
+            "userpass = " . ($employee->userpass == 1 ? 'Password Already Changed' : 'Change Password') . "\n" .
+            "created_at = {$employee->created_at}\n" .
+            "updated_at = {$employee->updated_at}\n"
+        );
+
         // Initialize the image variable
         $image = $employee->image;
 
@@ -291,12 +380,16 @@ class AdminController extends Controller
                 $employee->image !== 'images/default_profile_picture.png' &&
                 Storage::disk('public')->exists($employee->image)
             ) {
+                // Delete the old image
                 Storage::disk('public')->delete($employee->image);
             }
 
             // Upload the new image and get the new image path
             $image = uploadImage($request->image);
         }
+
+        // Ensure the brand values are integers and remove duplicates
+        $brands = $request->brand ? array_unique(array_map('intval', $request->brand)) : [];
 
         // Update employee details
         $employee->employee_id = $request->employee_id; // Set the fields directly
@@ -306,13 +399,45 @@ class AdminController extends Controller
         $employee->company_id = $request->company;
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
-        $employee->brand = implode(',', $request->brand);
+        $employee->brand = implode(',', $brands); // Save brand as comma-separated integers
         $employee->confirmation_status = $request->confirmation_status;
         $employee->role = $request->role;
         $employee->image = $image; // Set the image path to the new or existing one
 
         // Save the employee record
         $employee->save(); // Use save() to persist changes
+
+        // Fetch updated values after saving the employee
+        $employee->refresh();
+        $companyName = DB::table('companies')->where('id', $employee->company_id)->value('name');
+        $departmentName = DB::table('departments')->where('id', $employee->department_id)->value('name');
+        $designationName = DB::table('designations')->where('id', $employee->designation_id)->value('name');
+        $brandIds = explode(',', $employee->brand);
+        $brandNames = DB::table('brands')->whereIn('id', $brandIds)->pluck('name')->toArray();
+        $brandNamesString = implode(', ', $brandNames);
+        $roleName = $roleMapping[$employee->role] ?? 'Unknown Role';
+
+        // Log updated employee details after the update
+        Log::channel('update_employee')->info(
+            "Updated record:\n" .
+            "employee_id = {$employee->employee_id}\n" .
+            "username = {$employee->username}\n" .
+            "email = {$employee->email}\n" .
+            "email_verified_at = {$employee->email_verified_at}\n" .
+            "joining_date = {$employee->joining_date}\n" .
+            "confirmation_status = " . ($employee->confirmation_status == 1 ? 'Confirmed Staff' : 'Under Probation') . "\n" .
+            "image = {$employee->image}\n" .
+            "company = {$companyName}\n" .
+            "department = {$departmentName}\n" .
+            "designation = {$designationName}\n" .
+            "brand = {$brandNamesString}\n" .
+            "week_days = {$employee->week_days} Days\n" .
+            "status = " . ($employee->status == 1 ? 'Active' : 'Not Active') . "\n" .
+            "role = {$roleName}\n" .
+            "userpass = " . ($employee->userpass == 1 ? 'Password Already Changed' : 'Change Password') . "\n" .
+            "created_at = {$employee->created_at}\n" .
+            "updated_at = {$employee->updated_at}\n"
+        );
 
         return response()->json([
             'success' => true,

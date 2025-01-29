@@ -39,9 +39,31 @@ class LeaderEmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        $authId = auth()->user();
+        $serverTime = now();
+
         // Get the leader_id and employee_id as arrays
         $leader_id = explode(',', $request->leader_id);
         $employee_id = explode(',', $request->employee_id);
+
+        // Log the incoming request data
+        $logger = app('log')->channel('team_info');
+        $logger->info("Team Created By: User ID: {$authId->id}, Username:{$authId->username}, Employee ID:{$authId->employee_id}");
+
+
+        // Retrieve leader usernames using DB
+        $leaderUsernames = DB::table('users')->whereIn('id', $leader_id)->pluck('username', 'id')->toArray();
+
+        // Retrieve employee usernames using DB
+        $employeeUsernames = DB::table('users')->whereIn('id', $employee_id)->pluck('username', 'id')->toArray();
+
+        // Log the usernames of the leaders and employees
+        $leaderUsernamesLog = implode(', ', array_map(fn($id) => $leaderUsernames[$id], $leader_id));
+        $employeeUsernamesLog = implode(', ', array_map(fn($id) => $employeeUsernames[$id], $employee_id));
+
+        $logger->info("Leader Name: {$leaderUsernamesLog}");
+        $logger->info("Employee Names: {$employeeUsernamesLog}");
+
 
         // Check if any of the leaders already exist in the leader_employees table
         $existingLeaders = DB::table('leader_employees')
@@ -50,6 +72,7 @@ class LeaderEmployeeController extends Controller
 
         // If any of the leaders already exist, return an error response
         if ($existingLeaders->count() > 0) {
+            $logger->warning('Conflict detected! Leader(s) already exist: ' . implode(',', $existingLeaders->toArray()) . "\n");
             return response()->json([
                 'message' => 'Team Leader already exists!'
             ], 409); // Conflict status code
@@ -65,7 +88,9 @@ class LeaderEmployeeController extends Controller
             }
         }
 
+        $logger->info("Timestamp: {$serverTime}");
         // Return success message after saving
+        $logger->info("Team created successfully!\n");
         return response()->json([
             'message' => 'Team created successfully!'
         ], 200);
@@ -94,16 +119,45 @@ class LeaderEmployeeController extends Controller
      */
     public function update(Request $request)
     {
+        $authId = auth()->user();
+        $serverTime = now();
+
         $leader_id = explode(',', $request->leader_id);
-        ;
         $employee_id = explode(',', $request->employee_id);
+
+        // Log the incoming request data
+        $logger = app('log')->channel('team_info');
+        $logger->info("Team Updated By: User ID: {$authId->id}, Username: {$authId->username}, Employee ID: {$authId->employee_id}");
+        // Get the usernames for the leader_id array
+        $leaderUsernames = DB::table('users')->whereIn('id', $leader_id)->pluck('username', 'id');
+        $leaderUsernamesList = $leaderUsernames->only($leader_id)->implode(',', $leaderUsernames->toArray());
+
+        // Log the leader usernames
+        $logger->info("Leader Name: " . $leaderUsernamesList);
+
+
         if (count($leader_id) > 0) {
             foreach ($leader_id as $ld) {
 
+                // Select Leader_id, employee_id, and id to log the old records
                 $check = DB::table('leader_employees')
-                    ->select('id')
+                    ->select('id', 'Leader_id', 'employee_id')  // Include 'Leader_id' and 'employee_id' in the select
                     ->where('Leader_id', $ld)
                     ->get();
+
+                // Collect employee IDs from old records
+                $oldEmployeeIds = $check->pluck('employee_id')->toArray();  // Get the employee IDs from the old records
+
+                // Get usernames for old employee_ids
+                $oldEmployeeUsernames = DB::table('users')->whereIn('id', $oldEmployeeIds)->pluck('username', 'id');
+                $oldEmployeeUsernamesList = $oldEmployeeUsernames->only($oldEmployeeIds)->implode(', ', $oldEmployeeUsernames->toArray());
+
+                // Log the old employee usernames as comma-separated
+                if (!empty($oldEmployeeUsernamesList)) {
+                    $logger->info("Old Record Employee Usernames: " . $oldEmployeeUsernamesList);
+                }
+
+                // Log the old records
                 if (count($check) > 0) {
                     foreach ($check as $ck) {
                         $del = LeaderEmployee::find($ck->id);
@@ -122,11 +176,20 @@ class LeaderEmployeeController extends Controller
                         $insert->employee_id = $ei;
                         $insert->save();
 
-
+                        // Get the username for the new employee
+                        $employeeUsername = DB::table('users')->where('id', $ei)->value('username');
+                        $newEmployeeUsernames[] = $employeeUsername; // Collecting employee usernames
 
                     }
                 }
             }
+
+
+            // Log all updated Employee Usernames after insertion
+            $logger->info("Updated Employee Usernames: " . implode(', ', $newEmployeeUsernames));
+            $logger->info("Timestamp: {$serverTime}");
+            $logger->info("Team Updated Successfully. \n");
+
             return response()->json([
                 'message' => 'Team Updated successfully!'
             ], 200);
@@ -217,6 +280,18 @@ class LeaderEmployeeController extends Controller
 
     public function teamDelete($id)
     {
+        // Get the authenticated user details
+        $authId = auth()->user();
+        $serverTime = now();
+
+        // Get Leader details (username and employee_id) based on Leader_id
+        $leaderDetails = DB::table('users')->select('id', 'username', 'employee_id')->where('id', $id)->first();
+
+        // Log the deletion request
+        $logger = app('log')->channel('team_info');
+        $logger->info("Team Deletion Requested By: User ID: {$authId->id}, Username: {$authId->username}, Employee ID: {$authId->employee_id}");
+        $logger->info("Deleting Team with Leader ID: {$leaderDetails->id}, Username: {$leaderDetails->username}, Employee ID: {$leaderDetails->employee_id}");
+
         $delInfo = DB::table('leader_employees')
             ->select('id')
             ->where('Leader_id', $id)
@@ -226,6 +301,10 @@ class LeaderEmployeeController extends Controller
             $delete->delete();
 
         }
+
+        // Log the success message and the time the operation was performed
+        $logger->info("Timestamp: {$serverTime}");
+        $logger->info("Team Deletion Completed Successfully. \n");
         return response()->json([
 
             'message' => "Team deleted Successfully",

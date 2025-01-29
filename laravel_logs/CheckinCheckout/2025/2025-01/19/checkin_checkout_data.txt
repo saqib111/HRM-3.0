@@ -1,0 +1,21 @@
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-19 08:49:35
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-19 08:50:07
+No attendance record found for User ID: 1622 on 2025-01-19
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-19 08:50:53
+No attendance record found for User ID: 1622 on 2025-01-19
+

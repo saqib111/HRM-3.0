@@ -100,7 +100,7 @@
                                             @endphp
 
                                             @foreach($statuses as $status => $label)
-                                                <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->first ? 'active' : '' }}"
+                                                <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->index == 1 ? 'active' : '' }}"
                                                     style="width:138px; margin-bottom: 10px;" data-status="{{ $status }}"
                                                     onclick="filterByStatus('{{ $status }}')">
                                                     {{ $label }}
@@ -361,7 +361,7 @@
     $(document).ready(function () {
 
         /// Initialize DataTable with the default status (Pending)
-        const defaultStatus = 'pending';  // You can adjust this based on which status you want to load by default
+        const defaultStatus = 'approved';  // You can adjust this based on which status you want to load by default
         initializeDataTable(defaultStatus);
 
         // Handle the status buttons click event to filter data
@@ -550,6 +550,10 @@
                     case 8:
                         leaveType = 'Paternity Leave';
                         bgColorClass = 'bg-light-yellow';
+                        break;
+                    case 9:
+                        leaveType = 'Medical Leave(Malaysian Special)';
+                        bgColorClass = 'bg-info';
                         break;
                     default:
                         bgColorClass = 'bg-light-gray';

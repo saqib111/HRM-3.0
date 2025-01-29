@@ -39,6 +39,7 @@ class PayrollExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Absentee Fine',
             'Late Fine',
             'Total Deduction',
+            'Total UL',
         ];
     }
 
@@ -55,6 +56,7 @@ class PayrollExport implements FromCollection, WithHeadings, WithMapping, WithSt
             round($user->absentee_fine ?? 0, 3) . '%',
             round($user->late_fine ?? 0, 3) . '%',
             round(($user->absentee_fine + $user->late_fine) ?? 0, 3) . '%',
+            $user->unpaid_leave_count ?? 0,
         ];
     }
 

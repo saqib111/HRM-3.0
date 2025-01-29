@@ -1,0 +1,7 @@
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-25 12:12:02
+Attendance session created for User ID: 1622
+

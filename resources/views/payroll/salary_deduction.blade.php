@@ -34,6 +34,11 @@
 </style>
 @endsection
 @section('content')
+@php
+    $user = auth()->user();
+    $permissions = getUserPermissions($user);
+@endphp
+
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
@@ -57,40 +62,52 @@
                 <input type="hidden" name="startdate" id="startdate">
             </div>
         </div>
-        <div class="col-md-2 text-dark ms-md-3">
-            <div class="input-block mb-3 text-dark">
-                <label for="nationality">Nationality:</label>
-                <select class="form-select" aria-label="Default select example" id="nationality" name="nationality">
-                    <option value="ALL">All Nationalities</option>
-                    <option value="Pakistan">Pakistani</option>
-                    <option value="India">Indian</option>
-                    <option value="Bangladesh">Bangladeshi</option>
-                    <option value="Malaysia">Malaysian</option>
-                    <option value="Singapore">Singaporean</option>
-                    <option value="Vietnam">Vietnamese</option>
-                    <option value="Cambodia">Cambodian</option>
-                    <option value="Philippines">Filipino</option>
-                    <option value="Indonesia">Indonesian</option>
-                    <option value="Brazil">Brazilian</option>
-                    <option value="Nepal">Nepalese</option>
-                    <option value="Korea">Korean</option>
-                    <option value="Thailand">Thai</option>
-                </select>
+        @if(auth()->user()->role == 1 || auth()->user()->role == 3)
+            <div class="col-md-2 text-dark ms-md-3">
+                <div class="input-block mb-3 text-dark">
+                    <label for="nationality">Nationality:</label>
+                    <select class="form-select" aria-label="Default select example" id="nationality" name="nationality"
+                        @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2) disabled @endif>
+                        <option value="ALL">All Nationalities</option>
+                        <option value="Pakistan">Pakistani</option>
+                        <option value="India">Indian</option>
+                        <option value="Bangladesh">Bangladeshi</option>
+                        <option value="Malaysia">Malaysian</option>
+                        <option value="Singapore">Singaporean</option>
+                        <option value="Vietnam">Vietnamese</option>
+                        <option value="Cambodia">Cambodian</option>
+                        <option value="Philippines">Filipino</option>
+                        <option value="Indonesia">Indonesian</option>
+                        <option value="Brazil">Brazilian</option>
+                        <option value="Nepal">Nepalese</option>
+                        <option value="Korea">Korean</option>
+                        <option value="Thailand">Thai</option>
+                        @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2)
+                            <option value="{{ $user_nationality->nationality }}" selected>{{ $user_nationality->nationality }}
+                            </option>
+                        @endif
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="col-md-2 text-dark ms-md-3">
-            <div class="input-block mb-3 text-dark">
-                <label for="office">Office:</label>
-                <select class="form-select" id="office" name="office">
-                    <option value="AllOffices">All Offices</option>
-                    <option value="Sihanoukville" selected>Sihanoukville</option>
-                    <option value="Bataan">Bataan</option>
-                    <option value="Bavet">Bavet</option>
-                    <option value="Malaysia">Malaysia</option>
-                    <option value="Srilanka">Sri Lanka</option>
-                </select>
+        @endif
+        @if(auth()->user()->role == 1 || auth()->user()->role == 3)
+            <div class="col-md-2 text-dark ms-md-3">
+                <div class="input-block mb-3 text-dark">
+                    <label for="office">Office:</label>
+                    <select class="form-select" id="office" name="office" @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2) disabled @endif>
+                        <option value="AllOffices">All Offices</option>
+                        <option value="Sihanoukville" selected>Sihanoukville</option>
+                        <option value="Bataan">Bataan</option>
+                        <option value="Bavet">Bavet</option>
+                        <option value="Malaysia">Malaysia</option>
+                        <option value="Srilanka">Sri Lanka</option>
+                        @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2)
+                            <option value="{{ $user_office->office }}" selected>{{ $user_office->office }}</option>
+                        @endif
+                    </select>
+                </div>
             </div>
-        </div>
+        @endif
         <div class="col-md-1 text-dark ms-md-3">
             <div class="input-block mb-3 text-dark d-flex flex-column">
                 <button class="btn btn-primary mt-4" id="filter_btn" style="padding: 8px;">Filter</button>
@@ -114,14 +131,15 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Username</th>
                         <th>Employee ID</th>
+                        <th>Username</th>
                         <th>No of OFF-Days</th>
                         <th>No of Leaves</th>
                         <th>No of Absentees</th>
                         <th>Absentee Fine</th>
                         <th>Late Fine</th>
                         <th>Total Fine</th>
+                        <th>Total UL</th>
                     </tr>
                 </thead>
                 <tbody id="schedule-list">
@@ -146,9 +164,9 @@
     let table = $('#scheduletable').DataTable({
         processing: true,
         serverSide: true,
-        searching: true, // Disable searching
-        paging: true,     // Enable pagination
-        info: true,       // Show table information
+        searching: true,    // Disable searching
+        paging: true,       // Enable pagination
+        info: true,         // Show table information
         ajax: {
             url: "{{ route('payroll.dynamic_data') }}",
             type: 'GET',
@@ -168,14 +186,15 @@
         },
         columns: [
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'username', name: 'username' },
-            { data: 'employee_id', name: 'employee_id' },
-            { data: 'dayoff', name: 'dayoff' },
-            { data: 'leave_count', name: 'leave_count' },
-            { data: 'total_absentees', name: 'total_absentees' },
-            { data: 'absentee_fine', name: 'absentee_fine' },
-            { data: 'late_fine', name: 'late_fine' },
-            { data: 'total_deduction', name: 'total_deduction' },
+            { data: 'employee_id', name: 'employee_id', orderable: false, searchable: true },
+            { data: 'username', name: 'username', orderable: false, searchable: true },
+            { data: 'dayoff', name: 'dayoff', orderable: false, searchable: false },
+            { data: 'leave_count', name: 'leave_count', orderable: false, searchable: false },
+            { data: 'total_absentees', name: 'total_absentees', orderable: false, searchable: false },
+            { data: 'absentee_fine', name: 'absentee_fine', orderable: false, searchable: false },
+            { data: 'late_fine', name: 'late_fine', orderable: false, searchable: false },
+            { data: 'total_deduction', name: 'total_deduction', orderable: false, searchable: false },
+            { data: 'unpaid_leave_count', name: 'unpaid_leave_count', orderable: false, searchable: false },
         ],
         order: [
             [0, 'desc'] // Default order by the first column (index)
@@ -187,103 +206,84 @@
     });
 
     // Handle Form Submission
+
     $('#customizeSearch').on('submit', function (e) {
         e.preventDefault(); // Prevent default form submission
         table.ajax.reload(); // Reload the DataTable with filter data
     });
-
 </script>
 
 <script>
     $(document).ready(function () {
         // Initially, disable the Filter button and hide the Export button
-        $('#filter_btn').prop('disabled', true);  // Filter button initially disabled
-        $('#export-btn').hide();  // Hide Export button initially
+        $('#filter_btn').prop('disabled', true);
+        $('#export-btn').hide();
 
-        const timeInput = document.getElementById("time-input");
-        const endTime = document.getElementById("end-time");
-        // Initialize the flatpickr for the date range
         const datePicker = flatpickr("#date-picker", {
             mode: "range",
             dateFormat: "Y-m-d",
             onChange: function (selectedDates) {
-                // When dates are selected, update the hidden input field with the formatted date range
                 if (selectedDates.length === 2) {
                     const startDate = flatpickr.formatDate(selectedDates[0], "Y-m-d");
                     const endDate = flatpickr.formatDate(selectedDates[1], "Y-m-d");
                     $('#startdate').val(`${startDate},${endDate}`);
                 } else {
-                    $('#startdate').val('');  // If no valid date is selected, reset the hidden input
+                    $('#startdate').val('');
                 }
-                checkFilters();  // Check filters when date range changes
+                checkFilters();
             }
         });
 
-        // Listen for changes in other filter inputs and check the filters
         $('#nationality, #office').on('change', function () {
             checkFilters();
         });
 
-        // Check if all filters are selected
         function checkFilters() {
-            const nationality = $('#nationality').val();
-            const startDate = $('#startdate').val();  // Get the value of the hidden input field
-            const office = $('#office').val();
-
-            // Enable the Filter button only if all fields are filled
-            if (nationality && startDate && office) {
-                $('#filter_btn').prop('disabled', false);  // Enable Filter button
-            } else {
-                $('#filter_btn').prop('disabled', true);  // Disable Filter button if any field is empty
-            }
-        }
-
-        // Handle the filter form submission
-        $('#customizeSearch').on('submit', function (e) {
-            e.preventDefault();  // Prevent the default form submission
-
-            // Reload the DataTable with the current filter data
-            table.ajax.reload(function (json) {
-                // Check if any data is returned
-                if (json.data && json.data.length > 0) {
-                    // Data exists, enable and show the Export button
-                    $('#export-btn').prop('disabled', false);  // Enable Export button
-                    $('#export-btn').show();  // Show Export button
-                } else {
-                    // No data, disable and hide the Export button
-                    $('#export-btn').prop('disabled', true);  // Disable Export button
-                    $('#export-btn').hide();  // Hide Export button
-                }
-            });
-        });
-
-        // Handle Export button click
-        $('#export-btn').on('click', function () {
-            // Get the filter values
             const nationality = $('#nationality').val();
             const startDate = $('#startdate').val();
             const office = $('#office').val();
 
-            // Proceed with export if all filters are selected
-            if (nationality && startDate && office) {
+            if (startDate) {
+                $('#filter_btn').prop('disabled', false);
+            } else {
+                $('#filter_btn').prop('disabled', true);
+            }
+        }
+
+        $('#customizeSearch').on('submit', function (e) {
+            e.preventDefault();
+            const nationality = $('#nationality').val();
+            const office = $('#office').val();
+
+            // Reload DataTable with current filter values
+            table.ajax.reload(function (json) {
+                if (json.data && json.data.length > 0) {
+                    $('#export-btn').prop('disabled', false).show();
+                } else {
+                    $('#export-btn').prop('disabled', true).hide();
+                }
+            });
+        });
+
+        $('#export-btn').on('click', function () {
+            const nationality = $('#nationality').val();
+            const startDate = $('#startdate').val();
+            const office = $('#office').val();
+            if (startDate) {
                 const filters = {
                     nationality: nationality,
                     start_date: startDate,
                     office: office
                 };
 
-                // Construct the query string with the filters
                 let queryString = $.param(filters);
-
-                // Redirect to the export route with the query parameters
                 window.location.href = "{{ route('payroll.export') }}?" + queryString;
             } else {
                 alert("Please fill in all filter fields before exporting.");
             }
         });
 
-        // Ensure initial state when the page is loaded
-        checkFilters();  // Call it on document load to check the initial state
+        checkFilters();  // Ensure filters are checked when page loads
     });
 </script>
 

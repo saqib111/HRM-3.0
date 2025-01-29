@@ -1,0 +1,98 @@
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 11:32:12
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 11:33:42
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 11:35:09
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 11:36:31
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 12:36:08
+No attendance record found for User ID: 1622 on 2025-01-28
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 12:37:05
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 12:38:43
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 12:46:08
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 12:48:15
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 12:50:49
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 12:51:50
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Checkin
+Checkin Date & Time: 2025-01-28 12:55:10
+Attendance session created for User ID: 1622
+
+ID: 1622
+Username: Yazdaan Ahmed
+Employee ID: AHNV01622
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 12:56:35
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-28 17:04:14
+Attendance session created for User ID: 315
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-28 17:06:16
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-28 17:11:32
+Attendance session created for User ID: 315
+

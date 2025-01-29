@@ -160,7 +160,9 @@
                 <div class="employee-title">( {{auth()->user()->employee_id}} | {{auth()->user()->username}} )</div>
             </div>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Attendance </li>
             </ul>
         </div>
@@ -265,6 +267,8 @@
                     }
                 }
             ],
+            pageLength: 50, // Set the default number of records to show
+            lengthMenu: [10, 25, 50, 100], // Options for records per page
             "order": [[1, 'asc']], // Example: order by first column (employee id)
             createdRow: function (row, data, dataIndex) {
                 // Define columns to apply the colors

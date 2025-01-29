@@ -19,10 +19,11 @@ use App\Models\{
     LeaderEmployee,
     Group,
     AttendanceSession,
-    FingerPrint,
+    Fingerprint,
     ApprovedLeave
 };
-
+use Illuminate\Support\Facades\Log;
+use App\Logging\UpdateScheduleLog;
 class AttendanceRecordController extends Controller
 {
     /**
@@ -72,6 +73,26 @@ class AttendanceRecordController extends Controller
     public function update(Request $request, AttendanceRecord $attendanceRecord)
     {
         //
+    }
+
+    public function reloadTimesheet()
+    {
+        $serverTime = Carbon::now();
+        $active_user_id = auth()->user()->id;
+
+        // Fetch the latest shift record for the user
+        $shift_record = AttendanceRecord::where('user_id', '=', $active_user_id)
+            ->where(function ($query) {
+                $query->whereDate('shift_in', Carbon::today())
+                    ->orWhereDate('shift_out', Carbon::today());
+            })
+            ->whereNotNull('check_in')  // Ensure check_in is not null
+            ->where('check_in', '!=', '')  // Ensure check_in is not empty
+            ->whereNull('check_out')  // Ensure check_out is null (not punched out yet)
+            ->select('shift_out')  // Select only the shift_out field
+            ->first();
+
+        return view('partials.timesheet', compact('serverTime', 'shift_record'))->render();
     }
 
     /**
@@ -131,10 +152,10 @@ class AttendanceRecordController extends Controller
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
-                        ]);
+                        // $up->update([
+                        //     $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                        //     $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out))
+                        // ]);
                         $color = "";
                         break;
                     } else {
@@ -220,8 +241,8 @@ class AttendanceRecordController extends Controller
             if (count($check2) > 0) {
                 foreach ($check2 as $c2) {
                     $difference2 = abs(strtotime($d->check_out) - strtotime($c2->fingerprint_in));
-                    if ($difference < $smallDifferenceOut) {
-                        $smallDifferenceOut = $difference;
+                    if ($difference2 < $smallDifferenceOut) {
+                        $smallDifferenceOut = $difference2;
                         $closestPunchOut = $c2;
                     }
                 }
@@ -271,8 +292,6 @@ class AttendanceRecordController extends Controller
                 $duty_hours = "";
             }
 
-
-
             $info[] = [
                 'no' => $i,
                 'start_date' => $start_date,
@@ -293,19 +312,50 @@ class AttendanceRecordController extends Controller
 
             ];
         }
-
-
-
         return response()->json([
 
             'data' => $info,
         ], 200);
 
     }
+
     public function attendanceEmployeeRecord()
     {
-        return view('attendance.attendance-employee');
+        $serverTime = Carbon::now();
+        $active_user_id = Auth()->user()->id;
+
+        // Fetch the shift record for the user
+        $shift_record = AttendanceRecord::where('user_id', '=', $active_user_id)
+            ->where(function ($query) {
+                $query->whereDate('shift_in', Carbon::today())
+                    ->orWhereDate('shift_out', Carbon::today());
+            })
+            ->whereNotNull('check_in')  // Ensure check_in is not null
+            ->where('check_in', '!=', '')  // Ensure check_in is not empty
+            ->whereNull('check_out')  // Ensure check_out is null (not punched out yet)
+            ->select('shift_out')  // Select only the shift_out field
+            ->first();
+
+        if (!$shift_record) {
+            // Check for incomplete shift from the previous day
+            $shift_record = AttendanceRecord::where('user_id', '=', $active_user_id)
+                ->whereNotNull('check_in')  // Ensure check_in exists
+                ->where('check_in', '!=', '')  // Ensure check_in is not empty
+                ->whereNull('check_out')  // No checkout yet
+                ->where('shift_out', '<', $serverTime)  // Ensure shift_out time is in the past
+                ->whereDate('shift_in', '>=', Carbon::now()->subDays(7)->toDateString())
+                ->select('shift_out')  // Only need shift_out to check if the user can punch out
+                ->first();
+        }
+
+        // If still no record, return the view without shift record (meaning user is absent or no shift found)
+        if (!$shift_record) {
+            return view('attendance.attendance-employee', compact('serverTime', 'shift_record'));
+        }
+
+        return view('attendance.attendance-employee', compact('serverTime', 'shift_record'));
     }
+
 
     public function searchRecord(Request $request)
     {
@@ -382,10 +432,10 @@ class AttendanceRecordController extends Controller
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
-                        ]);
+                        // $up->update([
+                        //     $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                        //     $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
+                        // ]);
                         $color = "";
                         break;
                     } else {
@@ -609,39 +659,49 @@ class AttendanceRecordController extends Controller
                     ELSE 0 
                 END) as absentee_fine'),
             DB::raw('SUM(
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 
-                    FROM approved_leaves 
-                    WHERE approved_leaves.user_id = attendance_records.user_id 
-                      AND approved_leaves.date = DATE(attendance_records.shift_in)
-                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
-                ) THEN 0 -- No fine if leave is approved
-                WHEN attendance_records.dayoff = "Yes" THEN 0
-                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
-                    LEAST(
-                        CASE 
-                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
-                            ELSE 4.0 -- Cap for 6-day workers
-                        END,
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM approved_leaves 
+                            WHERE approved_leaves.user_id = attendance_records.user_id 
+                              AND approved_leaves.date = DATE(attendance_records.shift_in)
+                              AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                        ) THEN 0 -- No fine if leave is approved
+                        WHEN attendance_records.dayoff = "Yes" THEN 0
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NULL THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN DATE(attendance_records.check_out) != DATE(attendance_records.shift_out) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                            LEAST(
                                 CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        ) +
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
-                                CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        )
-                    )
-                ELSE 0 
-            END
-        ) as late_fine'),
+                                    WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                                    ELSE 4.0 -- Cap for 6-day workers
+                                END,
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                ) +
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                )
+                            )
+                        ELSE 0 
+                    END
+                ) as late_fine'),
             DB::raw('(SELECT COUNT(*) 
           FROM approved_leaves 
           WHERE approved_leaves.user_id = users.id 
@@ -720,9 +780,20 @@ class AttendanceRecordController extends Controller
             ->where('user_id', $user)
             ->first();
 
+        Log::channel('checkin_checkout')->info(
+            "ID: " . auth()->user()->id . "\n" .
+            "Username: " . auth()->user()->username . "\n" .
+            "Employee ID: " . auth()->user()->employee_id . "\n" .
+            "Status: Checkin\n" .
+            "Checkin Date & Time: " . $time
+        );
+
+
         if (!empty($check)) {
 
             if (strtotime($time) > strtotime($check->shift_out)) {
+                // Log error if punch-in time is after shift-out time
+                Log::channel('checkin_checkout')->error("Error: User ID: $user punch-in time is after shift-out time: $time\n");
                 return response()->json(['status' => 'error', 'punch_in_time' => "error"]);
             } else {
                 $update = AttendanceRecord::find($check->id);
@@ -738,14 +809,18 @@ class AttendanceRecordController extends Controller
                 // $active="on";
                 // Session::put(['info'=>$sess,'status'=>$active]);
 
+
+                // Log the session creation
+                Log::channel('checkin_checkout')->info("Attendance session created for User ID: $user\n");
+
                 $punch = AttendanceRecord::find($check->id);
                 $punch_in_time = $punch->check_in;
 
                 return response()->json(['status' => 'success', 'punch_in_time' => $punch_in_time]);
             }
-
-
         } else {
+            // Log if no attendance record was found for the user on that day
+            Log::channel('checkin_checkout')->warning("No attendance record found for User ID: $user on $checkInTime\n");
             return response()->json(['status' => 'error']);
         }
 
@@ -792,24 +867,86 @@ class AttendanceRecordController extends Controller
         $user = auth()->user()->id;
 
         $time = date('Y-m-d H:i:s');
+
         $check = AttendanceSession::where('user_id', $user)->where('check_out', NULL)->latest()->first();
 
         if (!empty($check)) {
             $upAttendance = AttendanceRecord::find($check->attendance_id);
+
+            $checkInTime = $upAttendance->check_in;
+
+            $timeDiff = strtotime($time) - strtotime($checkInTime);
+
+            if ($timeDiff < 60) {
+                return response()->json(['status' => 'error', 'message' => 'Cannot punch out Right NOw.']);
+            }
+
             $upAttendance->update([
                 $upAttendance->check_out = $time
 
             ]);
 
+            // Log the successful punch-out
+            Log::channel('checkin_checkout')->info(
+                "ID: " . auth()->user()->id . "\n" .
+                "Username: " . auth()->user()->username . "\n" .
+                "Employee ID: " . auth()->user()->employee_id . "\n" .
+                "Status: Checkout\n" .
+                "Checkout Date & Time: " . $time
+            );
+
+
             $upSession = AttendanceSession::find($check->id);
             $upSession->delete();
 
+        }
 
+        // Log if no active session found for the user to punch out
+        Log::channel('checkin_checkout')->warning("No active session found for User ID: $user to punch out.\n");
 
+        return response()->json(['status' => 'success']);
+    }
 
+    public function emergencyCheckOut()
+    {
+        $user = auth()->user()->id;
+
+        $time = date('Y-m-d H:i:s');
+
+        $check = AttendanceSession::where('user_id', $user)->where('check_out', NULL)->latest()->first();
+
+        if (!empty($check)) {
+            $upAttendance = AttendanceRecord::find($check->attendance_id);
+
+            $checkInTime = $upAttendance->check_in;
+
+            $timeDiff = strtotime($time) - strtotime($checkInTime);
+
+            if ($timeDiff < 60) {
+                return response()->json(['status' => 'error', 'message' => 'Invalid Punch Out Request.']);
+            }
+
+            $upAttendance->update([
+                'check_out' => $time,
+                'emergency_checkout' => 1  // SAME AS PUNCHOUT TO PREVENT THE INSTANT CHECKOUT REQUEST
+            ]);
+
+            Log::channel('checkin_checkout')->info(
+                "ID: " . auth()->user()->id . "\n" .
+                "Username: " . auth()->user()->username . "\n" .
+                "Employee ID: " . auth()->user()->employee_id . "\n" .
+                "Status: Emergency Checkout\n" .
+                "Checkout Date & Time: " . $time
+            );
+
+            $upSession = AttendanceSession::find($check->id);
+            $upSession->delete();
+
+            return response()->json(['status' => 'success', 'message' => 'Emergency Checkout Successful']);
         }
         return response()->json(['status' => 'success']);
     }
+
 
     public function statistics($fromDate = null, $toDate = null)
     {
@@ -883,39 +1020,49 @@ class AttendanceRecordController extends Controller
                     ELSE 0 
                 END) as absentee_fine'),
             DB::raw('SUM(
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 
-                    FROM approved_leaves 
-                    WHERE approved_leaves.user_id = attendance_records.user_id 
-                      AND approved_leaves.date = DATE(attendance_records.shift_in)
-                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
-                ) THEN 0 -- No fine if leave is approved
-                WHEN attendance_records.dayoff = "Yes" THEN 0
-                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
-                    LEAST(
-                        CASE 
-                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
-                            ELSE 4.0 -- Cap for 6-day workers
-                        END,
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM approved_leaves 
+                            WHERE approved_leaves.user_id = attendance_records.user_id 
+                              AND approved_leaves.date = DATE(attendance_records.shift_in)
+                              AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                        ) THEN 0 -- No fine if leave is approved
+                        WHEN attendance_records.dayoff = "Yes" THEN 0
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NULL THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN DATE(attendance_records.check_out) != DATE(attendance_records.shift_out) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                            LEAST(
                                 CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        ) +
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
-                                CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        )
-                    )
-                ELSE 0 
-            END
-        ) as late_fine'),
+                                    WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                                    ELSE 4.0 -- Cap for 6-day workers
+                                END,
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                ) +
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                )
+                            )
+                        ELSE 0 
+                    END
+                ) as late_fine'),
             DB::raw('(SELECT COUNT(*) 
           FROM approved_leaves 
           WHERE approved_leaves.user_id = users.id 
@@ -977,7 +1124,6 @@ class AttendanceRecordController extends Controller
 
     public function checkEmpAuhentication(Request $request)
     {
-
         $userData = array(
             'email' => auth()->user()->email,
             'password' => $request->password
@@ -1033,7 +1179,8 @@ class AttendanceRecordController extends Controller
                 'ar.check_in as check_in',
                 'ar.check_out as check_out',
                 'ar.dayoff as dayoff',
-                'ar.id as id'
+                'ar.id as id',
+                'ar.emergency_checkout as emergency_checkout'
             )
             ->where('ar.user_id', $id)
             ->whereMonth('ar.shift_in', Carbon::now()->month)
@@ -1053,10 +1200,10 @@ class AttendanceRecordController extends Controller
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
                         $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_out)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
-                        ]);
+                        // $up->update([
+                        //     $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
+                        //     $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
+                        // ]);
                         $color = "";
                         break;
                     } else {
@@ -1142,8 +1289,8 @@ class AttendanceRecordController extends Controller
             if (count($check2) > 0) {
                 foreach ($check2 as $c2) {
                     $difference2 = abs(strtotime($d->check_out) - strtotime($c2->fingerprint_in));
-                    if ($difference < $smallDifferenceOut) {
-                        $smallDifferenceOut = $difference;
+                    if ($difference2 < $smallDifferenceOut) {
+                        $smallDifferenceOut = $difference2;
                         $closestPunchOut = $c2;
                     }
                 }
@@ -1212,7 +1359,8 @@ class AttendanceRecordController extends Controller
                 'absent' => $absent,
                 'verify1' => $v1,
                 'verify2' => $v2,
-                'id' => $d->id
+                'id' => $d->id,
+                'emergency_checkout' => $d->emergency_checkout
             ];
         }
 
@@ -1267,35 +1415,51 @@ class AttendanceRecordController extends Controller
     }
     public function getSchedule($id)
     {
+        // Find the schedule by ID
         $schedule = AttendanceRecord::find($id);
+
         if (!$schedule) {
             return response()->json(['error' => 'Schedule not found'], 404);
         }
 
-        return response()->json([
+        // Format dates and times, handling null values gracefully
+        $start_date = $schedule->shift_in ? date('Y-m-d\TH:i', strtotime($schedule->shift_in)) : null;
+        $end_date = $schedule->shift_out ? date('Y-m-d\TH:i', strtotime($schedule->shift_out)) : null;
+        $check_in = $schedule->check_in ? date('Y-m-d\TH:i', strtotime($schedule->check_in)) : null;
+        $check_out = $schedule->check_out ? date('Y-m-d\TH:i', strtotime($schedule->check_out)) : null;
 
-            'start_date' => date('Y-m-d', strtotime($schedule->shift_in)),
-            'start_time' => date('H:i', strtotime($schedule->shift_in)),
-            'end_date' => date('Y-m-d', strtotime($schedule->shift_out)),
-            'end_time' => date('H:i', strtotime($schedule->shift_out)),
+        return response()->json([
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'check_in' => $check_in,
+            'check_out' => $check_out,
             'dayoff' => $schedule->dayoff,
+            'emergency_checkout' => $schedule->emergency_checkout,
         ]);
     }
 
     public function attendanceRecordEdit(Request $request)
     {
         $id = auth()->user()->id;
-        if (auth()->user()->role == "1") {
+        if (auth()->user()->role == "1" || auth()->user()->role == "3") {
             $query = DB::table('users as u')
                 ->join('departments as d', 'u.department_id', '=', 'd.id')
-                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department');
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
+                ->where('u.status', '=', '1');
 
+        } elseif (auth()->user()->role == "2") {
+            $query = DB::table('users as u')
+                ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
+                ->whereIn('u.role', [2, 4, 5])
+                ->where('u.status', '=', '1');
         } else {
             $query = DB::table('users as u')
                 ->join('departments as d', 'u.department_id', '=', 'd.id')
                 ->join('leader_employees as ld', 'ld.employee_id', '=', 'u.id')
                 ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
-                ->where('ld.leader_id', '=', $id);
+                ->where('ld.leader_id', '=', $id)
+                ->where('u.status', '=', '1');
         }
         // Apply search condition if a search term is provided
         if ($request->has('search') && $request->input('search')['value']) {
@@ -1341,27 +1505,109 @@ class AttendanceRecordController extends Controller
 
     public function updateAttendance(Request $request)
     {
+        // OBTAINING PERMISSIONS 
+        $user = auth()->user();
+        $serverTime = now();
+        $permissions = getUserPermissions($user);
+        // PERMISSIONS 
+        $shift_in = date('Y-m-d H:i', strtotime($request->startdate[0] . ' ' . $request->start_time));
+        $shift_out = date('Y-m-d H:i', strtotime($request->enddate[0] . ' ' . $request->end_time));
+        $chk_in = $request->check_in_datetime ? date('Y-m-d H:i', strtotime($request->check_in_datetime)) : null;
+        $chk_out = $request->check_out_datetime ? date('Y-m-d H:i', strtotime($request->check_out_datetime)) : null;
 
-        $shift_start = $request->startdate[0] . $request->start_time;
-        $shift_in = date('Y-m-d H:i', strtotime($shift_start));
-        $shift_end = $request->enddate[0] . $request->end_time;
-        $shift_out = date('Y-m-d H:i', strtotime($shift_end));
         $id = (int) $request->row_id;
         $schedule = AttendanceRecord::find($id);
 
+        $logger = app(UpdateScheduleLog::class);
+        $logger = $logger($shift_in);
+
+        $logger->info("Schedule Updated By:User ID: {$user->id}, Username: {$user->username}, Employee ID: {$user->employee_id}\n");
+
         if ($schedule) {
+
+            // Fetch the leader details using DB
+            $leader = DB::table('users')->select('id', 'username', 'employee_id')
+                ->where('id', $schedule->leader_id)
+                ->first();
+
+            // Fetch the user details using DB
+            $userSchedule = DB::table('users')->select('id', 'username', 'employee_id')
+                ->where('id', $schedule->user_id)
+                ->first();
+
+            // Log the old schedule (before updating)
+            $logger->info("Old Data:Schedule ID: {$schedule->id}\nLeader ID: {$leader->id}, Leader Username: {$leader->username}, Leader Employee ID: {$leader->employee_id}\nSchedule Updated For: User ID: {$userSchedule->id}, User Username: {$userSchedule->username}, User Employee ID: {$userSchedule->employee_id}");
+            $logger->info("Old Check-in/Check-out Time:\nCheck-in: {$schedule->check_in}, Check-out: {$schedule->check_out}");
+            $logger->info("Old Shift Time:\nShift-in: {$schedule->shift_in}, Shift-out: {$schedule->shift_out}");
+
+            // Log the old Manage Day (dayoff) value
+            switch ($schedule->dayoff) {
+                case 'Yes':
+                    $logger->info("Old Manage Day: Off Day\n");
+                    break;
+                case 'No':
+                    $logger->info("Old Manage Day: Working Day\n");
+                    break;
+                case 'BT':
+                    $logger->info("Old Manage Day: Business Trip\n");
+                    break;
+                case 'PH':
+                    $logger->info("Old Manage Day: Public Holiday\n");
+                    break;
+                default:
+                    $logger->info("Old Manage Day: Unknown\n");
+                    break;
+            }
+
+            if ($user->role === "1" || in_array('edit_checkin_checkout', $permissions)) {
+                $schedule->check_in = $chk_in;
+                $schedule->check_out = $chk_out;
+            }
             $schedule->shift_in = $shift_in;
             $schedule->shift_out = $shift_out;
             $schedule->dayoff = $request->manage_day;
 
             $schedule->save();
 
+
+            // Log the updated schedule with the new values
+            $logger->info("New Data:Schedule ID: {$schedule->id}\nLeader ID: {$leader->id}, Leader Username: {$leader->username}, Leader Employee ID: {$leader->employee_id}\nSchedule Updated For: User ID: {$userSchedule->id}, User Username: {$userSchedule->username}, User Employee ID: {$userSchedule->employee_id}");
+            $logger->info("Updated Check-in/Check-out Time:\nCheck-in: {$chk_in}, Check-out: {$chk_out}");
+            $logger->info("Updated Shift Time:\nShift-in: {$shift_in}, Shift-out: {$shift_out}");
+
+            // Log the updated manage day (dayoff) using switch
+            switch ($schedule->dayoff) {
+                case 'Yes':
+                    $logger->info("Updated Manage Day: Off Day\n");
+                    break;
+                case 'No':
+                    $logger->info("Updated Manage Day: Working Day\n");
+                    break;
+                case 'BT':
+                    $logger->info("Updated Manage Day: Business Trip\n");
+                    break;
+                case 'PH':
+                    $logger->info("Updated Manage Day: Public Holiday\n");
+                    break;
+                default:
+                    $logger->info("Updated Manage Day: Unknown\n");
+                    break;
+            }
+
+            // Log success
+            $logger->info("Timestamp: {$serverTime}.");
+            $logger->info("Schedule Updated Successfully.\n");
+
+
             return response()->json(['success' => true]);
         } else {
+            // Log failure if schedule not found
+            $logger->warning("Schedule not found for ID: $id\n");
+
             return response()->json(['success' => false, 'message' => 'Schedule not found.']);
         }
-
     }
+
     public function statisticsAdmin($id)
     {
         $info = [];
@@ -1415,39 +1661,49 @@ class AttendanceRecordController extends Controller
                     ELSE 0 
                 END) as absentee_fine'),
             DB::raw('SUM(
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 
-                    FROM approved_leaves 
-                    WHERE approved_leaves.user_id = attendance_records.user_id 
-                      AND approved_leaves.date = DATE(attendance_records.shift_in)
-                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
-                ) THEN 0 -- No fine if leave is approved
-                WHEN attendance_records.dayoff = "Yes" THEN 0
-                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
-                    LEAST(
-                        CASE 
-                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
-                            ELSE 4.0 -- Cap for 6-day workers
-                        END,
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM approved_leaves 
+                            WHERE approved_leaves.user_id = attendance_records.user_id 
+                              AND approved_leaves.date = DATE(attendance_records.shift_in)
+                              AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                        ) THEN 0 -- No fine if leave is approved
+                        WHEN attendance_records.dayoff = "Yes" THEN 0
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NULL THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN DATE(attendance_records.check_out) != DATE(attendance_records.shift_out) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                            LEAST(
                                 CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        ) +
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
-                                CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        )
-                    )
-                ELSE 0 
-            END
-        ) as late_fine'),
+                                    WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                                    ELSE 4.0 -- Cap for 6-day workers
+                                END,
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                ) +
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                )
+                            )
+                        ELSE 0 
+                    END
+                ) as late_fine'),
             DB::raw('(SELECT COUNT(*) 
           FROM approved_leaves 
           WHERE approved_leaves.user_id = users.id 
@@ -1560,7 +1816,6 @@ class AttendanceRecordController extends Controller
                 'ar.check_out as check_out',
                 'ar.dayoff as dayoff',
                 'ar.id as id'
-
             )
             ->where('ar.user_id', $id)
             ->whereBetween('ar.shift_in', [$from, $to])
@@ -1570,6 +1825,7 @@ class AttendanceRecordController extends Controller
         $currentYear = Carbon::now()->year;
         $approvedLeaves = ApprovedLeave::whereBetween('date', [$from, $to])
             ->where('user_id', $id)
+            ->whereNull('start_time')
             ->get();
         foreach ($data as $d) {
             $start = Carbon::parse($d->shift_in);
@@ -1583,11 +1839,6 @@ class AttendanceRecordController extends Controller
                         $shift_out = $chdate . $app->end_time;
                         $in = AttendanceRecord::whereDate('shift_in', $chdate)->where('user_id', $id)->first();
 
-                        $up = AttendanceRecord::find($in->id);
-                        $up->update([
-                            $up->shift_in = date('Y-m-d H:i:s', strtotime($shift_in)),
-                            $up->shift_out = date('Y-m-d H:i:s', strtotime($shift_out)),
-                        ]);
                         $color = "";
                         break;
                     } else {
@@ -1816,39 +2067,49 @@ class AttendanceRecordController extends Controller
                     ELSE 0 
                 END) as absentee_fine'),
             DB::raw('SUM(
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 
-                    FROM approved_leaves 
-                    WHERE approved_leaves.user_id = attendance_records.user_id 
-                      AND approved_leaves.date = DATE(attendance_records.shift_in)
-                      AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
-                ) THEN 0 -- No fine if leave is approved
-                WHEN attendance_records.dayoff = "Yes" THEN 0
-                WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
-                    LEAST(
-                        CASE 
-                            WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
-                            ELSE 4.0 -- Cap for 6-day workers
-                        END,
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                    CASE 
+                        WHEN EXISTS (
+                            SELECT 1 
+                            FROM approved_leaves 
+                            WHERE approved_leaves.user_id = attendance_records.user_id 
+                              AND approved_leaves.date = DATE(attendance_records.shift_in)
+                              AND approved_leaves.leave_type IN (1, 2, 3, 4, 5, 6, 7, 8)
+                        ) THEN 0 -- No fine if leave is approved
+                        WHEN attendance_records.dayoff = "Yes" THEN 0
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NULL THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN DATE(attendance_records.check_out) != DATE(attendance_records.shift_out) THEN 
+                            CASE 
+                                WHEN users.week_days = "5" THEN 4.8 -- Deduction for 5-day workers
+                                ELSE 4.0 -- Deduction for 6-day workers
+                            END
+                        WHEN attendance_records.check_in IS NOT NULL AND attendance_records.check_out IS NOT NULL THEN 
+                            LEAST(
                                 CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        ) +
-                        GREATEST(
-                            CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
-                                CASE 
-                                    WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
-                                    ELSE 0.125 -- Late fine per 15 mins for 6-day workers
-                                END, 0
-                        )
-                    )
-                ELSE 0 
-            END
-        ) as late_fine'),
+                                    WHEN users.week_days = "5" THEN 4.8 -- Cap for 5-day workers
+                                    ELSE 4.0 -- Cap for 6-day workers
+                                END,
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.shift_in, attendance_records.check_in) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                ) +
+                                GREATEST(
+                                    CEIL(TIMESTAMPDIFF(MINUTE, attendance_records.check_out, attendance_records.shift_out) / 15) *
+                                        CASE 
+                                            WHEN users.week_days = "5" THEN 0.25 -- Late fine per 15 mins for 5-day workers
+                                            ELSE 0.125 -- Late fine per 15 mins for 6-day workers
+                                        END, 0
+                                )
+                            )
+                        ELSE 0 
+                    END
+                ) as late_fine'),
             DB::raw('(SELECT COUNT(*) 
           FROM approved_leaves 
           WHERE approved_leaves.user_id = users.id 

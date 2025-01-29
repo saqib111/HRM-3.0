@@ -2,12 +2,28 @@
 @section('content')
 
 @php
+    $authRole = auth()->user()->role;
     $user = auth()->user();
     $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
 @endphp
 
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <style>
+    .select-all-option {
+        font-weight: bold;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    .select-all-option:hover {
+        background-color: #f0f0f0;
+    }
+
+    .unselect-all-option {
+        font-weight: bold;
+    }
+
+
     .MultiDropdown {
         width: 100%;
         position: relative;
@@ -33,12 +49,6 @@
         padding: 5px 10px;
         font-size: 16px;
         box-sizing: border-box;
-    }
-
-    .selected-tags {
-        display: flex;
-        flex-wrap: wrap;
-        max-width: 100%;
     }
 
     .selected-tag {
@@ -82,8 +92,8 @@
     }
 
     .option.selected {
-        background-color: #007bff;
-        color: white;
+        background-color: #b4b4b4d0;
+        color: #000;
     }
 
     .option:hover {
@@ -101,7 +111,9 @@
         <div class="col-md-4">
             <h3 class="page-title">Fingerprint Record</h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a
+                        href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
+                </li>
                 <li class="breadcrumb-item active">Fingerprint Record</li>
             </ul>
         </div>
@@ -125,6 +137,8 @@
 
         </div>
     </div>
+
+
 
     <div class="col-sm-6 col-md-3">
         <div class="input-block mb-3 form-focus select-focus">
@@ -311,31 +325,38 @@
                 url: "{{ route('fingerprint-record.index') }}",
                 type: 'GET',
                 data: function (d) {
-                    const userId = $('#employee_name').val();
-                    const dateRange = $('#daterange').val();
+                    const userId = $('#employee_name').val();  // The input field containing user IDs
+                    const dateRange = $('#daterange').val();   // The input field containing the date range (e.g., "2025-01-01 to 2025-01-31")
 
                     if (userId) {
-                        if (dateRange) {
-                            const [startDate, endDate] = dateRange.split(' to ');
-                            d.user_id = userId;
-                            d.start_date = startDate;
-                            d.end_date = endDate;
-                        } else {
-                            const currentDate = new Date();
-                            const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toLocaleDateString('en-CA');
-                            const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toLocaleDateString('en-CA');
+                        // Split the user_id by comma if it's a list of user IDs
+                        d.user_id = userId.split(',').map(item => item.trim()).join(','); // Send the user IDs as a comma-separated string
 
-                            d.user_id = userId;
+                        if (dateRange) {
+                            // Split the date range into start and end dates
+                            const [startDate, endDate] = dateRange.split(' to ');
+
+                            // Ensure the dates are in the format YYYY-MM-DD
+                            d.start_date = startDate.trim();
+                            d.end_date = endDate.trim();
+                        } else {
+                            // Default to the current month if no date range is provided
+                            const currentDate = new Date();
+                            const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toLocaleDateString('en-CA');  // First day of the month
+                            const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toLocaleDateString('en-CA');  // Last day of the month
+
                             d.start_date = startDate;
                             d.end_date = endDate;
                         }
                     } else {
+                        // If user_id is not provided, stop the request
                         return false;
                     }
                 }
             },
             columns: columns
         });
+
 
         // Search button click event
         $('.btn_employee').on('click', function (e) {
@@ -480,137 +501,257 @@
 </script>
 
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const searchBox = document.getElementById('searchBox');
         const optionsContainer = document.getElementById('optionsContainer');
         const selectedTagsContainer = document.getElementById('selectedTags');
-        let selectedValue = null;  // Store only the user ID for backend
-        let currentPage = 1;  // Keep track of the current page
-        let isLoading = false;  // Flag to prevent multiple simultaneous requests
-        let totalPages = 1;  // Track the total number of pages
+        let selectedValue = [];  // Store multiple user objects
+        let currentPage = 1;
+        let isLoading = false;
+        let totalPages = 1;
 
-        // Function to update selected tags inside the search box
+        const authRole = @json(auth()->user()->role);
+        // Update selected tags in the search box
         function updateSelectedTags() {
-            selectedTagsContainer.innerHTML = '';  // Clear current tags
+            selectedTagsContainer.innerHTML = ''; // Clear the current tags
 
-            if (selectedValue) {
-                const tag = document.createElement('div');
-                tag.classList.add('selected-tag');
-                tag.textContent = selectedValue.username;  // Display the username (for frontend)
-                // Add a close icon to the tag to remove it
-                const closeButton = document.createElement('span');
-                closeButton.innerHTML = '&times;';
-                closeButton.addEventListener('click', function () {
-                    removeSelectedTag();
+            if (selectedValue && Array.isArray(selectedValue)) {
+                selectedValue.forEach(user => {
+                    const tag = document.createElement('div');
+                    tag.classList.add('selected-tag');
+                    tag.textContent = user.username;
+
+                    const closeButton = document.createElement('span');
+                    closeButton.innerHTML = '&times;';
+                    closeButton.addEventListener('click', function () {
+                        removeSelectedTag(user.id);
+                    });
+
+                    tag.appendChild(closeButton);
+                    selectedTagsContainer.appendChild(tag);
                 });
 
-                tag.appendChild(closeButton);
-                selectedTagsContainer.appendChild(tag);
+                if (selectedValue.length > 8) {
+                    selectedTagsContainer.style.boxSizing = 'border-box';
+                    selectedTagsContainer.style.overflowY = 'auto';
+                    selectedTagsContainer.style.height = '9.3em';
+                } else {
+                    selectedTagsContainer.style.boxSizing = '';
+                    selectedTagsContainer.style.overflowY = '';
+                    selectedTagsContainer.style.height = '';
+                }
+
             }
         }
 
-        // Function to remove the selected tag
-        function removeSelectedTag() {
-            selectedValue = null;  // Clear the selected value
+        // Remove selected tag
+        function removeSelectedTag(userId) {
+            // Remove the tag by user ID
+            selectedValue = selectedValue.filter(user => user.id !== userId);
+
+            // Update the selected tags and input field
             updateSelectedTags();
-            optionsContainer.style.display = 'none';  // Hide options when tag is removed
-        }
-
-        // Handle option selection
-        function handleOptionSelection(userId, userName) {
-            selectedValue = { id: userId, username: userName };  // Store the user ID and username
-
-            updateSelectedTags();
-
-            // Update the hidden input with the selected user's ID (for backend)
             const input = document.getElementById('employee_name');
-            input.value = selectedValue.id;  // Store the selected user's ID
+            input.value = selectedValue.map(user => user.id).join(',');
+            // Update the dropdown options' selected state
+            const options = optionsContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                if (option.dataset.userId === userId.toString()) {
+                    option.classList.remove('selected');
+                }
+            });
+
+            // Hide options container if no tags are selected
+            if (selectedValue.length === 0) {
+                optionsContainer.style.display = 'none';
+            }
         }
 
-        // Fetch options based on the search query or for initial load
-        function fetchOptions(query = '', page = 1) {
-            if (isLoading) return;  // Prevent multiple fetches at once
 
-            isLoading = true;  // Set loading flag
-            fetch("{{ route('search.users') }}?search=" + query + "&page=" + page)
+        // Handle option selection (for individual users)
+        function handleOptionSelection(userId, userName) {
+            const existingUserIndex = selectedValue.findIndex(user => user.id === userId);
+
+            if (existingUserIndex === -1) {
+                // If the user is not already selected, add them
+                selectedValue.push({ id: userId, username: userName });
+            } else {
+                // If the user is already selected, remove them
+                selectedValue.splice(existingUserIndex, 1);
+            }
+
+            updateSelectedTags(); // Update the selected tags display
+            const input = document.getElementById('employee_name');
+            input.value = selectedValue.map(user => user.id).join(','); // Update the hidden input field
+
+            // Update the dropdown option's selected state
+            const options = optionsContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                if (option.textContent === userName) {
+                    option.classList.toggle('selected', existingUserIndex === -1);
+                }
+            });
+        }
+
+        // Fetch options from the backend
+        function fetchOptions(query = '', page = 1) {
+            if (isLoading) return;
+            isLoading = true;
+
+            fetch(`/search-users?search=${query}&page=${page}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        // Show the 'No users found' message
-                        alert(data.message);  // You can use any method to display this message, like a modal or div
-                        populateOptions([]);  // Clear previous options if no users are found
-                    } else if (data.data) {
-                        // Handle the case when data is present
-                        populateOptions(data.data);
-                        totalPages = data.last_page;  // Update total pages
-                        currentPage++;  // Increment the page counter after each fetch
+                        alert(data.message);
+                    } else {
+                        populateOptions(data.data); // Append new results to the dropdown
+                        totalPages = data.last_page;
+                        currentPage = data.current_page + 1;
                     }
                 })
                 .catch(error => console.error('Error fetching data:', error))
                 .finally(() => {
-                    isLoading = false;  // Reset loading flag
+                    isLoading = false;
                 });
         }
 
+        // Handle Select All functionality
+        function handleSelectAll() {
+            fetch(`/search-users?all=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data) {
+                        selectedValue = data.data.map(user => ({ id: user.id, username: user.username }));
 
-        // Function to populate options in the dropdown
+                        const input = document.getElementById('employee_name');
+                        input.value = selectedValue.map(user => user.id).join(',');
+
+                        updateSelectedTags();
+
+                        // Update the dropdown options' selected state
+                        const options = optionsContainer.querySelectorAll('.option');
+                        options.forEach(option => {
+                            if (data.data.some(user => user.username === option.textContent)) {
+                                option.classList.add('selected');
+                            }
+                        });
+
+                        toggleSelectOptions(true); // Switch to show Unselect All
+                    }
+                })
+                .catch(error => console.error('Error fetching all users:', error));
+        }
+
+
+        // Handle Unselect All functionality
+        function handleUnselectAll() {
+            selectedValue = [];
+            const input = document.getElementById('employee_name');
+            input.value = '';
+
+            updateSelectedTags();
+            // Update the dropdown options' selected state
+            const options = optionsContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            toggleSelectOptions(false); // Switch to show Select All
+        }
+
+        // Toggle between Select All and Unselect All options
+        function toggleSelectOptions(isSelectAll) {
+            const selectAllOption = document.querySelector('.select-all-option');
+            const unselectAllOption = document.querySelector('.unselect-all-option');
+
+            if (isSelectAll) {
+                selectAllOption.style.display = 'none';
+                unselectAllOption.style.display = 'block';
+            } else {
+                selectAllOption.style.display = 'block';
+                unselectAllOption.style.display = 'none';
+            }
+        }
+
+        // Populate options in the dropdown
         function populateOptions(data) {
             if (data.length === 0) {
-                optionsContainer.style.display = 'none';  // Hide options if no data is returned
+                optionsContainer.style.display = 'none';
             } else {
-                optionsContainer.style.display = 'block';  // Show options if data is available
+                optionsContainer.style.display = 'block';
             }
 
+            // Only show Select All and Unselect All if authRole is not 5
+            if (authRole !== "5") {
+                // Add the "Select All" option only if it's the first load
+                if (optionsContainer.children.length === 0) {
+                    let selectAllOption = document.createElement('div');
+                    selectAllOption.classList.add('option', 'select-all-option');
+                    selectAllOption.textContent = 'Select All';
+                    selectAllOption.addEventListener('click', handleSelectAll);
+                    optionsContainer.appendChild(selectAllOption);
+
+                    let unselectAllOption = document.createElement('div');
+                    unselectAllOption.classList.add('option', 'unselect-all-option');
+                    unselectAllOption.textContent = 'Unselect All';
+                    unselectAllOption.style.display = 'none';
+                    unselectAllOption.addEventListener('click', handleUnselectAll);
+                    optionsContainer.appendChild(unselectAllOption);
+                }
+            }
+
+
+            // Append the fetched user options without clearing previous ones
             data.forEach(user => {
-                const option = document.createElement('div');
-                option.classList.add('option');
-                option.textContent = user.username;  // Display username in the dropdown
-                option.id = `option-${user.id}`;
+                if (![...optionsContainer.children].some(option => option.textContent === user.username)) {
+                    const option = document.createElement('div');
+                    option.classList.add('option');
+                    option.textContent = user.username;
+                    option.dataset.userId = user.id;  // Add data attribute for user ID
+                    option.addEventListener('click', function () {
+                        handleOptionSelection(user.id, user.username);
+                    });
 
-                // Add click event listener for selection
-                option.addEventListener('click', function () {
-                    handleOptionSelection(user.id, user.username);  // Pass user.id and user.username
-                });
+                    // Check if the user is already selected and apply the selected class
+                    if (selectedValue.some(selected => selected.id === user.id)) {
+                        option.classList.add('selected');
+                    }
 
-                optionsContainer.appendChild(option);
+                    optionsContainer.appendChild(option);
+                }
             });
         }
 
-        // Scroll event for lazy loading more data when reaching the bottom of the dropdown
+
+        // Handle scroll event to load more users when reaching bottom
         optionsContainer.addEventListener('scroll', function () {
-            if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight) {
+            if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight - 10) {
                 if (currentPage <= totalPages && !isLoading) {
-                    fetchOptions(searchBox.value.trim(), currentPage);  // Fetch next page if not at the last page
+                    fetchOptions(searchBox.value.trim(), currentPage); // Fetch the next page
                 }
             }
         });
 
-        // Handle the search box click event to load the first set of records
+        // Show options when search box is clicked
         searchBox.addEventListener('click', function () {
             optionsContainer.style.display = 'block';
-
-            // If the options container is empty, load the first 10 records (search or no search)
             if (optionsContainer.children.length === 0) {
-                fetchOptions('', 1);  // Fetch the first 10 records, no search query
+                fetchOptions('', 1); // Load first page if no options exist
             }
         });
 
-        // Event listener for the search box input to filter the options based on the search query
+        // Handle input event (search query change)
         searchBox.addEventListener('input', function () {
             const query = searchBox.value.trim();
-            if (query) {
-                currentPage = 1;  // Reset to page 1 for new search query
-                optionsContainer.innerHTML = '';  // Clear current options
-                fetchOptions(query, 1);  // Fetch new options based on search query
-            } else {
-                currentPage = 1;  // Reset to page 1 when the search box is cleared
-                optionsContainer.innerHTML = '';  // Clear current options
-                fetchOptions('', 1);  // Fetch first 10 records without any search query
-            }
+            currentPage = 1;
+            // Clear existing options only if starting a new search query
+            optionsContainer.innerHTML = '';
+            fetchOptions(query, 1);
         });
 
-        // Close the options list when clicking outside of the dropdown
+        // Close the options if clicked outside
         document.addEventListener('click', function (event) {
             if (!event.target.closest('.MultiDropdown')) {
                 optionsContainer.style.display = 'none';

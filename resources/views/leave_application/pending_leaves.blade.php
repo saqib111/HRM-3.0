@@ -436,6 +436,7 @@
         $(document).on('click', '.toggle-modal', function () {
             const id = $(this).data('id');
             const modal = $('#leaveDetailsModal');
+            var auth_id = {{ auth()->user()->id }};
             showLoader(); // Start loader
 
             // Fetch leave details using AJAX
@@ -443,6 +444,7 @@
                 url: `/leave_application/${id}`, // Route for fetching leave application by ID
                 method: 'GET',
                 success: function (data) {
+                    console.log(data);
                     // Populate modal fields with dynamic data
                     $('#modal-employee-id').text(data.employee_id);
                     $('#modal-username').text(data.username);
@@ -462,7 +464,9 @@
                     const actionButtons = $('#action_buttons');
 
                     // Check if 2nd step needs action
-                    if (data.status_1 === "approved" && data.status_2 === "pending") {
+                    if (data.status_1 === "approved" && data.status_2 === "pending" &&
+                        data.manager_ids.includes(auth_id) // Check if auth_id is in manager_ids
+                    ) {
                         $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
                         actionButtons.removeClass("hideBlock");
                         $('#approval_btn').data('id', id);
@@ -595,6 +599,10 @@
                     case 8:
                         leaveType = 'Paternity Leave';
                         bgColorClass = 'bg-light-yellow';
+                        break;
+                    case 9:
+                        leaveType = 'Medical Leave(Malaysian Special)';
+                        bgColorClass = 'bg-info';
                         break;
                     default:
                         bgColorClass = 'bg-light-gray';

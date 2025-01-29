@@ -22,6 +22,11 @@ class AssignedLeaveApprovalsController extends Controller
             )
                 ->leftJoin('users as requesting_user', 'assigned_leave_approvals.user_id', '=', 'requesting_user.id');
 
+            // If there's a search term, apply it to the user_name column
+            if ($request->has('search') && $request->search['value']) {
+                $searchTerm = $request->search['value'];
+                $leaveApprovals = $leaveApprovals->where('requesting_user.username', 'like', '%' . $searchTerm . '%');
+            }
             // Implement pagination using DataTables request parameters
             $totalRecords = $leaveApprovals->count(); // Total records without filtering
             $leaveApprovals = $leaveApprovals->skip($request->start)
