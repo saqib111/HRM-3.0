@@ -1,0 +1,7 @@
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkout
+Checkout Date & Time: 2025-02-02 16:53:18
+No active session found for User ID: 315 to punch out.
+

@@ -126,6 +126,11 @@ return [
             'via' => App\Logging\IPRestrictionLog::class,
             'level' => env('LOG_LEVEL', 'debug'),
         ],
+        'import_schedule' => [
+            'driver' => 'custom',  // Use custom driver for dynamic log file location
+            'via' => App\Logging\ImportScheduleLog::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
         // Ending Logs
 
 

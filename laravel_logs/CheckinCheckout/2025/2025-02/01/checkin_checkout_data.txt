@@ -1,0 +1,7 @@
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-02-01 15:21:04
+Attendance session created for User ID: 315
+

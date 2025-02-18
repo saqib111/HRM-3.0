@@ -406,9 +406,15 @@
 
                                 <div class="form-outline mb-4">
                                     <label class="col-form-label" for="password">Password</label>
-                                    <input type="password" name="password" id="password"
-                                        placeholder="Please enter your password" autocomplete="off" class="form-control"
-                                        value="12345678" />
+                                    <div class="position-relative">
+                                        <input type="password" name="password" id="password"
+                                            placeholder="Please enter your password" autocomplete="off"
+                                            class="form-control" value="12345678" />
+                                        <span class="position-absolute" id="toggle_password"
+                                            style="right: 14px; top: 52%; transform: translateY(-50%); cursor: pointer;">
+                                            <i id="eyeIcon" class="fa fa-eye"></i>
+                                        </span>
+                                    </div>
                                     <span id="password-error" class="text-danger"></span>
                                 </div>
 
@@ -528,6 +534,24 @@
                 loader.style.display = 'none';
             }
         });
+
+        // SHOW PASSWORD FUNCTION
+        $(document).ready(function () {
+            $("#toggle_password").click(function (e) {
+                e.preventDefault();
+                var password = $("#password");
+                var icon = $("#eyeIcon");
+
+                if (password.attr("type") === "password") {
+                    password.attr("type", "text");
+                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                } else {
+                    password.attr("type", "password");
+                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                }
+            });
+        });
+
     </script>
 
 </body>

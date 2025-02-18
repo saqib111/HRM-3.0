@@ -89,9 +89,8 @@ class AttendanceRecordController extends Controller
             ->whereNotNull('check_in')  // Ensure check_in is not null
             ->where('check_in', '!=', '')  // Ensure check_in is not empty
             ->whereNull('check_out')  // Ensure check_out is null (not punched out yet)
-            ->select('shift_out')  // Select only the shift_out field
+            ->select('shift_out', 'check_in')  // Select only the shift_out field
             ->first();
-
         return view('partials.timesheet', compact('serverTime', 'shift_record'))->render();
     }
 
@@ -333,7 +332,7 @@ class AttendanceRecordController extends Controller
             ->whereNotNull('check_in')  // Ensure check_in is not null
             ->where('check_in', '!=', '')  // Ensure check_in is not empty
             ->whereNull('check_out')  // Ensure check_out is null (not punched out yet)
-            ->select('shift_out')  // Select only the shift_out field
+            ->select('shift_out', 'check_in')  // Select only the shift_out field
             ->first();
 
         if (!$shift_record) {
@@ -896,8 +895,10 @@ class AttendanceRecordController extends Controller
             );
 
 
-            $upSession = AttendanceSession::find($check->id);
-            $upSession->delete();
+            $upSession = AttendanceSession::where('user_id', $user)->get();
+            $upSession->each(function ($session) {
+                $session->delete();
+            });
 
         }
 
@@ -939,8 +940,10 @@ class AttendanceRecordController extends Controller
                 "Checkout Date & Time: " . $time
             );
 
-            $upSession = AttendanceSession::find($check->id);
-            $upSession->delete();
+            $upSession = AttendanceSession::where('user_id', $user)->get();
+            $upSession->each(function ($session) {
+                $session->delete();
+            });
 
             return response()->json(['status' => 'success', 'message' => 'Emergency Checkout Successful']);
         }
@@ -1378,23 +1381,99 @@ class AttendanceRecordController extends Controller
     }
     public function deleteAttendance(Request $request)
     {
+        // Get the authenticated user details
+        $authId = auth()->user();
+        $serverTime = now();
+
         $ids = $request->input('ids');
 
-        if (empty($ids)) {
-            return response()->json(['message' => 'No IDs provided.'], 400);
+        // Initialize the logger
+        $logger = app('log')->channel('delete_schedule');
+
+        // Log the incoming request data (user who requested the delete and the IDs to delete)
+        $logger->info("Schedule Deleted By: User ID: {$authId->id}, Username: {$authId->username}, Employee ID: {$authId->employee_id}");
+
+        // Fetch all the attendance records that match the provided IDs
+        $attendanceRecords = AttendanceRecord::whereIn('id', $ids)->get();
+
+        // If no records are found, log that and return an error message
+        if ($attendanceRecords->isEmpty()) {
+            $logger->warning("No attendance records found for IDs: " . implode(', ', $ids));
+            return response()->json(['message' => 'No records found for deletion.'], 404);
+        }
+
+        // Fetch the leader details only once, as they are the same for all records
+        $leaderId = $attendanceRecords->first()->leader_id;
+        $fetchLeader = User::find($leaderId);
+        $LeaderName = $fetchLeader->username;
+        $LeaderEMPID = $fetchLeader->employee_id;
+
+        // Log the leader's information once
+        $logger->info("Leader ID: {$leaderId}, Username: {$LeaderName}, Employee ID: {$LeaderEMPID}");
+
+        // Loop through each attendance record and log the user details
+        foreach ($attendanceRecords as $attendanceRecord) {
+            $userId = $attendanceRecord->user_id;
+            $shiftIn = $attendanceRecord->shift_in;
+            $shiftOut = $attendanceRecord->shift_out;
+
+            // Fetch user details for each record
+            $fetchUser = User::find($userId);
+            $EmpName = $fetchUser->username;
+            $EmpID = $fetchUser->employee_id;
+
+            // Log the details of the attendance record, including Shift In and Shift Out
+            $logger->info("Attendance Record ID: {$attendanceRecord->id} | Shift In: {$shiftIn} | Shift Out: {$shiftOut} | User ID: {$userId}, Username: {$EmpName}, Employee ID: {$EmpID}");
         }
 
         try {
 
             AttendanceRecord::whereIn('id', $ids)->delete();
+
+            // Log the success of the operation
+            $logger->info("Timestamp: {$serverTime}");
+            $logger->info("Schedule Deleted successfully.\n");
+
             return response()->json(['message' => 'Records deleted successfully.'], 200);
         } catch (\Exception $e) {
+            // Log the error if deletion fails
+            $logger->error("Error deleting attendance records: " . $e->getMessage() . "\n");
+
             return response()->json(['message' => 'An error occurred.'], 500);
         }
     }
     public function deleteSingleAttendance(Request $request)
     {
+        // Get the authenticated user details
+        $authId = auth()->user();
+        $serverTime = now();
+
         $id = $request->input('id');
+
+        $fetchData = AttendanceRecord::find($id);
+        $leaderId = $fetchData->leader_id;  // Assuming leader_id exists in the attendance table
+        $userId = $fetchData->user_id;
+        $shiftIn = $fetchData->shift_in;
+        $shiftout = $fetchData->shift_out;
+
+        $fetchUser = User::find($userId);
+        $fetchLeader = User::find($leaderId);
+        $EmpName = $fetchUser->username;
+        $EmpID = $fetchUser->employee_id;
+        $LeaderName = $fetchLeader->username;
+        $LeaderEMPID = $fetchLeader->employee_id;
+
+
+        // Set up the logger
+        $logger = app('log')->channel('delete_schedule');
+        $logger->info("Single Attendance Record Deleted By: User ID: {$authId->id}, Username: {$authId->username}, Employee ID: {$authId->employee_id}");
+
+        // Log the attempt to delete the record with the provided ID
+        $logger->info("User Record Deleted: User ID: {$userId}, Username:{$EmpName}, Employee ID: {$EmpID}");
+        $logger->info("Leader ID: {$leaderId}, Username:{$LeaderName}, Employee ID:{$LeaderEMPID}");
+        $logger->info("Record ID: {$id} | Shift In: {$shiftIn} | Shift Out: {$shiftout}");
+        // $logger->info("Shift In: {$shiftIn}\nShift Out: {$shiftout}");
+        $logger->info("Timestamp: {$serverTime}");
 
         if (empty($id)) {
             return response()->json(['message' => 'No ID provided.'], 400);
@@ -1405,6 +1484,7 @@ class AttendanceRecordController extends Controller
             $deleted = AttendanceRecord::where('id', $id)->delete();
 
             if ($deleted) {
+                $logger->info("Record Deleted Successfully.\n");
                 return response()->json(['message' => 'Record deleted successfully.'], 200);
             } else {
                 return response()->json(['message' => 'Record not found.'], 404);

@@ -11,9 +11,11 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceImport implements ToCollection
 {
+    public $totalRecords = 0; // Define a public property to hold the total records count
     /**
      * @param Collection $collection
      */
@@ -23,6 +25,7 @@ class AttendanceImport implements ToCollection
 
         $errors = []; // Array to store validation errors
         $validatedData = []; // Array to store validated data
+        $serverTime = now();
 
         // Get the Authenticated User
         $leader = Auth::user();
@@ -40,18 +43,18 @@ class AttendanceImport implements ToCollection
                 $user = User::where('username', $username)->first();
 
                 if (!$user) {
-                    throw new Exception("User not found for username '{$username}' at line {$lineNumber}.");
+                    throw new Exception("<span class='fw-bold text-danger'>Invalid User Name</span>:  User not found for username <span class='text-danger'>'{$username}'</span> at <span class='badge bg-danger text-white'>line {$lineNumber}</span>");
                 }
                 $userId = $user->id;
 
                 // Check if user has permission to update this schedule
-                if ($leaderRole !== "1") { // If not admin (role = 1)
+                if ($leaderRole !== "1" && $leaderRole !== "2" && $leaderRole !== "3") { // If not admin (role = 1)
                     $isAssignedEmployee = LeaderEmployee::where('Leader_id', $leaderId)
                         ->where('employee_id', $userId)
                         ->exists();
 
                     if (!$isAssignedEmployee) {
-                        throw new Exception("Unauthorized: The username '{$username}' at line {$lineNumber} does not belong to your team.");
+                        throw new Exception("<span class='fw-bold text-danger'>Invalid Team Member</span>:  The user <span class='text-danger'>'{$username}'</span> does not belong to your team at <span class='badge bg-danger text-white'>line {$lineNumber}</span>");
                     }
                 }
 
@@ -60,18 +63,18 @@ class AttendanceImport implements ToCollection
                     $shiftIn = Carbon::instance(Date::excelToDateTimeObject($row[1] + $row[2]));
                     $shiftOut = Carbon::instance(Date::excelToDateTimeObject($row[3] + $row[4]));
                 } catch (Exception $e) {
-                    throw new Exception("Invalid date/time format at line {$lineNumber}.");
+                    throw new Exception("<span class='fw-bold text-danger'>Invalid Format</span>:  Invalid <span class='text-danger'>date</span> or <span class='text-danger'>time</span> format at <span class='badge bg-danger text-white'>line {$lineNumber}</span>");
                 }
 
                 // Ensure shiftOut is not before shiftIn
                 if ($shiftOut->lessThan($shiftIn)) {
-                    throw new Exception("Shift out time is earlier than shift in time at line {$lineNumber}.");
+                    throw new Exception("<span class='fw-bold text-danger'>Invalid Shift Hours</span>:  Shift out time is earlier than shift in time at <span class='badge bg-danger text-white'>line {$lineNumber}</span>");
                 }
 
                 // Ensure duty hours do not exceed 9 hours
                 $dutyHours = $shiftIn->diffInMinutes($shiftOut);
                 if ($dutyHours > 540) { // 9 hours * 60 minutes
-                    throw new Exception("Duty hours exceed the allowed 9-hour limit at line {$lineNumber}.");
+                    throw new Exception("<span class='fw-bold text-danger'>Invalid Duty Hours</span>:  Duty hours exceed the allowed <span class='text-danger'>09 hours</span> limit at <span class='badge bg-danger text-white'>line {$lineNumber}</span>");
                 }
 
                 // Determine dayoff value
@@ -85,6 +88,8 @@ class AttendanceImport implements ToCollection
                     'shift_out' => $shiftOut->format('Y-m-d H:i:s'),
                     'dayoff' => $dayoff,
                 ];
+
+                $this->totalRecords++; // Increment the count of successfully validated records
             } catch (Exception $e) {
                 // Capture error with line number
                 $errors[] = $e->getMessage();
@@ -109,6 +114,18 @@ class AttendanceImport implements ToCollection
                     'dayoff' => $data['dayoff'],
                 ]
             );
+            $user_schedule = User::whereIn('id', [$data['user_id'], $data['leader_id']])
+                ->pluck('username', 'id');
+
+            $u_name = $user_schedule->get($data['user_id'], '');
+            $leader_name = $user_schedule->get($data['leader_id'], '');
+
+            // Log successful insert
+            Log::channel('import_schedule')->info("Updated Schedule for Employee Name: {$u_name}(ID:{$data['user_id']}) | Leader Name: {$leader_name}(ID:{$data['leader_id']}) | Shift In: {$data['shift_in']} | Shift Out: {$data['shift_out']} | Day Off: {$data['dayoff']}");
         }
+        Log::channel('import_schedule')->info("TimeStamp: {$serverTime}\n\n");
+
+        // Return the number of successfully processed records
+        return $this->totalRecords;
     }
 }

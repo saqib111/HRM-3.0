@@ -1,0 +1,45 @@
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkout
+Checkout Date & Time: 2025-01-31 18:45:56
+No active session found for User ID: 315 to punch out.
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-31 18:46:04
+Error: User ID: 315 punch-in time is after shift-out time: 2025-01-31 18:46:04
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-31 19:11:43
+Attendance session created for User ID: 315
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-31 19:13:50
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-31 19:13:57
+No attendance record found for User ID: 315 on 2025-01-31
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Checkin
+Checkin Date & Time: 2025-01-31 19:16:57
+Attendance session created for User ID: 315
+
+ID: 315
+Username: Affan Ahmed
+Employee ID: AHNV00315
+Status: Emergency Checkout
+Checkout Date & Time: 2025-01-31 19:19:08

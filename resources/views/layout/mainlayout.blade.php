@@ -242,14 +242,18 @@
                 url: "{{ route('notify') }}",
                 type: "GET",
                 success: function (response) {
+                    if (!response.haspermission && !response.hasroles) {
+                        console.log("User does not have permission or role. Stopping requests.");
+                        clearInterval(notificationInterval);
+                        return;
+                    }
+
                     var count = response.notificount;
                     var totalPendingLeaves = response.totalPendingLeaves;
                     var hrpending = response.hrpending;
 
                     if (count > 0) {
                         $('#notifibadge').text(count).removeClass('hidden');
-
-
                     } else {
                         $('#notifibadge').addClass('hidden');
                     }
@@ -260,15 +264,11 @@
                         $('#pendingLeavesBadge').addClass('hidden');
                     }
 
-
-
                     if (hrpending > 0) {
                         $('#hrpendingbadge').text(hrpending).removeClass('hidden');
                     } else {
                         $('#hrpendingbadge').addClass('hidden');
                     }
-
-
                 },
                 error: function (xhr, status, error) {
                     console.error("Error fetching notification count:", error);
@@ -276,15 +276,12 @@
             });
         }
 
-        // Call the function when the page loads
         $(document).ready(function () {
             updateNotificationBadge();
-
-            // Optionally refresh every 30 seconds
-            setInterval(updateNotificationBadge, 10000);
+            window.notificationInterval = setInterval(updateNotificationBadge, 5000);
         });
-
     </script>
+
 </body>
 
 </html>

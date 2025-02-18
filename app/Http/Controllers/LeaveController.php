@@ -1017,20 +1017,23 @@ class LeaveController extends Controller
                         $subQuery->where('status_1', 'pending')
                             ->orWhere('status_2', 'pending');
                     })->whereNotIn('status_1', ['rejected'])
-                        ->whereNotIn('status_2', ['rejected']);
+                        ->whereNotIn('status_2', ['rejected'])
+                        ->orderBy('created_at', 'desc'); // Order by latest created_at
                 })
                 ->when($status === 'approved', function ($query) {
                     // Approved requests: Both status_1 and status_2 are approved
                     $query->where('status_1', 'approved')
                         ->where('status_2', 'approved')
                         ->where('revoked', '=', '0')
-                        ->whereNull('hr_approval_id');
+                        ->whereNull('hr_approval_id')
+                        ->orderBy('second_approval_created_time', 'desc'); // Order by latest second approval time
                 })
                 ->when($status === 'rejected', function ($query) {
                     // Rejected requests: Either status_1 or status_2 is rejected
                     $query->where(function ($subQuery) {
                         $subQuery->where('status_1', 'rejected')
-                            ->orWhere('status_2', 'rejected');
+                            ->orWhere('status_2', 'rejected')
+                            ->orderBy('created_at', 'desc'); // Order by latest created_at
                     });
                 })
                 ->when($status === 'completed', function ($query) {
@@ -1038,15 +1041,16 @@ class LeaveController extends Controller
                     $query->where('status_1', 'approved')
                         ->where('status_2', 'approved')
                         ->where('revoked', '=', '0')
-                        ->whereNotNull('hr_approval_id');
+                        ->whereNotNull('hr_approval_id')
+                        ->orderBy('hr_approval_created_time', 'desc'); // Order by latest HR approval time
                 })
                 ->when($status === 'revoked', function ($query) {
                     // Completed requests: Both status_1 and status_2 are approved and hr_approval_id exists
                     $query->where('status_1', 'approved')
                         ->where('status_2', 'approved')
-                        ->where('revoked', '=', '1');
+                        ->where('revoked', '=', '1')
+                        ->orderBy('revoked_created_time', 'desc'); // Order by latest created_at
                 })
-
                 ->get();
 
             // Return the leaves data as Datatables
@@ -1341,8 +1345,27 @@ class LeaveController extends Controller
     //Unassigned Leave Badge
     public function notifibadged()
     {
+        $user = Auth::user();
+        $loggedInUserId = $user->id;
 
-        $loggedInUserId = auth()->user()->id;
+
+        $hasPermission = DB::table('user_permissions')
+            ->where('user_id', $loggedInUserId) // Ensure it's checking for the current user
+            ->where('permissions', 'pending_leaves')
+            ->exists();
+
+
+        $hasRoles = in_array($user->role, [1, 2, 3]);
+
+        if (!$hasPermission && !$hasRoles) {
+            return response()->json([
+                'notificount' => 0,
+                'totalPendingLeaves' => 0,
+                'hrpending' => 0,
+                'haspermission' => false,
+                'hasroles' => false
+            ]);
+        }
 
         $notificount = LeaveManagement::where(function ($query) {
             $query->where('team_leader_ids')
@@ -1373,11 +1396,13 @@ class LeaveController extends Controller
             ->where('revoked', '=', '0')
             ->count();
 
+
         return response()->json([
             'notificount' => $notificount,
             'totalPendingLeaves' => $totalPendingLeaves,
-            'hrpending' => $hrpending
-
+            'hrpending' => $hrpending,
+            'haspermission' => $hasPermission,
+            'hasroles' => $hasRoles,
         ]);
     }
 

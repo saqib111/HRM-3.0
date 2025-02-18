@@ -993,7 +993,7 @@
         let shiftDuration = 9;
         let intervalId = null;
         let endShift = null;
-        let shitFinish = null;
+        let shiftFinish = null;
         // Fetch Punch IN/OUT status on page load
         fetch('/get-punch-time')
             .then(response => response.json())
@@ -1015,15 +1015,10 @@
                     punchInTimeDisplay.textContent = '';
                     timeCounter.textContent = '0:00 hrs';
                     progressCircle.style.strokeDashoffset = 314;
-
-                    punchInBtn.style.display = 'block';
                 } else {
                     punchInTime = new Date(data.punch_in_time);
                     shiftFinish = new Date(data.shiftEnd);
                     shiftDuration = data.shift_duration || shiftDuration;
-
-                    punchInBtn.style.display = 'none';
-
                     punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
                     startShiftProgress(true);
                 }
@@ -1099,10 +1094,16 @@
                                 } else {
                                     createToast('info', 'fa-solid fa-check-circle', 'Success', `${punchAction} successful.`);
                                     if (punchAction === "Punch IN") {
-                                        $('#punchInBtn').css('display', 'none');
+                                        punchInTime = new Date(result.punch_in_time);
+                                        punchInTimeDisplay.textContent = moment(punchInTime).format('dddd, DD MMM YYYY HH:mm:ss A');
+                                        startShiftProgress(true);
+                                        console.log("golo is working");
                                     } else {
-                                        punchOutBtn.style.display = 'none';
-                                        punchInBtn.style.display = 'block';
+                                        punchInTime = null;
+                                        punchInTimeDisplay.textContent = '';
+                                        timeCounter.textContent = '0:00 hrs';
+                                        progressCircle.style.strokeDashoffset = 314;
+                                        console.log("golo is Ending");
                                     }
                                 }
 

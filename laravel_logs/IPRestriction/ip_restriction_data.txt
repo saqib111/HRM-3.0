@@ -16,3 +16,13 @@ Updated status for ID: 1 => Username: Benison Wong (Employee ID: AHNV00001)
 Old status: Restricted - New status: Allowed
 Timestamp: 2025-01-25 13:46:00
 
+Updated By: User ID: 315 - Username:Affan Ahmed - Employee ID: AHNV00315
+Updated status for ID: 519 => Username: Naeem Khan (Employee ID: AHNV00519) 
+Old status: Allowed - New status: Restricted
+Timestamp: 2025-01-31 19:22:29
+
+Updated By: User ID: 315 - Username:Affan Ahmed - Employee ID: AHNV00315
+Updated status for ID: 519 => Username: Naeem Khan (Employee ID: AHNV00519) 
+Old status: Restricted - New status: Allowed
+Timestamp: 2025-01-31 19:23:29
+
