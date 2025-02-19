@@ -334,6 +334,9 @@ Route::get('custom-leave-detail', [LeaveController::class, 'customLeaveDetail'])
 // ALL LEAVES ROUTE
 Route::get("all-leaves-detail", [LeaveController::class, "allLeaves"])->name("all-leaves-detail");
 
+// CUSTOM SEARCH LEAVE WITH FILTER
+Route::get("/search-leaves", [LeaveController::class, "show"])->name("show.searchleaves");
+Route::post("/search-leaves/custom", [LeaveController::class, "getLeavesData"])->name("search.searchleaves");
 
 //Documentation route
 Route::middleware(["auth", "check_permission"])->group(function () {

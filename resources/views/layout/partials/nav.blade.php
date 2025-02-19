@@ -113,15 +113,15 @@
                 @endif
 
                 @if(
-                        $user->role == 1 || in_array('show_all_employee_info', $permissions)
-                        || in_array('show_brands', $permissions)
-                        || in_array('show_departments', $permissions)
-                        || in_array('show_designations', $permissions)
-                        || in_array('view_manage_shift', $permissions)
-                        || in_array('show_teams', $permissions)
-                        || in_array('show_al_balance', $permissions)
-                        || in_array('show_fingerprint_record', $permissions)
-                    )
+                    $user->role == 1 || in_array('show_all_employee_info', $permissions)
+                    || in_array('show_brands', $permissions)
+                    || in_array('show_departments', $permissions)
+                    || in_array('show_designations', $permissions)
+                    || in_array('view_manage_shift', $permissions)
+                    || in_array('show_teams', $permissions)
+                    || in_array('show_al_balance', $permissions)
+                    || in_array('show_fingerprint_record', $permissions)
+                )
                                     <li class="menu-title">
                                         <span>Employees</span>
                                     </li>
@@ -204,12 +204,12 @@
                         Status</span> </a>
             </li>
             @if(
-                    $user->role == 1 || in_array('unassigned_leaves', $permissions) ||
-                    in_array('pending_leaves', $permissions) ||
-                    in_array('hr_work', $permissions) ||
-                    in_array('revoked_leaves', $permissions) ||
-                    in_array('leave_approvals', $permissions)
-                )
+                $user->role == 1 || in_array('unassigned_leaves', $permissions) ||
+                in_array('pending_leaves', $permissions) ||
+                in_array('hr_work', $permissions) ||
+                in_array('revoked_leaves', $permissions) ||
+                in_array('leave_approvals', $permissions)
+            )
                             <li class="menu-title">
                                 <span>Manage Leaves</span>
                             </li>
@@ -252,6 +252,13 @@
                 <li class="{{ request()->routeIs('leave-approvals.index') ? 'active' : '' }}">
                     <a href="{{route('leave-approvals.index')}}"><i class="fa fa-person-circle-check"></i> <span>Leave
                             Approvals</span>
+                    </a>
+                </li>
+            @endif
+            @if ($user->role == 1 || in_array('search_leaves', $permissions))
+                <li>
+                    <a href="{{route('show.searchleaves')}}"><i class="fa-brands fa-searchengin"></i> <span
+                            data-translate="search_leaves">Customize Search Leaves</span>
                     </a>
                 </li>
             @endif

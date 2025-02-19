@@ -1406,4 +1406,142 @@ class LeaveController extends Controller
         ]);
     }
 
+    // ************************************************** CUSTOM LEAVE SEARCH WITH FILTERS STARTS ********************************************
+
+    // VIEW FILE
+    public function show()
+    {
+        return view("leave_application.custom_leave_search");
+    }
+
+    // FILTERED RESULTS
+    public function getLeavesData(Request $request)
+    {
+        if ($request->ajax()) {
+            $leave_dates = $request->leave_dates;
+            $leave_status = $request->leave_status;
+            $leave_type = (int) $request->leave_type;  // Cast the value to an integer
+            $username = $request->username;
+            $dates = explode(',', $leave_dates);
+            $start_date = $dates[0];
+            $end_date = $dates[1];
+            $nationality = $request->nationality;
+
+            $query = LeaveManagement::whereRaw(
+                "(CAST(JSON_UNQUOTE(JSON_EXTRACT(leave_details, '$[0].start_date')) AS DATE) BETWEEN ? AND ? 
+                OR CAST(JSON_UNQUOTE(JSON_EXTRACT(leave_details, '$[0].end_date')) AS DATE) BETWEEN ? AND ?)",
+                [$start_date, $end_date, $start_date, $end_date]
+            );
+
+
+            if ($leave_status === 'pending') {
+                $query->where(function ($q) {
+                    $q->where('status_1', 'pending')
+                        ->orWhere(function ($q2) {
+                            $q2->where('status_2', 'pending')->where('status_1', '!=', 'rejected'); // Exclude if status_1 is also pending
+                        });
+                });
+            } elseif ($leave_status === 'approved') {
+                $query->where('status_2', 'approved');
+            } elseif ($leave_status === 'rejected') {
+                $query->where(function ($q) {
+                    $q->where('status_1', 'rejected')
+                        ->orWhere('status_2', 'rejected');
+                });
+            } elseif ($leave_status === 'revoked') {
+                $query->where('revoked', '1');
+            }
+
+            if ($leave_type) {
+                $query->whereJsonContains('leave_details', ['leave_type_id' => $leave_type]);
+                if ($leave_type === 9) {
+                    $query = LeaveManagement::whereRaw(
+                        "(CAST(JSON_UNQUOTE(JSON_EXTRACT(leave_details, '$[0].date')) AS DATE) BETWEEN ? AND ?)",
+                        [$start_date, $end_date]
+                    );
+                }
+            }
+
+            if ($username) {
+                $user_id = User::where('username', $username)->value('id');
+                $query->where('user_id', $user_id);
+            }
+
+            if ($nationality && $nationality != "all") {
+                $query->whereHas('userProfile', function ($q) use ($nationality) {
+                    $q->where('nationality', $nationality);
+                });
+            }
+
+            $leaves = $query->get();
+
+            return Datatables::of($leaves)
+                ->addIndexColumn()
+                ->addColumn('username', function ($row) {
+                    return $row->user->username ?? 'N/A';
+                })
+                ->addColumn('employee_id', function ($row) {
+                    return $row->user->employee_id ?? 'N/A';
+                })
+                ->addColumn('day', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $day_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $day_str .= '<span class="badge bg-primary">Full Day</span><br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $day_str .= '<span class="badge bg-warning">Half Day</span><br>';
+                        }
+                    }
+                    return $day_str;
+                })
+                ->addColumn('from', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $from_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $from_str .= $detail->start_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $from_str .= $detail->date . ' (' . $detail->start_time . ')<br>';
+                        }
+                    }
+                    return $from_str;
+                })
+                ->addColumn('to', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $to_str = '';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'full_day') {
+                            $to_str .= $detail->end_date . '<br>';
+                        } elseif ($detail->type === 'half_day') {
+                            $to_str .= $detail->date . ' (' . $detail->end_time . ')<br>';
+                        }
+                    }
+                    return $to_str;
+                })
+                ->addColumn('off_days', function ($row) {
+                    $details = json_decode($row->leave_details);
+                    $off_day_str = '<ul class="list-unstyled mb-0">';
+
+                    foreach ($details as $detail) {
+                        if ($detail->type === 'off_day') {
+                            $off_day_str .= "<li><span class='badge bg-secondary'>{$detail->date}</span></li>";
+                        }
+                    }
+
+                    return $off_day_str .= '</ul>';
+                })
+                ->rawColumns(['day', 'from', 'to', 'off_days'])
+                ->make(true);
+
+        }
+
+
+    }
+
+    // ************************************************** CUSTOM LEAVE SEARCH WITH FILTERS ENDS ********************************************
+
 }
