@@ -197,24 +197,56 @@ class AdminController extends Controller
             // Fetch permissions for the logged-in user
             $permissions = getUserPermissions($user);
 
-            $employees = User::join('companies', 'users.company_id', '=', 'companies.id')
-                ->join('departments', 'users.department_id', '=', 'departments.id')
-                ->join('designations', 'users.designation_id', '=', 'designations.id')
-                ->select([
-                    'users.id',
-                    'users.employee_id',
-                    'users.username',
-                    'users.email',
-                    'users.joining_date',
-                    'companies.name as company_name',
-                    'departments.name as department_name',
-                    'designations.name as designation_name',
-                    'users.status',
-                    'users.image',
-                    'users.role'
-                ])
-                ->orderBy('users.id', 'asc'); // This ensures sorting by ID in ascending order
+            $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+            $matching_offices = array_intersect($allowed_offices, $permissions);
 
+            if (!empty($matching_offices)) {
+                $office_based_permission = array_values($matching_offices);
+            } else {
+                $office_based_permission = [];
+            }
+
+            if ($user->role == 1) {
+                $employees = User::join('companies', 'users.company_id', '=', 'companies.id')
+                    ->join('departments', 'users.department_id', '=', 'departments.id')
+                    ->join('designations', 'users.designation_id', '=', 'designations.id')
+                    ->join('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                    // ->where('office', '=', 'Bataan')
+                    ->select([
+                        'users.id',
+                        'users.employee_id',
+                        'users.username',
+                        'users.email',
+                        'users.joining_date',
+                        'companies.name as company_name',
+                        'departments.name as department_name',
+                        'designations.name as designation_name',
+                        'users.status',
+                        'users.image',
+                        'users.role'
+                    ])
+                    ->orderBy('users.id', 'asc'); // This ensures sorting by ID in ascending order
+            } elseif ($user->role == 2 && $office_based_permission) {
+                $employees = User::join('companies', 'users.company_id', '=', 'companies.id')
+                    ->join('departments', 'users.department_id', '=', 'departments.id')
+                    ->join('designations', 'users.designation_id', '=', 'designations.id')
+                    ->join('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                    ->whereIn('user_profiles.office', $office_based_permission) // ✅ Corrected the where clause
+                    ->select([
+                        'users.id',
+                        'users.employee_id',
+                        'users.username',
+                        'users.email',
+                        'users.joining_date',
+                        'companies.name as company_name',
+                        'departments.name as department_name',
+                        'designations.name as designation_name',
+                        'users.status',
+                        'users.image',
+                        'users.role'
+                    ])
+                    ->orderBy('users.id', 'asc'); // This ensures sorting by ID in ascending order
+            }
 
             // Filter by company if specified
             if ($request->has('company')) {
@@ -520,11 +552,6 @@ class AdminController extends Controller
             return response()->json(['employee_id' => $employee->id]); // Ensure you return employee_id
         }
         return response()->json(['message' => 'Employee not found'], 404);
-    }
-
-    public function createTeam()
-    {
-        return view('admin.leader-team.leader-team');
     }
 
     public function loadBrands(Request $request)

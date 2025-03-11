@@ -86,13 +86,32 @@ class FingerprintController extends Controller
         $page = $request->input('page', 1);  // Get the current page, default to 1
         $allUsers = $request->input('all', false);  // Check if we want to fetch all users without pagination
 
+        $user = auth()->user();
+
+        $permissions = getUserPermissions($user);
+
+        $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+        $matching_offices = array_intersect($allowed_offices, $permissions);
+
+        if (!empty($matching_offices)) {
+            $office_based_permission = array_values($matching_offices);
+        } else {
+            $office_based_permission = [];
+        }
+
         // Check if the user is an admin or not (role == 1)
-        if (auth()->user()->role == 1 || auth()->user()->role == 2) {
+        if (auth()->user()->role == 1) {
             // If role is 1, fetch all active users matching the search
             $query = User::when($search, function ($query) use ($search) {
                 return $query->where('username', 'LIKE', '%' . $search . '%');
             })
                 ->where('status', '1');
+        } elseif ($user->role == 2 && $office_based_permission) {
+            $query = User::when($search, function ($query) use ($search) {
+                return $query->where('username', 'LIKE', '%' . $search . '%');
+            })
+                ->join('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                ->whereIn('user_profiles.office', $office_based_permission);
         } else {
             // If role is not 1, fetch users from the team based on leader_employees table
             $leaderId = auth()->user()->id;  // Get the logged-in user's ID

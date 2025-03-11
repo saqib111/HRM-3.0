@@ -6,12 +6,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
-            <h3 class="page-title">Edit Schedule Employee List </h3>
+            <h3 class="page-title"><span data-translate="edit_schedule_employee_list">Edit schedule Employee List</span></h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active"> Employee List</li>
+                <li class="breadcrumb-item active"><span data-translate="employee_list">Employee List</span></li>
             </ul>
         </div>
 
@@ -24,10 +24,10 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Employee ID</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Action</th>
+                        <th><span data-translate="employee_id">Employee ID</span></th>
+                        <th><span data-translate="name">Name</span></th>
+                        <th><span data-translate="department">Department</span></th>
+                        <th><span data-translate="action">Action</span></th>
                     </tr>
                 </thead>
             </table>
@@ -56,7 +56,7 @@
                     searchable: false,
                     render: function (data, type, row) {
 
-                        return `<button class="btn btn-primary edit-button" data-id="${data}">Edit Schedule</button>`;
+                        return `<button class="btn btn-primary edit-button" data-id="${data}"><span data-translate="edit_schedule">Edit Schedule</span></button>`;
                     }
                 },
             ],
@@ -72,4 +72,6 @@
     });
 
 </script>
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 @endsection

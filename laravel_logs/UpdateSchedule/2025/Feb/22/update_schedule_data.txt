@@ -1,0 +1,23 @@
+Schedule Updated By:User ID: 578, Username: Jaziel Ng, Employee ID: AHNV00578
+
+Old Data:Schedule ID: 98626
+Leader ID: 578, Leader Username: Jaziel Ng, Leader Employee ID: AHNV00578
+Schedule Updated For: User ID: 2327, User Username: Jezzy Nash, User Employee ID: AHNV02327
+Old Check-in/Check-out Time:
+Check-in: , Check-out: 
+Old Shift Time:
+Shift-in: 2025-02-22 09:00:00, Shift-out: 2025-02-22 18:00:00
+Old Manage Day: Working Day
+
+New Data:Schedule ID: 98626
+Leader ID: 578, Leader Username: Jaziel Ng, Leader Employee ID: AHNV00578
+Schedule Updated For: User ID: 2327, User Username: Jezzy Nash, User Employee ID: AHNV02327
+Updated Check-in/Check-out Time:
+Check-in: , Check-out: 
+Updated Shift Time:
+Shift-in: 2025-02-22 09:00, Shift-out: 2025-02-22 18:00
+Updated Manage Day: Working Day
+
+Timestamp: 2025-02-26 12:13:39.
+Schedule Updated Successfully.
+

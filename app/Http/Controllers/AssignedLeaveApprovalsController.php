@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\AssignedLeaveApprovals;
 use App\Models\User;
+use App\Models\LeaveManagement;
 use Yajra\DataTables\Facades\DataTables;
 
 class AssignedLeaveApprovalsController extends Controller
@@ -158,11 +159,9 @@ class AssignedLeaveApprovalsController extends Controller
     {
         try {
             $leaveApproval = AssignedLeaveApprovals::find($id);
-
             if (!$leaveApproval) {
                 return response()->json(['error' => 'Leave approval not found'], 404);
             }
-
             // Log the values before decoding
             \Log::info('First Assigned User ID: ' . $leaveApproval->first_assign_user_id);
             \Log::info('Second Assigned User ID: ' . $leaveApproval->second_assign_user_id);
@@ -186,7 +185,35 @@ class AssignedLeaveApprovalsController extends Controller
         }
     }
 
+    public function unassigned_edit($id)
+    {
+        try {
+            $leaveApproval = LeaveManagement::find($id);
+            if (!$leaveApproval) {
+                return response()->json(['error' => 'Leave approval not found'], 404);
+            }
+            // Log the values before decoding
+            \Log::info('First Assigned User ID: ' . $leaveApproval->first_assign_user_id);
+            \Log::info('Second Assigned User ID: ' . $leaveApproval->second_assign_user_id);
 
+            $firstAssignedUsers = User::whereIn('id', json_decode($leaveApproval->first_assign_user_id, true) ?: [])
+                ->pluck('username', 'id')
+                ->toArray();
+
+            $secondAssignedUsers = User::whereIn('id', json_decode($leaveApproval->second_assign_user_id, true) ?: [])
+                ->pluck('username', 'id')
+                ->toArray();
+
+            return response()->json([
+                'leaveApprovalId' => $leaveApproval->id,
+                'first_assigned_user' => $firstAssignedUsers,
+                'second_assigned_user' => $secondAssignedUsers,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in edit controller: ' . $e->getMessage());
+            return response()->json(['error' => 'An unexpected error occurred.'], 500);
+        }
+    }
 
 
 

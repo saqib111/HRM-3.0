@@ -8,6 +8,7 @@ use App\Models\VisaInfo;
 use App\Models\User;
 use App\Models\Emergency;
 use App\Models\Dependant;
+use App\Models\Company;
 use DB;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Log;
@@ -60,20 +61,59 @@ class UserProfileController extends Controller
 
     public function allEmployee(Request $request)
     {
+        $company = Company::all();
         if ($request->ajax()) {
-            $profileUsers = User::select(
-                'users.id',
-                'users.employee_id',
-                'visa_infos.visa_no as visa_no',
-                'visa_infos.passport_no as passport_no',
-                'user_profiles.real_name as real_name',
-                'user_profiles.nationality as nationality',
-                'companies.name as company_name',
-                'users.email'
-            )
-                ->leftJoin('visa_infos', 'users.id', '=', 'visa_infos.user_id')
-                ->leftJoin('user_profiles', 'users.id', '=', 'user_profiles.user_id')
-                ->leftJoin('companies', 'users.company_id', '=', 'companies.id');
+            $user = auth()->user();
+
+
+
+            $permissions = getUserPermissions($user);
+
+            $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+            $matching_offices = array_intersect($allowed_offices, $permissions);
+
+            if (!empty($matching_offices)) {
+                $office_based_permission = array_values($matching_offices);
+            } else {
+                $office_based_permission = [];
+            }
+
+            if ($user->role == 1) {
+                $profileUsers = User::select(
+                    'users.id',
+                    'users.employee_id',
+                    'visa_infos.visa_no as visa_no',
+                    'visa_infos.passport_no as passport_no',
+                    'user_profiles.real_name as real_name',
+                    'user_profiles.nationality as nationality',
+                    'companies.name as company_name',
+                    'users.email'
+                )
+                    ->leftJoin('visa_infos', 'users.id', '=', 'visa_infos.user_id')
+                    ->leftJoin('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                    ->leftJoin('companies', 'users.company_id', '=', 'companies.id');
+
+            } elseif (($user->role == 2 || $user->role == 3) && $office_based_permission) {
+                $profileUsers = User::select(
+                    'users.id',
+                    'users.employee_id',
+                    'visa_infos.visa_no as visa_no',
+                    'visa_infos.passport_no as passport_no',
+                    'user_profiles.real_name as real_name',
+                    'user_profiles.nationality as nationality',
+                    'companies.name as company_name',
+                    'users.email'
+                )
+                    ->leftJoin('visa_infos', 'users.id', '=', 'visa_infos.user_id')
+                    ->leftJoin('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                    ->whereIn('user_profiles.office', $office_based_permission)
+                    ->leftJoin('companies', 'users.company_id', '=', 'companies.id');
+            }
+
+            // Filter by company if specified
+            if ($request->has('company')) {
+                $profileUsers->where('companies.name', $request->input('company'));
+            }
 
             return DataTables::of($profileUsers)
                 ->addIndexColumn() // Automatically adds an index column
@@ -110,7 +150,7 @@ class UserProfileController extends Controller
         }
 
         // Render the view for non-AJAX requests
-        return view('usersProfile.all-employees');
+        return view('usersProfile.all-employees', ['company' => $company]);
     }
 
     /**

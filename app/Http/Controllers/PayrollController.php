@@ -35,6 +35,7 @@ class PayrollController extends Controller
 
         $selectedNationality = $request->input('nationality', 'ALL'); // Default to "ALL"
         $selectedOffice = $request->input('office', 'AllOffices'); // Default to "AllOffices"
+        $selectedGroup = $request->input('group', 'all'); // Default to "Both Groups"
 
         $excludedIds = [13, 14, 17, 19, 24, 31, 32, 83, 110, 118, 191, 193, 197, 209, 227, 230, 246, 308, 315, 378, 400, 410, 451, 523, 524, 606, 738, 1103, 1590]; // Array of IDs to exclude
 
@@ -142,14 +143,19 @@ class PayrollController extends Controller
                 // If the user role is not 1, filter only by the authenticated user's ID
                 return $query->where('users.id', $user_id);
             })
-            ->when($user_role == "1" || $user_role == "3", function ($query) use ($selectedNationality, $selectedOffice) {
+            ->when($user_role == "1" || $user_role == "3", function ($query) use ($selectedNationality, $selectedOffice, $selectedGroup) {
                 // If the user role is 1, apply nationality and office filters
-                return $query->when($selectedNationality !== 'ALL', function ($query) use ($selectedNationality) {
+                return $query->join('companies', 'companies.id', '=', 'users.company_id')
+                    ->when($selectedNationality !== 'ALL', function ($query) use ($selectedNationality) {
                     return $query->where('user_profiles.nationality', $selectedNationality);
                 })->when($selectedOffice !== 'AllOffices', function ($query) use ($selectedOffice) {
                     return $query->where('user_profiles.office', $selectedOffice);
+                })->when($selectedGroup !== 'all', function ($query) use ($selectedGroup) {
+                    // Filter based on the 'name' field in the 'companies' table
+                    return $query->where('companies.name', $selectedGroup);
                 });
             })
+
             ->when($user_role == "4", function ($query) use ($team_data) {
                 return $query->whereIn("users.id", $team_data);
             })
@@ -207,6 +213,7 @@ class PayrollController extends Controller
 
         $selectedNationality = $request->input('nationality', 'ALL'); // Default to "ALL"
         $selectedOffice = $request->input('office', 'AllOffices'); // Default to "AllOffices"
+        $selectedGroup = $request->input('group', 'all'); // Default to "Both Groups"
 
         $excludedIds = [13, 14, 17, 19, 24, 31, 32, 83, 110, 118, 191, 193, 197, 209, 227, 230, 246, 308, 315, 378, 400, 410, 451, 523, 524, 606, 738, 1103, 1590]; // Array of IDs to exclude
 
@@ -314,12 +321,16 @@ class PayrollController extends Controller
                 // If the user role is not 1, filter only by the authenticated user's ID
                 return $query->where('users.id', $user_id);
             })
-            ->when($user_role == "1" || $user_role == "3", function ($query) use ($selectedNationality, $selectedOffice) {
+            ->when($user_role == "1" || $user_role == "3", function ($query) use ($selectedNationality, $selectedOffice, $selectedGroup) {
                 // If the user role is 1, apply nationality and office filters
-                return $query->when($selectedNationality !== 'ALL', function ($query) use ($selectedNationality) {
+                return $query->join('companies', 'companies.id', '=', 'users.company_id')
+                    ->when($selectedNationality !== 'ALL', function ($query) use ($selectedNationality) {
                     return $query->where('user_profiles.nationality', $selectedNationality);
                 })->when($selectedOffice !== 'AllOffices', function ($query) use ($selectedOffice) {
                     return $query->where('user_profiles.office', $selectedOffice);
+                })->when($selectedGroup !== 'all', function ($query) use ($selectedGroup) {
+                    // Filter based on the 'name' field in the 'companies' table
+                    return $query->where('companies.name', $selectedGroup);
                 });
             })
             ->when($user_role == "4", function ($query) use ($team_data) {

@@ -43,12 +43,11 @@
 @endsection
 @section('content')
 
-
 <div class="col-auto ms-auto mb-3">
     <ul class="split-head">
         <li>
             <a href="#" class="btn add-btn text-white" data-bs-toggle="modal" data-bs-target="#schedule">
-                <i class="fa fa-plus"></i> Add Schedule</a>
+                <i class="fa fa-plus"></i> <span data-translate="add_schedule">Add Schedule</span></a>
         </li>
     </ul>
 </div>
@@ -61,13 +60,13 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Shift Name</th>
-                        <th>Start Date</th>
-                        <th>Start Time</th>
-                        <th>End Date</th>
-                        <th>End Time</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th><span data-translate="shift_name">Shift Name</span></th>
+                        <th><span data-translate="start_date">Start Date</span></th>
+                        <th><span data-translate="start_time">Start Time</span></th>
+                        <th><span data-translate="end_date">End Date</span></th>
+                        <th><span data-translate="end_time">End Time</span></th>
+                        <th><span data-translate="status">Status</span></th>
+                        <th><span data-translate="action">Action</span></th>
                     </tr>
                 </thead>
                 <tbody id="schedule-list">
@@ -82,16 +81,16 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="modalTitle">Delete Confirmation</h4>
+                <h4 class="modal-title" id="modalTitle"><span data-translate="delete_confirmation">Delete Confirmation</span></h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this Schedule? This action cannot be undone.</p>
+                <p><span data-translate="delete_confirmation_text">Are you sure you want to delete this Schedule? This action cannot be undone.</span></p>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-translate="cancel">Cancel</span></button>
+                <button type="button" class="btn btn-danger" id="confirmDelete"><span data-translate="delete">Delete</span></button>
             </div>
         </div>
     </div>
@@ -103,31 +102,25 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Schedule</h5>
+                <h5 class="modal-title"><span data-translate="add_schedule">Add Schedule</span></h5>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <!-- <span aria-hidden="true">&times;</span> -->
                 </button>
             </div>
             <div class="modal-body">
                 <form id="schedule" method="post" enctype="multipart/form-data">
                     @csrf
                     <div class="row">
-
-
-
                         <div class="col-sm-12 ">
                             <div class="input-block mb-3">
-                                <label class="col-form-label" for="shiftname">Shift Name <span
-                                        class="text-danger">*</span></label>
+                                <label class="col-form-label" for="shiftname"><span data-translate="shift_name">Shift Name</span><span class="text-danger">*</span></label>
                                 <input class="form-control shiftname" type="text" name="shift_name" id="shiftname">
-
-
                             </div>
                         </div>
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker">Select Shift Start Dates:</label>
+                                <label for="datepicker"><span data-translate="select_shift_start_dates">Select Shift Start Dates:</span></label>
                                 <input type="text" id="date-picker" name="start-date[]" class="form-control" />
                                 <input type="hidden" name="startdate[]" id="startdate">
 
@@ -135,7 +128,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker">Select Shift Start Time:</label>
+                                <label for="datepicker"><span data-translate="select_shift_start_time">Select Shift Start Time:</span></label>
                                 <input type="time" id="time-input" name="start_time" class="form-control" />
 
                             </div>
@@ -143,7 +136,7 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker2">Select Shift End Dates:</label>
+                                <label for="datepicker2"><span data-translate="select_shift_end_dates">Select Shift End Dates:</span></label>
                                 <input type="text" id="date-picker2" name="end-date[]" class="form-control" />
                                 <input type="hidden" name="enddate[]" id="enddate">
                                 <div id="shift_date_error" style="color: red;"></div>
@@ -151,7 +144,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker2">Select Shift End Time:</label>
+                                <label for="datepicker2"><span data-translate="select_shift_end_time">Select Shift End Time:</span></label>
                                 <input type="time" id="end-time" name="end_time" class="form-control" />
                                 <div id="show_error_msg" style="color: red;"></div>
                             </div>
@@ -161,7 +154,7 @@
                     </div>
 
                     <div class="submit-section">
-                        <button class="btn btn-primary" id="">Submit</button>
+                        <button class="btn btn-primary" id=""><span data-translate="submit">Submit</span></button>
                     </div>
                 </form>
 
@@ -472,7 +465,7 @@
 
         $('#deleteSchedule').modal('show'); // Show the modal
     }
-
 </script>
-
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 @endsection

@@ -64,12 +64,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
-            <h3 class="page-title">Assign Offday</h3>
+            <h3 class="page-title"><span data-translate="assign_offday">Assign Offday</span></h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active">Assign Offday</li>
+                <li class="breadcrumb-item active"><span data-translate="assign_offday">Assign Offday</span></li>
             </ul>
         </div>
 
@@ -81,7 +81,7 @@
     <ul class="split-head">
         <li>
             <button class="btn add-btn text-white" onclick="addHoliday()">
-                <i class="fa fa-plus"></i> Add Offday</button>
+                <i class="fa fa-plus"></i> <span data-translate="add_offday">Add Offday</span></button>
         </li>
     </ul>
 </div>
@@ -90,8 +90,8 @@
     <div class="col-md-12">
         <div class="table-responsive">
             <table class="table  custom-table" id="attendance">
-
                 <tbody id="attendance-list">
+                    <!-- DYNAMIC DATA -->
                 </tbody>
             </table>
         </div>
@@ -106,21 +106,19 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Assign Off Day</h5>
+                <h5 class="modal-title"><span data-translate="assign_offday">Assign Offday</span></h5>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <!-- <span aria-hidden="true">&times;</span> -->
                 </button>
             </div>
             <div class="modal-body">
                 <form id="assign-holiday" method="post" enctype="multipart/form-data">
                     @csrf
                     <div class="row">
-
-
                         <div class="col-sm-12 ">
                             <div class=" input-block mb-3 ">
                                 <div class="custom-select" id="empID">
-                                    <label for="select_box">First Assigner Name:</label>
+                                    <label for="select_box"><span data-translate="group_members_name">Group Members Name:</span></label>
                                     <div class="select-box first_select_box" id="select-box">
                                         <input type="hidden" class="tags_input" id="first_assigners_backend_field"
                                             name="tags" hidden>
@@ -134,19 +132,17 @@
                                             <input type="text" class="search-tags" placeholder="Search Tags ..">
                                             <button type="button" class="clear"><i class="fa fa-close"></i></button>
                                         </div>
-                                        <div class="op-disabled" selected disabled>Select Users</div>
-                                        <div class="no-result-message" style="display:none;">No Result Match</div>
+                                        <div class="op-disabled" selected disabled><span data-translate="select_users">Select Users</span></div>
+                                        <div class="no-result-message" style="display:none;"><span data-translate="no_match_found">No Match Found</span></div>
                                     </div>
                                     <span class="text-danger" id="first_field_error"></span>
                                 </div>
                             </div>
 
                         </div>
-
-
                         <div class="col-sm-12">
                             <div class="input-block mb-3 ">
-                                <label for="datepicker">Select Off Days:</label>
+                                <label for="datepicker"><span data-translate="select_offdays">Select Off Days:</span></label>
                                 <input type="text" id="date-picker" name="holiday[]" class="form-control" />
 
 
@@ -154,7 +150,7 @@
                         </div>
 
                         <div class="submit-section">
-                            <button class="btn btn-primary" id="">Submit</button>
+                            <button class="btn btn-primary" id=""><span data-translate="submit">Submit</span></button>
                         </div>
                 </form>
 
@@ -183,10 +179,10 @@
                     data: data.groups,
 
                     columns: [
-                        { data: 'id', title: 'User Id' },
-                        { data: 'name', title: 'Username' },
-                        { data: 'group_name', title: 'Group Name' },
-                        { data: 'group_id', title: 'Group ID' },
+                        { data: 'id', title: '<span data-translate="user_id">User Id</span>' },
+                        { data: 'name', title: '<span data-translate="username">Username</span>' },
+                        { data: 'group_name', title: '<span data-translate="group_name">Group Name</span>' },
+                        { data: 'group_id', title: '<span data-translate="group_id">Group ID</span>' },
 
                     ]
                 });
@@ -556,4 +552,6 @@
     //end
 
 </script>
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 @endsection

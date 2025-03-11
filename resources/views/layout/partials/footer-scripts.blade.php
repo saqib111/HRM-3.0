@@ -71,3 +71,6 @@
 <script src="{{ asset('assets/js/myAllCustomScript.js') }}"></script>
 <!-- Multi Select Tag JS -->
 <script src="https://cdn.jsdelivr.net/gh/habibmhamadi/multi-select-tag@3.1.0/dist/js/multi-select-tag.js"></script>
+
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>

@@ -149,177 +149,168 @@
 @endsection
 @section('content')
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
-<div class="page-header">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="main-employee-title">
-                <h3 class="page-title">Attendance </h3>
-                <div class="employee-title">( {{auth()->user()->employee_id}} | {{auth()->user()->username}} )</div>
-            </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
-                <li class="breadcrumb-item active">Attendance </li>
-            </ul>
-        </div>
-    </div>
-</div>
-<!-- /Page Header -->
-<input type="hidden" name="user_id" value="{{auth()->user()->id}}" id="userID">
-<input type="hidden" name="id" value="" id="id">
-<div class="row">
-    <div class="col-md-4">
-        <div id="timesheetSection">
-            @include('partials.timesheet')
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card att-statistics">
-            <div class="card-body">
-                <h5 class="card-title">Salary Deduction</h5>
-                <div class="stats-list">
-
-                    <div class="stats-info">
-                        <p>Late <strong><span id="day"></span> </strong></p>
-
-                    </div>
-
-
-                    <div class="stats-info">
-                        <p>Absent Fine<strong> <small><span id="absent_fine"> </span></small></strong></p>
-
-                    </div>
-
-                    <div class="stats-info">
-                        <p>Late Fine<strong> <small><span id="late_fine"> </span></small></strong></p>
-                    </div>
-
-                    <div class="stats-info">
-                        <p>Total Deduction <strong> <small><span id="total"> </span></small></strong></p>
-                    </div>
-                    <div class="deductions text-center p-0 mt-3 mb-0">
-                        <button class="btn btn-danger btn-sm" id="deductions_btn"
-                            style="background: #a90500 !important,">View Deduction Details</button>
-                    </div>
+    <div class="page-header">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="main-employee-title">
+                    <h3 class="page-title"><span data-translate="attendance">Attendance</span> </h3>
+                    <div class="employee-title">( {{auth()->user()->employee_id}} | {{auth()->user()->username}} )</div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card recent-activity">
-            <div class="card-body">
-                <h5 class="card-title">Today Activity</h5>
-                <ul class="res-activity-list">
-                    <li>
-                        <p class="mb-0">Punch In at</p>
-                        <p class="res-activity-time">
-                            <i class="fa-regular fa-clock"></i>
-                            <span id="check_in"></span>
-                        </p>
-                    </li>
-                    <li>
-                        <p class="mb-0">Punch Out at</p>
-                        <p class="res-activity-time">
-                            <i class="fa-regular fa-clock"></i>
-                            <span id="check_out"></span>
-                        </p>
-                    </li>
-
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active"><span data-translate="attendance">Attendance</span> </li>
                 </ul>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Search Filter -->
-<form method="post" id="searchData">
-    @csrf
-    <div class="row filter-row mt-5">
-        <div class="col-sm-5">
-            <label for=""> From date: </label>
-            <div class="input-block mb-3 form-focus">
-                <div class="cal-icon">
-                    <input type="text" class="form-control floating datetimepicker" id="fromDate" name="fromDate">
-                </div>
-                <label class="focus-label">Date</label>
+    <!-- /Page Header -->
+    <input type="hidden" name="user_id" value="{{auth()->user()->id}}" id="userID">
+    <input type="hidden" name="id" value="" id="id">
+    <div class="row">
+        <div class="col-md-4">
+            <div id="timesheetSection">
+                @include('partials.timesheet')
             </div>
         </div>
-        <div class="col-sm-5">
-            <label for=""> To date: </label>
-            <div class="input-block mb-3 form-focus">
-                <div class="cal-icon">
-                    <input type="text" class="form-control floating datetimepicker" id="toDate" name="toDate">
-                </div>
-                <label class="focus-label">Date</label>
-            </div>
-        </div>
-
-        <div class="col-sm-2  d-flex align-items-center">
-            <button type="button" class="btn btn-primary me-2" id="refresh" onclick="refreshDate()">
-                <i class="fa fa-refresh" aria-hidden="true"></i>
-            </button>
-            <button class="btn btn-primary" type="submit" id="submitButton"> Search </button>
-        </div>
-    </div>
-</form>
-
-<!-- TABLE STARTS -->
-<div class="row">
-    <div class="col-lg-12">
-        <div class="table-responsive">
-            <table class="table  custom-table mb-0" id="attendance-employee">
-                <thead>
-
-                </thead>
-                <tbody>
-
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-<!-- TABLE END -->
-
-<!--Login Modal start-->
-<div class="modal fade " id="PunchInModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content ">
-            <div class="modal-header border-bottom-0">
-
-            </div>
-            <div class="modal-body ">
-                <div class="form-title text-center">
-                    <h4 id="verify_heading">Verify Employee</h4>
-                    <p class="text-muted mt-3" id="emergency_text"></p>
-                </div>
-                <div class="d-flex flex-column text-center ">
-                    <form id="verify_user" method="POST">
-                        <div class="form-group mb-4">
-                            <input type="password" class="form-control" id="password" placeholder="Password...">
-                            <div id="display_error" class="text-danger mt-2" style="display: none; text-align: left;">
-                                Please enter password
-                            </div>
+        <div class="col-md-4">
+            <div class="card att-statistics">
+                <div class="card-body">
+                    <h5 class="card-title"><span data-translate="salary_deduction">Salary Deduction</span></h5>
+                    <div class="stats-list">
+                        <div class="stats-info">
+                            <p><span data-translate="late">Late</span> <strong><span id="day"></span> </strong></p>
                         </div>
-                        <button type="submit"
-                            class="btn btn-info btn-block btn-round ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Verify&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
-                    </form>
+                        <div class="stats-info">
+                            <p><span data-translate="absent_fine">Absent Fine</span><strong> <small><span id="absent_fine"> </span></small></strong></p>
+                        </div>
+                        <div class="stats-info">
+                            <p><span data-translate="late_fine">Late Fine</span><strong> <small><span id="late_fine"> </span></small></strong></p>
+                        </div>
+                        <div class="stats-info">
+                            <p><span data-translate="total_deduction">Total Deduction</span> <strong> <small><span id="total"> </span></small></strong></p>
+                        </div>
+                        <div class="deductions text-center p-0 mt-3 mb-0">
+                            <button class="btn btn-danger btn-sm" id="deductions_btn" style="background: #a90500 !important,">
+                            <span data-translate="view_deduction_details">View Deduction Details</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card recent-activity">
+                <div class="card-body">
+                    <h5 class="card-title"><span data-translate="today_activity">Today Activity</span></h5>
+                    <ul class="res-activity-list">
+                        <li>
+                            <p class="mb-0"><span data-translate="check_in_at">Check In at</span></p>
+                            <p class="res-activity-time">
+                                <i class="fa-regular fa-clock"></i>
+                                <span id="check_in"></span>
+                            </p>
+                        </li>
+                        <li>
+                            <p class="mb-0"><span data-translate="check_out_at">Check Out at</span></p>
+                            <p class="res-activity-time">
+                                <i class="fa-regular fa-clock"></i>
+                                <span id="check_out"></span>
+                            </p>
+                        </li>
+
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
-</div>
+
+    <!-- Search Filter -->
+    <form method="post" id="searchData">
+        @csrf
+        <div class="row filter-row mt-5">
+            <div class="col-sm-5">
+                <label for=""> <span data-translate="from_date">From date:</span> </label>
+                <div class="input-block mb-3 form-focus">
+                    <div class="cal-icon">
+                        <input type="text" class="form-control floating datetimepicker" id="fromDate" name="fromDate">
+                    </div>
+                    <label class="focus-label"><span data-translate="date">Date</span></label>
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <label for=""> <span data-translate="to_date">To date:</span> </label>
+                <div class="input-block mb-3 form-focus">
+                    <div class="cal-icon">
+                        <input type="text" class="form-control floating datetimepicker" id="toDate" name="toDate">
+                    </div>
+                    <label class="focus-label"><span data-translate="date">Date</span></label>
+                </div>
+            </div>
+
+            <div class="col-sm-2  d-flex align-items-center">
+                <button type="button" class="btn btn-primary me-2" id="refresh" onclick="refreshDate()">
+                    <i class="fa fa-refresh" aria-hidden="true"></i>
+                </button>
+                <button class="btn btn-primary" type="submit" id="submitButton"> <span data-translate="search">Search</span> </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- TABLE STARTS -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="table-responsive">
+                <table class="table  custom-table mb-0" id="attendance-employee">
+                    <thead>
+
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- TABLE END -->
+
+    <!--Login Modal start-->
+    <div class="modal fade " id="PunchInModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content ">
+                <div class="modal-header border-bottom-0">
+
+                </div>
+                <div class="modal-body ">
+                    <div class="form-title text-center">
+                        <h4 id="verify_heading"><span data-translate="verify_employee">Verify Employee</span></h4>
+                        <p class="text-muted mt-3" id="emergency_text"></p>
+                    </div>
+                    <div class="d-flex flex-column text-center ">
+                        <form id="verify_user" method="POST">
+                            <div class="form-group mb-4">
+                                <input type="password" class="form-control" id="password" placeholder="Password...">
+                                <div id="display_error" class="text-danger mt-2" style="display: none; text-align: left;">
+                                    Please enter password
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="btn btn-info btn-block btn-round ">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span data-translate="verify">Verify</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
 </div>
 <!--End -->
-
 
 <!-- DEDUCTION DETAILS MODAL STARTS -->
 <div class="modal fade mt-4" id="deduction_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl deduction">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5 text-center" id="exampleModalLabel">Salary Deduction Details</h1>
+                <h1 class="modal-title fs-5 text-center" id="exampleModalLabel"><span data-translate="salary_deduction_details">Salary Deduction Details</span></h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
             </div>
             <div class="modal-body pt-0">
@@ -327,16 +318,16 @@
                     <table class="table mt-0" id="deduction_table">
                         <thead class="sticky-top" style="background-color: #f8f9fa;">
                             <tr>
-                                <th>Start Date</th>
-                                <th>Shift In</th>
-                                <th>End Date</th>
-                                <th>Shift Out</th>
-                                <th>CheckIn Date</th>
-                                <th>Check In</th>
-                                <th>CheckOut Date</th>
-                                <th>Check Out</th>
-                                <th>Duty Hours</th>
-                                <th>Status</th>
+                                <th><span data-translate="start_date">Start Date</span></th>
+                                <th><span data-translate="shift_in">Shift In</span></th>
+                                <th><span data-translate="end_date">End Date</span></th>
+                                <th><span data-translate="shift_out">Shift Out</span></th>
+                                <th><span data-translate="check_in_date">CheckIn Date</span></th>
+                                <th><span data-translate="check_in">Check In</span></th>
+                                <th><span data-translate="check_out_date">CheckOut Date</span></th>
+                                <th><span data-translate="check_out">Check Out</span></th>
+                                <th><span data-translate="duty_hours">Duty Hours</span></th>
+                                <th><span data-translate="status">Status</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -359,9 +350,7 @@
 
 @endsection
 @section('script-z')  
-
 <script>
-
     $(document).ready(function () {
         $("#fromDate").empty();
         $("#toDate").empty();
@@ -388,7 +377,7 @@
                     columns: [
                         {
                             data: 'verify1',
-                            title: 'Verify',
+                            title: '<span data-translate="verify">Verify</span>',
                             render: function (data, type, row) {
                                 let result = '';
 
@@ -412,15 +401,15 @@
                             },
                             title: '#'
                         },
-                        { data: 'start_date', title: 'Start Date' },
-                        { data: 'shift_in', title: 'Shift In' },
-                        { data: 'end_date', title: 'End Date' },
-                        { data: 'shift_out', title: 'Shift Out' },
-                        { data: 'in_date', title: 'Checkin Date' },
+                        { data: 'start_date', title: '<span data-translate="start_date">Start Date</span>' },
+                        { data: 'shift_in', title: '<span data-translate="shift_in">Shift In</span>' },
+                        { data: 'end_date', title: '<span data-translate="end_date">End Date</span>' },
+                        { data: 'shift_out', title: '<span data-translate="shift_out">Shift Out</span>' },
+                        { data: 'in_date', title: '<span data-translate="check_in_date">Checkin Date</span>' },
 
                         {
                             data: 'check_in',
-                            title: 'Check In',
+                            title: '<span data-translate="check_in">Check In</span>',
                             render: function (data, type, row) {
                                 if (row.check_in == null) {
 
@@ -430,10 +419,10 @@
                                 }
                             }
                         },
-                        { data: 'out_date', title: 'Checkout Date' },
+                        { data: 'out_date', title: '<span data-translate="check_out_date">Checkout Date</span>' },
                         {
                             data: 'check_out',
-                            title: 'Check Out',
+                            title: '<span data-translate="check_out">Check Out</span>',
                             render: function (data, type, row) {
                                 if (row.check_out == null) {
                                     return " ";
@@ -444,7 +433,7 @@
                         },
                         {
                             data: 'duty_hours',
-                            title: 'Duty Hours',
+                            title: '<span data-translate="duty_hours">Duty Hours</span>',
                             render: function (data, type, row) {
                                 if (row.dayoff === "Yes") {
                                     return "OFF";
@@ -467,7 +456,7 @@
 
                         {
                             data: 'verify2',
-                            title: 'Verify',
+                            title: '<span data-translate="verify">Verify</span>',
                             render: function (data, type, row) {
                                 let result = '';
 
@@ -484,7 +473,8 @@
 
                         },
 
-                    ], order: [],
+                    ],
+                    order: [],
                     pageLength: 31, // Set the default number of records to show
                     lengthMenu: [10, 25, 31, 50, 100], // Options for records per page
                     createdRow: function (row, data, dataIndex) {
@@ -972,15 +962,26 @@
 
         // 📌 Ensure `openVerifyModal` is globally accessible
         window.openVerifyModal = function (action) {
+        const storedLang = localStorage.getItem('language');
             punchAction = action;
             $('#PunchInModal').modal('show');
 
             if (punchAction === "Emergency Punch OUT") {
-                $('#verify_heading').html('<i class="fa-solid fa-triangle-exclamation" style="color: #f50a0a;"></i><span style="color: #f50a0a;" class="ms-2 fs-5">Warning!</span>');
-                $('#emergency_text').html("<span style='color: #f50a0a;'>Emergency checkout</span> may have a salary deduction according to company policies!");
+                if(storedLang === "vi"){
+                    $('#verify_heading').html('<i class="fa-solid fa-triangle-exclamation" style="color: #f50a0a;"></i><span style="color: #f50a0a;" class="ms-2 fs-5">Cảnh báo!</span>');
+                    $('#emergency_text').html("<span style='color: #f50a0a;'>Ra Ca khẩn cấp</span> có thể bị trừ lương theo chính sách của công ty!");
+                }else{
+                    $('#verify_heading').html('<i class="fa-solid fa-triangle-exclamation" style="color: #f50a0a;"></i><span style="color: #f50a0a;" class="ms-2 fs-5"><span data-translate="warning">Warning!</span></span>');
+                    $('#emergency_text').html("<span style='color: #f50a0a;'>Emergency checkout</span> may have a salary deduction according to company policies!");
+                }
             } else {
-                $('#verify_heading').html("Verify Employee");
-                $('#emergency_text').html("");
+                if(storedLang === "vi"){
+                    $('#verify_heading').html("Xác minh nhân viên");
+                    $('#emergency_text').html("");
+                }else{
+                    $('#verify_heading').html("<span data-translate='verify_employee'>Verify Employee</span>");
+                    $('#emergency_text').html("");
+                }
             }
         };
 
@@ -1088,9 +1089,10 @@
                                 $('#verify_user button[type="submit"]').prop('disabled', false);
                                 $("#password").val("");
 
-
-                                if (result.status === "error") {
-                                    createToast('error', 'fa-solid fa-check-circle', 'Error', 'Your Shift is Over!');
+                                if ( result.status === "emergency_error") {
+                                    createToast('error', 'fa-solid fa-check-circle', 'Error', result.message);
+                                } else if (result.status === "error") {
+                                    createToast('error', 'fa-solid fa-check-circle', 'Error', `Invalid ${punchAction} request!`);
                                 } else {
                                     createToast('info', 'fa-solid fa-check-circle', 'Success', `${punchAction} successful.`);
                                     if (punchAction === "Punch IN") {
@@ -1129,6 +1131,7 @@
                     isRequestInProgress = false; // Reset flag
                     $('#verify_user button[type="submit"]').prop('disabled', false);
                     $("#password").val("");
+                    $("#punchInModal").hide();
                     createToast('error', 'fa-solid fa-circle-exclamation', 'Error', 'Invalid User.');
                 }
             });
@@ -1253,6 +1256,8 @@
         });
     });
 </script>
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 </body>
 
 </html>

@@ -1,11 +1,12 @@
 <div id="timesheetSection">
     <div class="card punch-status">
         <div class="card-body">
-            <h5 class="card-title">Timesheet <small class="text-muted" id="punchDate">{{ date('dS M Y') }}</small>
+            <h5 class="card-title"><span data-translate="timesheet">Timesheet</span> <small class="text-muted"
+                    id="punchDate">{{ date('dS M Y') }}</small>
             </h5>
 
             <div class="punch-det">
-                <h6>Punch In at</h6>
+                <h6><span data-translate="check_in_at">Check In at</span></h6>
                 <p id="punchInTime">{{ $shift_record ? $shift_record->check_in : '--' }}</p>
             </div>
 
@@ -29,13 +30,17 @@
 
                 @if($shift_out_time)
                     @if($serverTime->greaterThanOrEqualTo($shift_out_time))
-                        <button id="punchOutBtn" class="btn btn-primary punch-btn mx-2">Punch Out</button>
+                        <button id="punchOutBtn" class="btn btn-primary punch-btn mx-2"><span data-translate="check_out">Check
+                                Out</span></button>
                     @else
-                        <button class="btn btn-primary punch-btn mx-2" disabled>Punch Out</button>
-                        <button id="emergencyCheckOutBtn" class="btn btn-danger punch-btn mx-2">Emergency PunchOut</button>
+                        <button class="btn btn-primary punch-btn mx-2" disabled><span data-translate="check_out">Check
+                                Out</span></button>
+                        <button id="emergencyCheckOutBtn" class="btn btn-danger punch-btn mx-2"><span
+                                data-translate="emergency_check_out">Emergency CheckOut</span></button>
                     @endif
                 @else
-                    <button id="punchInBtn" class="btn btn-primary punch-btn mx-2">Punch In</button>
+                    <button id="punchInBtn" class="btn btn-primary punch-btn mx-2"><span data-translate="check_in">Check
+                            In</span></button>
                 @endif
             </div>
         </div>

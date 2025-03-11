@@ -171,13 +171,23 @@ class LeaveController extends Controller
 
                         // Remaining days after paid leave are converted to unpaid leave
                         $unpaid_start_date = (new \DateTime($paid_end_date))->modify('+1 day')->format('Y-m-d');
-                        $leave_details[] = [
-                            'type' => 'full_day',
-                            'leave_type_id' => 4, // Unpaid Leave
-                            'start_date' => $unpaid_start_date,
-                            'end_date' => $to,
-                            'status' => 'unpaid'
-                        ];
+                        if ($annual_leave_balance === 0.0) {
+                            $leave_details[] = [
+                                'type' => 'full_day',
+                                'leave_type_id' => 4, // Unpaid Leave
+                                'start_date' => $from,
+                                'end_date' => $to,
+                                'status' => 'unpaid'
+                            ];
+                        } else {
+                            $leave_details[] = [
+                                'type' => 'full_day',
+                                'leave_type_id' => 4, // Unpaid Leave
+                                'start_date' => $unpaid_start_date,
+                                'end_date' => $to,
+                                'status' => 'unpaid'
+                            ];
+                        }
 
                         // Reset the annual leave balance to the fractional part only (e.g., 0.5 day)
                         $annual_leave_balance = $fractional_balance;
@@ -1355,7 +1365,7 @@ class LeaveController extends Controller
             ->exists();
 
 
-        $hasRoles = in_array($user->role, [1, 2, 3]);
+        $hasRoles = in_array($user->role, [1, 2, 3, 4]);
 
         if (!$hasPermission && !$hasRoles) {
             return response()->json([

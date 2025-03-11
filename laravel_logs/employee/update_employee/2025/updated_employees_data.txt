@@ -1,0 +1,195 @@
+Record Updated By:: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+Old record:
+employee_id = AHNV00132
+username = Rihan Rossy
+email = rihan.rossy@auroramy.com
+email_verified_at = 
+joining_date = 2022-11-28
+confirmation_status = Confirmed Staff
+image = images//1735814696-5U36t.jpg
+company_id = Aurora
+department_id = Operation
+designation_id = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = SuperAdmin
+userpass = Password Already Changed
+created_at = 2024-12-24 08:17:16
+updated_at = 2025-01-29 18:00:21
+
+Updated record:
+employee_id = AHNV00132
+username = Rihan Rossy
+email = rihan.rossy@auroramy.com
+email_verified_at = 
+joining_date = 2022-11-28
+confirmation_status = Confirmed Staff
+image = images//1735814696-5U36t.jpg
+company = Aurora
+department = Operation
+designation = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Payroll
+userpass = Password Already Changed
+created_at = 2024-12-24 08:17:16
+updated_at = 2025-02-21 15:40:32
+
+Record Updated By:: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+Old record:
+employee_id = AHNV02001
+username = Taran Khan
+email = taran.khan@auroramy.com
+email_verified_at = 
+joining_date = 2024-12-04
+confirmation_status = Under Probation
+image = images/default_profile_picture.png
+company_id = Group B
+department_id = Operation
+designation_id = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:23:56
+updated_at = 2025-02-24 12:30:00
+
+Updated record:
+employee_id = AHNV02001
+username = Taran Khan
+email = taran.khan@auroramy.com
+email_verified_at = 
+joining_date = 2024-12-04
+confirmation_status = Confirmed Staff
+image = images/default_profile_picture.png
+company = Group B
+department = Operation
+designation = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:23:56
+updated_at = 2025-02-24 12:30:13
+
+Record Updated By:: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+Old record:
+employee_id = AHNV01590
+username = Bubbles Tee
+email = bubbles.tee@auroramy.com
+email_verified_at = 
+joining_date = 2024-08-01
+confirmation_status = Under Probation
+image = images/default_profile_picture.png
+company_id = Group A
+department_id = Operation
+designation_id = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:22:28
+updated_at = 2025-02-18 11:17:26
+
+Updated record:
+employee_id = AHNV01590
+username = Bubbles Tee
+email = bubbles.tee@auroramy.com
+email_verified_at = 
+joining_date = 2024-08-01
+confirmation_status = Under Probation
+image = images/default_profile_picture.png
+company = Group A
+department = Operation
+designation = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = HR
+userpass = Password Already Changed
+created_at = 2024-12-24 08:22:28
+updated_at = 2025-02-24 12:33:13
+
+Record Updated By:: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+Old record:
+employee_id = AHNV00003
+username = Felix Tan
+email = felix.tan@auroramy.com
+email_verified_at = 
+joining_date = 2019-06-03
+confirmation_status = Confirmed Staff
+image = images/default_profile_picture.png
+company_id = EZGB A
+department_id = Operation
+designation_id = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:16:48
+updated_at = 2024-12-31 10:09:32
+
+Updated record:
+employee_id = AHNV00003
+username = Felix Tan
+email = felix.tan@auroramy.com
+email_verified_at = 
+joining_date = 2019-06-03
+confirmation_status = Confirmed Staff
+image = images/default_profile_picture.png
+company = EZGB C
+department = Operation
+designation = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:16:48
+updated_at = 2025-03-11 23:44:27
+
+Record Updated By:: ID = 315 | UserName: Affan Ahmed | Employee ID: AHNV00315
+Old record:
+employee_id = AHNV01622
+username = Yazdaan Ahmed
+email = yazdaan.ahmed@auroramy.com
+email_verified_at = 
+joining_date = 2024-08-12
+confirmation_status = Confirmed Staff
+image = images/default_profile_picture.png
+company_id = EZGB A
+department_id = Operation
+designation_id = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:22:35
+updated_at = 2025-02-11 14:48:52
+
+Updated record:
+employee_id = AHNV01622
+username = Yazdaan Ahmed
+email = yazdaan.ahmed@auroramy.com
+email_verified_at = 
+joining_date = 2024-08-12
+confirmation_status = Confirmed Staff
+image = images/default_profile_picture.png
+company = EZGB D
+department = Operation
+designation = Customer Support
+brand = Baji PKR
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Password Already Changed
+created_at = 2024-12-24 08:22:35
+updated_at = 2025-03-11 23:44:58
+

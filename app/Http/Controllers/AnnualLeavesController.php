@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 use App\Models\AnnualLeaves;
 use App\Models\User;
 use Yajra\DataTables\Facades\DataTables;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -23,6 +22,16 @@ class AnnualLeavesController extends Controller
             $permissions = getUserPermissions($user);
             $canUpdateLeaveBalance = $user->role == 1 || in_array('update_al_balance', $permissions);
 
+            $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+            $matching_offices = array_intersect($allowed_offices, $permissions);
+
+            if (!empty($matching_offices)) {
+                $office_based_permission = array_values($matching_offices);
+            } else {
+                $office_based_permission = [];
+            }
+            // dd($matching_offices);
+
             // Query with join
             if ($user->role == 1) {
                 $query = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
@@ -33,8 +42,10 @@ class AnnualLeavesController extends Controller
                         'annual_leaves.leave_balance',
                         'annual_leaves.last_year_balance'
                     ]);
-            } elseif ($user->role == 2) {
+            } elseif (($user->role == 2 || $user->role == 3) && $office_based_permission) {
                 $query = AnnualLeaves::join('users', 'annual_leaves.user_id', '=', 'users.id')
+                    ->join('user_profiles', 'users.id', '=', 'user_profiles.user_id')
+                    ->whereIn('user_profiles.office', $office_based_permission)
                     ->select([
                         'annual_leaves.id',
                         'users.username as username',

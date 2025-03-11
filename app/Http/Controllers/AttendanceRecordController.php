@@ -1521,18 +1521,34 @@ class AttendanceRecordController extends Controller
     public function attendanceRecordEdit(Request $request)
     {
         $id = auth()->user()->id;
+
+        $user = auth()->user();
+        $permissions = getUserPermissions($user);
+
+        $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+        $matching_offices = array_intersect($allowed_offices, $permissions);
+
+        if (!empty($matching_offices)) {
+            $office_based_permission = array_values($matching_offices);
+        } else {
+            $office_based_permission = [];
+        }
+
+        // dd($office_based_permission);
         if (auth()->user()->role == "1" || auth()->user()->role == "3") {
             $query = DB::table('users as u')
                 ->join('departments as d', 'u.department_id', '=', 'd.id')
                 ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
                 ->where('u.status', '=', '1');
 
-        } elseif (auth()->user()->role == "2") {
+        } elseif (($user->role == 2 || $user->role == 3) && $office_based_permission) {
             $query = DB::table('users as u')
                 ->join('departments as d', 'u.department_id', '=', 'd.id')
+                ->join('user_profiles as up', 'u.id', '=', 'up.user_id')
                 ->select('u.id as id', 'u.employee_id as employee_id', 'u.username as username', 'd.name as department')
                 ->whereIn('u.role', [2, 4, 5])
-                ->where('u.status', '=', '1');
+                ->where('u.status', '=', '1')
+                ->whereIn('up.office', $office_based_permission);
         } else {
             $query = DB::table('users as u')
                 ->join('departments as d', 'u.department_id', '=', 'd.id')

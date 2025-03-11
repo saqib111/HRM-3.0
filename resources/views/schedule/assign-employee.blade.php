@@ -45,12 +45,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
-            <h3 class="page-title">Assign Group</h3>
+            <h3 class="page-title"><span data-translate="assign_group">Assign Group</span></h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active">Assign Group</li>
+                <li class="breadcrumb-item active"><span data-translate="assign_group">Assign Group</span></li>
             </ul>
         </div>
 
@@ -64,13 +64,13 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Shift Name</th>
-                        <th>Start Date</th>
-                        <th>Start Time</th>
-                        <th>End Date</th>
-                        <th>End Time</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th><span data-translate="shift_name">Shift Name</span></th>
+                        <th><span data-translate="start_date">Start Date</span></th>
+                        <th><span data-translate="start_time">Start Time</span></th>
+                        <th><span data-translate="end_date">End Date</span></th>
+                        <th><span data-translate="end_time">End Time</span></th>
+                        <th><span data-translate="status">Status</span></th>
+                        <th><span data-translate="action">Action</span></th>
                     </tr>
                 </thead>
                 <tbody id="schedule-list">
@@ -86,9 +86,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Assign Group</h5>
+                <h5 class="modal-title"><span data-translate="assign_group">Assign Group</span></h5>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
@@ -106,8 +105,7 @@
 
                         <div class="col-sm-12 ">
                             <div class="input-block mb-3">
-                                <label class="col-form-label" for="shiftname">Shift Name <span
-                                        class="text-danger">*</span></label>
+                                <label class="col-form-label" for="shiftname"><span data-translate="shift_name">Shift Name</span><span class="text-danger">*</span></label>
                                 <input class="form-control shiftname" type="text" name="shift_name" id="shiftname"
                                     disabled>
 
@@ -117,7 +115,7 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker">Select Shift Start Dates:</label>
+                                <label for="datepicker"><span data-translate="select_shift_start_dates">Select Shift Start Dates:</span></label>
                                 <input type="text" id="date-picker" name="start-date[]" class="form-control" disabled />
 
 
@@ -125,7 +123,7 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker-time">Select Shift Start Time:</label>
+                                <label for="datepicker-time"><span data-translate="select_shift_start_time">Select Shift Start Time:</span></label>
                                 <input type="time" id="time-input" name="start_time" class="form-control" disabled />
 
                             </div>
@@ -133,7 +131,7 @@
 
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker2">Select Shift End Dates:</label>
+                                <label for="datepicker2"><span data-translate="select_shift_end_dates">Select Shift End Dates:</span></label>
                                 <input type="text" id="date-picker2" name="end-date[]" class="form-control" disabled />
 
 
@@ -141,27 +139,23 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3">
-                                <label for="datepicker2-time">Select Shift End Time:</label>
+                                <label for="datepicker2-time"><span data-translate="select_shift_end_time">Select Shift End Time:</span></label>
                                 <input type="time" id="end-time" name="end_time" class="form-control" disabled />
 
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="input-block mb-3 ">
-                                <label class="col-form-label" for="assign_label">Assign Group<span
-                                        class="text-danger">*</span></label>
-
+                                <label class="col-form-label" for="assign_label"><span data-translate="assign_group">Assign Group</span><span class="text-danger">*</span></label>
                                 <select class="form-control" name="group" id="assign_label">
-
-
+                                    <!-- DYNAMIC CONTENTs -->
                                 </select>
-
                             </div>
                         </div>
                     </div>
 
                     <div class="submit-section">
-                        <button class="btn btn-primary" id="">Submit</button>
+                        <button class="btn btn-primary" id=""><span data-translate="submit">Submit</span></button>
                     </div>
                 </form>
 
@@ -384,9 +378,7 @@
 
         $('.text-danger').remove();
     }
-
-
-
 </script>
-
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 @endsection

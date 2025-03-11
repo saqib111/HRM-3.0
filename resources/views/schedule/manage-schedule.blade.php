@@ -45,12 +45,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
-            <h3 class="page-title">Enable/Delete Schedule</h3>
+            <h3 class="page-title"><span data-translate="enable/delete_schedule">Enable/Delete Schedule</span></h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active">Enable/Delete Schedule</li>
+                <li class="breadcrumb-item active"><span data-translate="enable/delete_schedule">Enable/Delete Schedule</span></li>
             </ul>
         </div>
 
@@ -59,18 +59,18 @@
 <div id="notification" aria-live="polite" aria-atomic="true"></div>
 <div class="row">
     <div class="col-md-12">
-        <button class="btn btn-danger btn-sm d-flex flex-end" id="deleteSelectedBtn">Delete Schedule</button>
+        <button class="btn btn-danger btn-sm d-flex flex-end" id="deleteSelectedBtn"><span data-translate="delete_schedule">Delete Schedule</span></button>
         <div class="table-responsive">
             <table class="table table-striped custom-table" id="manageSchedule">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Shift Name</th>
-                        <th>Start Date</th>
-                        <th>Start Time</th>
-                        <th>End Date</th>
-                        <th>End Time</th>
-                        <th>Status / Activate </th>
+                        <th><span data-translate="shift_name">Shift Name</span></th>
+                        <th><span data-translate="start_date">Start Date</span></th>
+                        <th><span data-translate="start_time">Start Time</span></th>
+                        <th><span data-translate="end_date">End Date</span></th>
+                        <th><span data-translate="end_time">End Time</span></th>
+                        <th><span data-translate="status/activate">Status / Activate</span></th>
                         <th><input type="checkbox" id="selectAll"></th>
                     </tr>
                 </thead>
@@ -112,8 +112,6 @@
                                         class="text-danger">*</span></label>
                                 <input class="form-control shiftname" type="text" name="shift_name" id="shiftname"
                                     disabled>
-
-
                             </div>
                         </div>
 
@@ -333,9 +331,7 @@
             }
         });
     }
-
-
-
 </script>
-
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 @endsection

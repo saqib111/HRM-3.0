@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\UserProfile;
 
 class CheckTeamPermission
 {
@@ -24,19 +25,27 @@ class CheckTeamPermission
             return $next($request);
         }
 
-        if ($user->role == 2) {
-            $user_role = DB::table("users")
-                ->where("id", "=", $employeeId)
-                ->select("role")
-                ->first();
-            // dd($user_role);
-            if ($user_role && ($user_role->role == 4 || $user_role->role == 5)) {
-                return $next($request);
-            } else {
-                abort(403, 'Unauthorized - No permissions assigned.');
-            }
-        }
+        $profileId = $request->route("id");
 
+        // 2 = HR 3 = PAYROLL
+        if ($user->role == 2 || $user->role == 3) {
+
+            $permissions = getUserPermissions($user);
+
+            $user_office = UserProfile::select("office")->where("user_id", $profileId)->first();
+
+            if ($user_office) {
+                $user_office = $user_office->office;
+
+                $matching_offices = array_intersect($permissions, [$user_office]);
+
+                if (!empty($matching_offices)) {
+                    return $next($request);
+                }
+            }
+
+            abort(403, "Unauthorized - No permissions assigned.");
+        }
 
         // Check if the user is a team leader and has access to this employee
         $isTeamMember = DB::table('leader_employees')

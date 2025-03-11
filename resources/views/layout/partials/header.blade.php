@@ -32,6 +32,92 @@
         justify-content: space-between;
         width: 100%;
     }
+
+    /* //Language */
+
+    #search_bar {
+        width: 90%;
+    }
+
+    #search-results-dropdown {
+        display: none;
+        width: 88.2%;
+        background: #FFFF;
+        padding: 0px
+    }
+
+    #leave-search-form {
+        width: 98%;
+    }
+
+    .header .user-menu.nav>li.flag-nav a.dropdown-toggle::before {
+        display: none !important;
+    }
+
+    .header .user-menu.nav>li.flag-nav a.dropdown-toggle {
+        margin: 0 !important;
+        width: 120px !important;
+    }
+
+
+    @media only screen and (min-width: 1800px) and (max-width: 2680px) {
+        #search_bar {
+            width: 80%;
+        }
+
+        #search-results-dropdown {
+            width: 78.4%;
+        }
+
+    }
+
+    @media only screen and (min-width: 1564px) and (max-width:1799px) {
+
+        #search_bar {
+            width: 75%;
+        }
+
+        #search-results-dropdown {
+            width: 73.5%;
+        }
+
+    }
+
+    @media only screen and (min-width: 1262px) and (max-width:1564px) {
+
+        #search_bar {
+            width: 70%;
+        }
+
+        #search-results-dropdown {
+            width: 68.6%;
+        }
+
+    }
+
+    @media only screen and (min-width: 1174px) and (max-width:1262px) {
+
+        #search_bar {
+            width: 60%;
+        }
+    }
+
+    @media only screen and (max-width:1173px) {
+        #search_bar {
+            width: 55%;
+        }
+
+    }
+
+    @media only screen and (max-width:992px) {
+        .header .user-menu.nav>li.flag-nav a.dropdown-toggle {
+            width: 50px !important;
+        }
+
+        .header .user-menu.nav>li.flag-nav a img {
+            margin-right: 0 !important;
+        }
+    }
 </style>
 <!-- Header -->
 <div class="header">
@@ -91,6 +177,26 @@
         @endif
         <!-- /Search -->
 
+        <!-- LANGUAGE SWITCH -->
+        <li class="nav-item dropdown has-arrow flag-nav">
+            <a class="nav-link dropdown-toggle" id="language-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                aria-expanded="false">
+                <img src="{{ URL::asset('/assets/img/flags/uk.png') }}" alt="Flag" height="20">
+                <span id="selected-language">English</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" id="language-selector">
+                <a href="javascript:void(0);" class="dropdown-item" data-lang="en"
+                    data-flag="{{ URL::asset('/assets/img/flags/uk.png') }}">
+                    <img src="{{ URL::asset('/assets/img/flags/uk.png') }}" alt="Flag" height="16"> English
+                </a>
+                <a href="javascript:void(0);" class="dropdown-item" data-lang="vi"
+                    data-flag="{{ URL::asset('/assets/img/flags/vn.png') }}">
+                    <img src="{{ URL::asset('/assets/img/flags/vn.png') }}" alt="Flag" height="16"> Tiếng Việt
+                </a>
+            </div>
+        </li>
+        <!-- LANGUAGE SWITCH -->
+
         <li class="nav-item dropdown has-arrow main-drop">
             <a href="#" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
                 <span class="user-img"><img src="{{ URL::asset('/uploads/' . auth()->user()->image) }}"
@@ -127,3 +233,6 @@
 
 </div>
 <!-- /Header -->
+
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>

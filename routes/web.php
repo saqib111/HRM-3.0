@@ -30,7 +30,8 @@ use App\Http\Controllers\{
     WhiteListIPsController,
     ManageIpRestrictionsController,
     DocumentationController,
-    ExcelAttendanceController
+    ExcelAttendanceController,
+    LanguageController
 };
 
 Route::get('/', function () {
@@ -173,6 +174,7 @@ Route::middleware(['auth', 'check_user_password'])->group(function () {
     Route::post('/assigned-leave-approvals/store', [AssignedLeaveApprovalsController::class, 'store']);  //STORING VALUES IN TABLE.
     // Web route to fetch leave approval details by ID
     Route::get('/edit/{id}', [AssignedLeaveApprovalsController::class, 'edit']);
+    Route::get('/unassigned_edit/{id}', [AssignedLeaveApprovalsController::class, 'unassigned_edit']);
 
     // Single Routes 
     Route::resource('roles-permissions', RolesPermissionsController::class);
@@ -214,7 +216,7 @@ Route::middleware(['auth', 'check_permission'])->group(function () {
     Route::get('/manage-employees', [AdminController::class, 'getEmployee'])->name('list.employee')->defaults('permission', 'show_users'); // Set 'permission' in the route defaults
 
     // Show "Manage Team" Table --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Route::get('create-team', [AdminController::class, 'createTeam'])->name('create.team')->defaults('permission', 'show_teams');
+    Route::get('create-team', [LeaderEmployeeController::class, 'createTeam'])->name('create.team')->defaults('permission', 'show_teams');
     Route::post('team-store', [LeaderEmployeeController::class, 'store'])->name('team.store')->defaults('permission', 'create_team');
     Route::get('team-delete/{id}', [LeaderEmployeeController::class, 'teamDelete'])->name('delete.team')->defaults('permission', 'delete_team');
 
@@ -342,5 +344,8 @@ Route::post("/search-leaves/custom", [LeaveController::class, "getLeavesData"])-
 Route::middleware(["auth", "check_permission"])->group(function () {
     Route::get("/documentation", [DocumentationController::class, "showDocumentation"])->name("documentation");
 });
+
+// LANGUAGES
+Route::get('/get-translations/{lang}', [LanguageController::class, 'getTranslations']);
 
 require __DIR__ . '/auth.php';

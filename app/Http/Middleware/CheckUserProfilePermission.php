@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\UserProfile;
 
 class CheckUserProfilePermission
 {
@@ -20,12 +21,32 @@ class CheckUserProfilePermission
     {
         $user = Auth::user();
 
-        // 1 = SUPER-ADMIN 2 = HR
+        // 1 = SUPER-ADMIN 
         if ($user->role == 1) {
             return $next($request);
         }
 
         $profileId = $request->route("id");
+
+        // 2 = HR 3 = PAYROLL
+        if ($user->role == 2 || $user->role == 3) {
+
+            $permissions = getUserPermissions($user);
+
+            $user_office = UserProfile::select("office")->where("user_id", $profileId)->first();
+
+            if ($user_office) {
+                $user_office = $user_office->office;
+
+                $matching_offices = array_intersect($permissions, [$user_office]);
+
+                if (!empty($matching_offices)) {
+                    return $next($request);
+                }
+            }
+
+            abort(403, "Unauthorized - No permissions assigned.");
+        }
 
         // RESTRICT USER TO ITS PROFILE ONLY
         if ($user->id == $profileId) {

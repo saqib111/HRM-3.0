@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="itA1Ny454sf8Rb9AoDXzhXmr0Y3nrCYDhNL6VAiJ">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Smarthr - Bootstrap Admin Template">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords" content="Affan Ahmed">
     <meta name="author" content="Created By Affan Ahmed">
     <title>Login - HRMS admin template</title>
@@ -398,30 +399,25 @@
                             <form action="{{ route('loginto') }}" method="POST" id="login-form">
                                 @csrf
                                 <div class="form-outline mb-4">
-                                    <label class="col-form-label" for="email">Email Address</label>
-                                    <input type="text" name="email" id="email" placeholder="Please enter your email"
-                                        autocomplete="off" class="form-control" value="affan.ahmed@auroramy.com" />
-                                    <span id="email-error" class="text-danger"></span>
+                                    <label class="col-form-label" for="employee_id">Employee ID</label>
+                                    <input type="text" name="employee_id" id="employee_id"
+                                        placeholder="Please enter your employee ID" autocomplete="off"
+                                        class="form-control" value="AHNV00315" />
+                                    <span id="employee_id-error" class="text-danger"></span>
                                 </div>
 
                                 <div class="form-outline mb-4">
                                     <label class="col-form-label" for="password">Password</label>
-                                    <div class="position-relative">
-                                        <input type="password" name="password" id="password"
-                                            placeholder="Please enter your password" autocomplete="off"
-                                            class="form-control" value="12345678" />
-                                        <span class="position-absolute" id="toggle_password"
-                                            style="right: 14px; top: 52%; transform: translateY(-50%); cursor: pointer;">
-                                            <i id="eyeIcon" class="fa fa-eye"></i>
-                                        </span>
-                                    </div>
+                                    <input type="password" name="password" id="password"
+                                        placeholder="Please enter your password" autocomplete="off" class="form-control"
+                                        value="12345678" />
                                     <span id="password-error" class="text-danger"></span>
                                 </div>
 
-                                {{-- <button type="submit" id="submitbtn" class="btn btn-primary">Login</button> --}}
                                 <button type="submit" id="submitbtn">Login</button>
                                 <div id="general-error" class="text-danger mt-3"></div>
                             </form>
+
                         </div>
                     </div>
                 </div>
@@ -440,7 +436,7 @@
             e.preventDefault();
 
             // Clear previous errors
-            document.getElementById('email-error').textContent = '';
+            document.getElementById('employee_id-error').textContent = '';
             document.getElementById('password-error').textContent = '';
             document.getElementById('general-error').textContent = '';
 
@@ -450,26 +446,22 @@
             const url = form.action;
 
             // Client-side validation
-            const email = formData.get('email');
+            const employee_id = formData.get('employee_id');
             const password = formData.get('password');
             let hasError = false;
 
             // Reset borders before validation
-            $('#email').css('border', '');
+            $('#employee_id').css('border', '');
             $('#password').css('border', '');
 
-            if (email === '') {
-                document.getElementById('email-error').textContent = 'Email is required.';
-                $('#email').css('border', '1px solid red');
+            // Employee ID validation
+            if (employee_id === '') {
+                document.getElementById('employee_id-error').textContent = 'Employee ID is required.';
+                $('#employee_id').css('border', '1px solid red');
                 hasError = true;
-            } else {
-                if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-                    document.getElementById('email-error').textContent = 'Please enter a valid email address.';
-                    $('#email').css('border', '1px solid red');
-                    hasError = true;
-                }
             }
 
+            // Password validation
             if (password === '') {
                 hasError = true;
                 document.getElementById('password-error').textContent = 'Password is required.';
@@ -495,35 +487,46 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json', // Ensure the response is JSON
                     },
                 });
 
-                const result = await response.json();
+                // Check if the response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const result = await response.json();
 
-                if (response.ok) {
-                    if (result.redirect_url) {
-                        window.location.href = result.redirect_url;
-                    } else {
-                        alert(result.message);
-                    }
-                } else if (response.status === 403) {
-                    window.location.href = "/access-denied-ip";
-                } else {
-                    if (response.status === 401) {
-                        document.getElementById('general-error').textContent = 'Your credentials are invalid. Please contact your administrator for assistance.';
-                        $('#password').css('border', '1px solid red');
-                        $('#email').css('border', '1px solid red');
-                    } else if (response.status === 402) {
+                    if (response.ok) {
                         if (result.redirect_url) {
                             window.location.href = result.redirect_url;
                         } else {
-                            document.getElementById('message_error').innerHTML =
-                                'Your account has been disabled by the administrator.<br>Please contact HR';
+                            alert(result.message);
+                        }
+                    } else if (response.status === 403) {
+                        window.location.href = "/access-denied-ip";
+                    } else {
+                        if (response.status === 401) {
+                            document.getElementById('general-error').textContent = 'Your credentials are invalid. Please contact your administrator for assistance.';
                             $('#password').css('border', '1px solid red');
-                            $('#email').css('border', '1px solid red');
+                            $('#employee_id').css('border', '1px solid red');
+                        } else if (response.status === 402) {
+                            if (result.redirect_url) {
+                                window.location.href = result.redirect_url;
+                            } else {
+                                document.getElementById('message_error').innerHTML =
+                                    'Your account has been disabled by the administrator.<br>Please contact HR';
+                                $('#password').css('border', '1px solid red');
+                                $('#employee_id').css('border', '1px solid red');
+                            }
                         }
                     }
+                } else {
+                    // If not JSON, log the response body as text for debugging
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    document.getElementById('general-error').textContent =
+                        'An error occurred. Please try again later.';
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -534,25 +537,9 @@
                 loader.style.display = 'none';
             }
         });
-
-        // SHOW PASSWORD FUNCTION
-        $(document).ready(function () {
-            $("#toggle_password").click(function (e) {
-                e.preventDefault();
-                var password = $("#password");
-                var icon = $("#eyeIcon");
-
-                if (password.attr("type") === "password") {
-                    password.attr("type", "text");
-                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
-                } else {
-                    password.attr("type", "password");
-                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
-                }
-            });
-        });
-
     </script>
+
+
 
 </body>
 

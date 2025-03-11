@@ -92,12 +92,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col-md-4">
-            <h3 class="page-title">Create Group</h3>
+            <h3 class="page-title"><span data-translate="create_group">Create Group</span></h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active">Create Group</li>
+                <li class="breadcrumb-item active"><span data-translate="create_group">Create Group</span></li>
             </ul>
         </div>
 
@@ -107,7 +107,7 @@
     <ul class="split-head">
         <li>
             <button class="btn add-btn text-white" onclick="groupAdd()">
-                <i class="fa fa-plus"></i> Add Group</button>
+                <i class="fa fa-plus"></i> <span data-translate="add_group">Add Group</span></button>
         </li>
     </ul>
 </div>
@@ -121,9 +121,8 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Group Name</th>
-
-                        <th>Action</th>
+                        <th><span data-translate="create_group">Create Group</span></th>
+                        <th><span data-translate="action">Action</span></th>
                     </tr>
                 </thead>
                 <tbody id="group-list">
@@ -136,9 +135,9 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Group</h5>
+                <h5 class="modal-title"><span data-translate="create_group">Create Group</span></h5>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <!-- <span aria-hidden="true">&times;</span> -->
                 </button>
             </div>
             <div class="modal-body">
@@ -148,7 +147,7 @@
                         <div class="input-block mb-3">
 
                             <div class="input-block mb-3">
-                                <label for="groupName">Group Name <span class="text-danger">*</span></label>
+                                <label for="groupName"><span data-translate="group_name">Group Name</span> <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="group_name" id="groupName">
                             </div>
 
@@ -159,7 +158,7 @@
                     <div class="input-block mb-3">
 
                         <div class="custom-select" id="first-assigner-select">
-                            <label for="select_box">First Assigner Name:</label>
+                            <label for="select_box"><span data-translate="group_members_name">Group Members Name</span></label>
                             <div class="select-box first_select_box" id="select-box">
                                 <input type="hidden" class="tags_input" id="first_assigners_backend_field" name="tags"
                                     hidden>
@@ -173,15 +172,15 @@
                                     <input type="text" class="search-tags" placeholder="Search Tags ..">
                                     <button type="button" class="clear"><i class="fa fa-close"></i></button>
                                 </div>
-                                <div class="op-disabled" selected disabled>Select Users</div>
-                                <div class="no-result-message" style="display:none;">No Result Match</div>
+                                <div class="op-disabled" selected disabled><span data-translate="select_users">Select Users</span></div>
+                                <div class="no-result-message" style="display:none;"><span data-translate="no_match_found">No match found</span></div>
                             </div>
                             <span class="text-danger" id="first_field_error"></span>
                         </div>
                     </div>
 
                     <div class="submit-section">
-                        <button class="btn btn-primary">Submit</button>
+                        <button class="btn btn-primary"><span data-translate="submit">Submit</span></button>
                     </div>
                 </form>
             </div>
@@ -195,16 +194,16 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="modalTitle">Delete Confirmation</h4>
+                <h4 class="modal-title" id="modalTitle"><span data-translate="delete_confirmation">Delete Confirmation</span></h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this Group? This action cannot be undone.</p>
+                <p><span data-translate="delete_confirmation_text">Are you sure you want to delete this Schedule? This action cannot be undone.</span></p>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-translate="cancel">Cancel</span></button>
+                <button type="button" class="btn btn-danger" id="confirmDelete"><span data-translate="delete">Delete</span></button>
             </div>
         </div>
     </div>
@@ -222,9 +221,9 @@
 
             <div class="modal-header ">
 
-                <h4 class="modal-title">Group Details </h4>
+                <h4 class="modal-title"><span data-translate="group_details">Group Details</span></h4>
                 <button type="button" class="closed_btn" data-bs-dismiss="modal"
-                    style="margin-left:300px;">&times;</button>
+                    style="margin-left:300px;"></button>
             </div>
             <div class="row mt-2" style="margin-left:10px;" id="groupInfo">
 
@@ -235,23 +234,16 @@
                 <table class="table table-striped">
                     <thead>
                         <tr class="text-center">
-                            <th>Employee Name</th>
-                            <th>Group Name</th>
+                            <th><span data-translate="employee_name">Employee Name</span></th>
+                            <th><span data-translate="group_name">Group Name</span></th>
 
                         </tr>
                     </thead>
                     <tbody id="employeeData">
-
-
+                        <!-- DYNAMIC DATA -->
                     </tbody>
                 </table>
             </div>
-
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-            </div>
-
         </div>
     </div>
 </div>
@@ -337,12 +329,6 @@
 
 
         formData.append('selectedEmployee', employee_id);
-
-        // if (selectedEmployee) {
-        //     selectedEmployee.forEach(function (employee_id) {
-        //         formData.append('employee_id[]', employee_id);
-        //     });
-        // }
         var isValid = true;
         clearValidationStates();
         if (!validateEmployee(employee_id)) isValid = false;
@@ -452,7 +438,7 @@
 
     function showGroup(id) {
         group_id = id;
-
+        
         if (group_id) {
 
             $.ajax({
@@ -466,7 +452,7 @@
                     $('#groupInfo').empty().append(
 
                         `<div class="col-md-12"><h5 class="modal-title">Group name : ${response.group_name} </h5></div>
-        <div class="col-md-12"><h5 class="modal-title">Total employee :  ${response.total}  </h5></div>`
+                        <div class="col-md-12"><h5 class="modal-title">Total employee :  ${response.total}  </h5></div>`
 
                     )
                     $('#employeeData').empty().append();
@@ -494,15 +480,8 @@
 
     }
 
-
-
-
-
-
-
-
-
 </script>
-
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 
 @endsection

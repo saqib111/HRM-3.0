@@ -156,14 +156,14 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="main-employee-title">
-                <h3 class="page-title">Late Employee Attendance </h3>
+                <h3 class="page-title"><span data-translate="late_employee_attendance">Late Employee Attendance</span></h3>
                 <div class="employee-title">( {{auth()->user()->employee_id}} | {{auth()->user()->username}} )</div>
             </div>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a
                         href="{{ auth()->user()->role == '1' ? url('admin-dashboard') : url('attendance-employee') }}">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item active">Attendance </li>
+                <li class="breadcrumb-item active"><span data-translate="late_employee_attendance">Late Employee Attendance</span></li>
             </ul>
         </div>
     </div>
@@ -175,17 +175,17 @@
             <table class="table  custom-table mb-0" id="late-employees-table">
                 <thead>
                     <tr class="table_row">
-                        <th class="text-center">Verify</th>
+                        <th class="text-center"><span data-translate="verify">Verify</span></th>
                         <th>#</th>
-                        <th>Employee Name</th>
-                        <th>Shift In</th>
-                        <th>Shift Out</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>CheckIn Status</th>
-                        <th>CheckOut Status</th>
-                        <th>Duty Hours</th>
-                        <th class="text-center">Verify</th>
+                        <th><span data-translate="employee_name">Employee Name</span></th>
+                        <th><span data-translate="late_employee_shift_in">Shift In</span></th>
+                        <th><span data-translate="late_employee_shift_out">Shift Out</span></th>
+                        <th><span data-translate="check_in">Check In</span></th>
+                        <th><span data-translate="check_out">Check Out</span></th>
+                        <th><span data-translate="check_in_status">CheckIn Status</span></th>
+                        <th><span data-translate="check_out_status">CheckOut Status</span></th>
+                        <th><span data-translate="duty_hours">Duty Hours</span></th>
+                        <th class="text-center"><span data-translate="verify">Verify</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -207,10 +207,7 @@
 @endsection
 @section('script-z')  
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-
 <script>
-
     $(document).ready(function () {
         $("#late-employees-table").DataTable({
             processing: true,
@@ -314,6 +311,8 @@
 
     });
 </script>
+<!-- LANGUAGE SCRIPT -->
+<script src="{{ asset('assets/js/switch.language.js') }}"></script>
 </body>
 
 </html>

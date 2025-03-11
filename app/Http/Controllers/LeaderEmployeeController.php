@@ -34,6 +34,12 @@ class LeaderEmployeeController extends Controller
         //
     }
 
+    // MOVED FROM ADMIN (VIEW FOR TEAM MANAGEMENT)
+    public function createTeam()
+    {
+        return view('admin.leader-team.leader-team');
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -245,23 +251,48 @@ class LeaderEmployeeController extends Controller
     {
         $user = auth()->user();
 
-        // Fetch user permissions
         $permissions = getUserPermissions($user);
+
+        $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+        $matching_offices = array_intersect($allowed_offices, $permissions);
+
         $canUpdateTeam = $user->role == 1 || in_array('update_team', $permissions);
         $canDeleteTeam = $user->role == 1 || in_array('delete_team', $permissions);
 
-        // Get data from the database
-        $collection = DB::table('leader_employees as le')
-            ->join('users as u', 'u.id', '=', 'le.Leader_id')
-            ->join('users as emp', 'emp.id', '=', 'le.employee_id')
-            ->select(
-                'u.username as name',
-                'le.Leader_id as lid',
-                DB::raw('GROUP_CONCAT(emp.username SEPARATOR ", ") as employee_names')
-            )
-            ->groupBy('le.Leader_id', 'u.username')
-            ->orderBy('le.Leader_id', 'asc');
+        if (!empty($matching_offices)) {
+            $office_based_permission = array_values($matching_offices);
+        } else {
+            $office_based_permission = [];
+        }
 
+        // Get data from the database
+        if ($user->role == 1) {
+            $collection = DB::table('leader_employees as le')
+                ->join('users as u', 'u.id', '=', 'le.Leader_id')
+                ->join('users as emp', 'emp.id', '=', 'le.employee_id')
+                ->select(
+                    'u.username as name',
+                    'le.Leader_id as lid',
+                    DB::raw('GROUP_CONCAT(emp.username SEPARATOR ", ") as employee_names')
+                )
+                ->groupBy('le.Leader_id', 'u.username')
+                ->orderBy('le.Leader_id', 'asc');
+        } elseif (($user->role == 2 || $user->role == 3) && $office_based_permission) {
+
+            $collection = DB::table('leader_employees as le')
+                ->join('users as u', 'u.id', '=', 'le.Leader_id')
+                ->join('users as emp', 'emp.id', '=', 'le.employee_id')
+                ->join('user_profiles as up', 'u.id', '=', 'up.user_id')
+                ->whereIn('up.office', $office_based_permission)
+                ->select(
+                    'u.username as name',
+                    'le.Leader_id as lid',
+                    DB::raw('GROUP_CONCAT(emp.username SEPARATOR ", ") as employee_names')
+                )
+                ->groupBy('le.Leader_id', 'u.username')
+                ->orderBy('le.Leader_id', 'asc');
+
+        }
         return DataTables::of($collection)
             ->addIndexColumn()
             ->filterColumn('name', function ($query, $keyword) {  // Change filter to use the correct column

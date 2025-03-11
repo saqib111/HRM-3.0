@@ -58,13 +58,13 @@
                     <span>Main</span>
                 </li>
                 {{-- Show "Add Employee" if the user has the "create_user" permission or is Superadmin --}}
-                @if($user->role == 1 || in_array('dashboard', $permissions))
+                @if($user->role == 1 || ($user->role == 2 && in_array('dashboard', $permissions)))
                     <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <a href="{{route('dashboard')}}"><i class="fa fa-home"></i> <span> Dashboard</span> </a>
                     </li>
                 @endif
                 {{-- Show "Add Employee" if the user has the "create_user" permission or is Superadmin --}}
-                @if($user->role == 1 || in_array('show_users', $permissions))
+                @if($user->role == 1 || ($user->role == 2 && in_array('show_users', $permissions)))
                     <li class="{{ request()->routeIs('list.employee') ? 'active' : '' }}">
                         <a href="{{route('list.employee')}}"><i class="fa fa-user"></i> <span> Manage Employee</span> </a>
                     </li>
@@ -72,46 +72,52 @@
 
                 <li class="{{ request()->routeIs('attendanceemployee.record') ? 'active' : '' }}">
                     <a href="{{route('attendanceemployee.record')}}"><i class="fa fa-user-check"></i>
-                        <span>Attendance</span>
+                        <span data-translate="attendance">Attendance</span>
                     </a>
                 </li>
 
                 <!-- SCHEDULES -->
                 @if($user->role == 1 || in_array('view_manage_shift', $permissions))
                     <li class="menu-title">
-                        <span>Manage Schedule</span>
+                        <span data-translate="manage_schedule">Manage Schedule</span>
                     </li>
                     <li class="submenu">
-                        <a href="#"><i class="fa fa-cloud-arrow-up"></i> <span>Excel Schedule</span> <span
-                                class="menu-arrow"></span></a>
+                        <a href="#"><i class="fa fa-cloud-arrow-up"></i><span data-translate="upload_schedule">Upload
+                                Schedule</span><span class="menu-arrow"></span></a>
                         <ul>
                             <li class="{{ request()->routeIs('importshcedule') ? 'active' : '' }}">
                                 <a href="{{ url('importshcedule') }}"><i class="fa fa-newspaper"></i>
-                                    <span>Import Excel File</span>
+                                    <span data-translate="import_excel_file">Import Excel File</span>
                                 </a>
                             </li>
                         </ul>
                     </li>
                     <li class="submenu ">
-                        <a href="#"><i class="fa fa-calendar fa-1x"></i> <span>Form Schedule</span> <span
-                                class="menu-arrow"></span></a>
+                        <a href="#"><i class="fa fa-calendar fa-1x"></i> <span data-translate="manage_schedule">Manage
+                                Schedule</span> <span class="menu-arrow"></span></a>
                         <ul>
                             <li><a class="{{ request()->routeIs('schedule') ? 'active' : '' }}"
-                                    href="{{ route('schedule')}}">Create Schedule</a></li>
+                                    href="{{ route('schedule')}}"><span data-translate="create_schedule" class="ms-0">Create
+                                        Schedule</span></a></li>
                             <li><a class="{{ request()->routeIs('group.index') ? 'active' : '' }}"
-                                    href="{{ route('group.index')}}">Create Group</a></li>
+                                    href="{{ route('group.index')}}"><span data-translate="create_group" class="ms-0">Create
+                                        Group</span></a></li>
                             <li><a class="{{ request()->routeIs('assign.employee') ? 'active' : '' }}"
-                                    href="{{ route('assign.employee')}}">Assign Group</a></li>
+                                    href="{{ route('assign.employee')}}"><span data-translate="assign_group"
+                                        class="ms-0">Assign Group</span></a></li>
                             <li><a class="{{ request()->routeIs('add.holiday') ? 'active' : '' }}"
-                                    href="{{route('add.holiday')}}">Assign Offday</a></li>
+                                    href="{{route('add.holiday')}}"><span data-translate="assign_offday" class="ms-0">Assign
+                                        Offday</span></a></li>
                             <li><a class="{{ request()->routeIs('group.change') ? 'active' : '' }}"
-                                    href="{{ route('group.change')}}">Change Group Members</a></li>
+                                    href="{{ route('group.change')}}"><span data-translate="change_group_members"
+                                        class="ms-0">Change Group Members</span></a></li>
                             <li><a class="{{ request()->routeIs('schedule.manage') ? 'active' : '' }}"
-                                    href="{{route('schedule.manage')}}">Manage Schedule</a></li>
+                                    href="{{route('schedule.manage')}}"><span data-translate="manage_schedule"
+                                        class="ms-0">Manage Schedule</span></a></li>
                         </ul>
                     </li>
                 @endif
-
+                <!-- SCHEDULES -->
                 @if(
                     $user->role == 1 || in_array('show_all_employee_info', $permissions)
                     || in_array('show_brands', $permissions)
@@ -123,10 +129,10 @@
                     || in_array('show_fingerprint_record', $permissions)
                 )
                                     <li class="menu-title">
-                                        <span>Employees</span>
+                                        <span data-translate="employees">Employees</span>
                                     </li>
                 @endif
-                @if($user->role == 1 || in_array('show_all_employee_info', $permissions))
+                @if($user->role == 1 || ($user->role == 2 && in_array('show_all_employee_info', $permissions)))
                     <li class="{{ request()->routeIs('all.employees') ? 'active' : '' }}">
                         <a href="{{route('all.employees')}}"><i class="la la-key"></i> <span>Employee Info</span>
                         </a>
@@ -167,41 +173,43 @@
             @endif
             @if($user->role == 1 || in_array('show_al_balance', $permissions))
                 <li class="{{ request()->routeIs('annual-leaves.index') ? 'active' : '' }}">
-                    <a href="{{route('annual-leaves.index')}}"><i class="fa fa-user-clock"></i> <span>AL Balance</span>
+                    <a href="{{route('annual-leaves.index')}}"><i class="fa fa-user-clock"></i>
+                        <span data-translate="nav_al_balance">AL Balance</span>
                     </a>
                 </li>
             @endif
             @if($user->role == 1 || in_array('view_manage_shift', $permissions))
                 <li class="{{ request()->routeIs('emp.list') ? 'active' : '' }}">
-                    <a href="{{route('emp.list')}}"><i class="fa fa-home"></i> <span>Manage Shift</span>
+                    <a href="{{route('emp.list')}}"><i class="fa fa-home"></i>
+                        <span data-translate="manage_shift">Manage Shift</span>
                     </a>
                 </li>
             @endif
             @if($user->role == 1 || in_array('show_fingerprint_record', $permissions))
                 <li class="{{ request()->routeIs('fingerprint-record.index') ? 'active' : '' }}">
                     <a href="{{route('fingerprint-record.index')}}"><i class="fa-solid fa-fingerprint"></i>
-                        <span>Fingerprint Record</span>
+                        <span data-translate="fingerprint_record">Fingerprint Record</span>
                     </a>
                 </li>
             @endif
             @if($user->role == 1 || in_array('show_late_employee_details', $permissions))
                 <li class="{{ request()->routeIs('late.employee') ? 'active' : '' }}">
                     <a href="{{route('late.employee')}}"><i class="fa-solid fa-user-clock"></i>
-                        <span>Late Employee Details</span>
+                        <span data-translate="late_employee_details">Late Employee Details</span>
                     </a>
                 </li>
             @endif
             <!-- Leave Application -->
             <li class="menu-title">
-                <span>Leave Application</span>
+                <span data-translate="leave_application">Leave Application</span>
             </li>
             <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
-                <a href="{{route('leave.form.show')}}"><i class="fa fa-person-walking-luggage"></i> <span> Leave
-                        Apply</span> </a>
+                <a href="{{route('leave.form.show')}}"><i class="fa fa-person-walking-luggage"></i><span
+                        data-translate="leave_application">Leave Apply</span></a>
             </li>
             <li class="{{ request()->routeIs('leave.status') ? 'active' : '' }}">
-                <a href="{{route('leave.status')}}"><i class="fa fa-person-walking-luggage"></i> <span> Leave
-                        Status</span> </a>
+                <a href="{{route('leave.status')}}"><i class="fa fa-person-walking-luggage"></i><span span
+                        data-translate="leave_status">Leave Status</span></a>
             </li>
             @if(
                 $user->role == 1 || in_array('unassigned_leaves', $permissions) ||
@@ -226,9 +234,7 @@
             @if ($user->role == 1 || in_array('pending_leaves', $permissions))
                 <li class="{{ request()->routeIs('leave_application.data') ? 'active' : '' }}">
                     <a href="{{ route('leave_application.data') }}"><i class="fa fa-person-circle-exclamation"></i>
-                        <span>
-                            Pending
-                            Leaves</span>
+                        <span data-translate="pending_leaves">Pending Leaves</span>
                         <span id="pendingLeavesBadge" class="notification-badge hidden"></span>
                     </a>
                 </li>
@@ -283,11 +289,11 @@
                 @endif
             @endif
             <li class="menu-title">
-                <span>Payroll</span>
+                <span data-translate="payroll"><span>Payroll</span></span>
             </li>
             <li class="{{ request()->routeIs('payroll.salary_deduction') ? 'active' : '' }}">
-                <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i> <span>Salary
-                        Deduction</span>
+                <a href="{{route('payroll.salary_deduction')}}"><i class="fa fa-money-bill-wave"></i><span span
+                        data-translate="salary_deduction">Salary Deduction</span>
                 </a>
             </li>
             @if($user->role == 1 || in_array('expired_visa', $permissions))
