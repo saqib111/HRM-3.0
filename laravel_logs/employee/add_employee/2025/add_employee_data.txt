@@ -30,3 +30,275 @@ Leave Type: 28
 New Employee Data Created Successfully
 
 
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200001
+Employee Username: Jax Lee
+Employee Email: jax.lee@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Boss
+Employee Designation: Boss
+Employee Brand: BJ88 (All Brands)
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:36:27
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200002
+Employee Username: John Lee
+Employee Email: john.lee@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Team Leader
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:41:29
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200003
+Employee Username: Victory Lion
+Employee Email: victory.lion@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Team Leader
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:43:26
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200004
+Employee Username: Neymar Vinh
+Employee Email: neymar.vinh@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:45:40
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200005
+Employee Username: Pax Hoang
+Employee Email: pax.hoang@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Team Leader
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:46:51
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200006
+Employee Username: Amos Phan
+Employee Email: amos.phan@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:47:51
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200007
+Employee Username: Conan Thai
+Employee Email: conan.thai@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:49:28
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200008
+Employee Username: Tony Phung
+Employee Email: tony.phung@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:50:44
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200009
+Employee Username: Felix Nguyen
+Employee Email: felix.nguyen@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:51:54
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200010
+Employee Username: Titi Dang
+Employee Email: titi.dang@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:52:56
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200011
+Employee Username: Antony Vu
+Employee Email: antony.vu@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:54:00
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200012
+Employee Username: La Dion
+Employee Email: la.dion@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Team Leader
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:54:47
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200013
+Employee Username: Prey Vo
+Employee Email: prey.vo@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Team Leader
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:55:42
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200014
+Employee Username: Bibi Nguyen
+Employee Email: bibi.nguyen@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:56:22
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB200015
+Employee Username: Tiki Bui
+Employee Email: tiki.bui@ezglobal.com
+Employee Joining Date: 2024-09-01
+Employee Company: EZGB C
+Employee Department: Sale
+Employee Designation: Sales Executive
+Employee Brand: E28 VND
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-13 19:57:02
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: BOSS | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB000002
+Employee Username: Affan Ahmed
+Employee Email: affan.ahmed@ezglobal.com
+Employee Joining Date: 2023-05-15
+Employee Company: EZGB A
+Employee Department: Information Technology
+Employee Designation: Junior Information Technology Executive
+Employee Brand: BJ88 (All Brands), E28 (All Brands), JW7 (All Brands)
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-22 00:51:37
+Leave Type: 28
+New Employee Data Created Successfully
+
+
+New Employee Created By: ID = 1 | UserName: BOSS | Employee ID: EZGB000001
+New Created Employee Data:
+Employee ID: EZGB000003
+Employee Username: Chloe Wong
+Employee Email: chloe.wong@ezglobal.com
+Employee Joining Date: 2023-04-17
+Employee Company: EZGB A
+Employee Department: Human Resources
+Employee Designation: Human Resources Executive
+Employee Brand: BJ88 (All Brands), E28 (All Brands), JW7 (All Brands)
+Employee Image: images/default_profile_picture.png
+Created Date and Time: 2025-03-22 00:52:41
+Leave Type: 28
+New Employee Data Created Successfully
+
+

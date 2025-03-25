@@ -31,7 +31,8 @@ use App\Http\Controllers\{
     ManageIpRestrictionsController,
     DocumentationController,
     ExcelAttendanceController,
-    LanguageController
+    LanguageController,
+    UnlockLeaveController
 };
 
 Route::get('/', function () {
@@ -347,5 +348,14 @@ Route::middleware(["auth", "check_permission"])->group(function () {
 
 // LANGUAGES
 Route::get('/get-translations/{lang}', [LanguageController::class, 'getTranslations']);
+
+// UNLOCK LEAVE CATEGORY ROUTES
+// application form
+Route::post("/unlock-leave-categoreis", [UnlockLeaveController::class, "unlockLeaveApplication"])->name("unlock.leaveApplication");
+// view
+Route::get("/view-unlock-leave-applications", [UnlockLeaveController::class, "view"])->name("view.leaveApplication");
+Route::get("/data-unlock-leave-applications", [UnlockLeaveController::class, "applicationsData"])->name("data.leaveApplication");
+Route::get("/view-unlock-leave-details/{id}", [UnlockLeaveController::class, "applicationDetails"])->name("details.leaveApplication");
+Route::post("/unlock-leave-action", [UnlockLeaveController::class, "unlockLeaveAction"])->name("action.leaveApplication");
 
 require __DIR__ . '/auth.php';

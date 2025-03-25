@@ -1,5 +1,10 @@
 @extends('layout.mainlayout')
 @section('content')
+
+    @php
+        $user = auth()->user();
+        $permissions = getUserPermissions($user); // Use the helper function to fetch permissions
+    @endphp
     <style>
         .date5,
         .date4,
@@ -66,6 +71,12 @@
             display: none !important;
         }
 
+        #images-sections {
+            display: flex;
+            max-width: 100px;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
             .modal-body {
                 max-height: 70vh;
@@ -80,31 +91,28 @@
             }
         }
     </style>
-    @php
-        $nationalities = DB::table('user_profiles')->select('nationality')->distinct()->where('nationality', '!=', '')->get();
-    @endphp
-
     <div class="page-header">
         <div class="row align-items-center justify-content-between">
             <div class="col-md-4">
-                <h3 class="page-title">HR Work(Leave Applications)</h3>
+                <h3 class="page-title"><span>Unlock Leave Category Applications</span>
+                </h3>
                 <ul class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Leave Application</a></li>
-                    <li class="breadcrumb-item active">HR Work (Leaves)</li>
+                    <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
+                    <li class="breadcrumb-item active"><span>Unlock Leave Category Applications</span></li>
                 </ul>
             </div>
-            <div class="col-md-8 d-flex justify-content-end">
+            <div class="col-md8 d-flex justify-content-end me-0">
                 <ul class="c_Employee">
                     <li>
-                        @if(auth()->user()->role === "1" || auth()->user()->role === "2" || auth()->user()->role === "3")
+                        @if(auth()->user()->role === "1" || in_array('pending_leaves', $permissions))
                                             <div class="d-flex justify-content-end flex-wrap">
                                                 <!-- Status Buttons (Pendings, Approved, Rejected) -->
                                                 @php
-                                                    $statuses = ['pending' => 'All Pending', 'approved' => 'HR Task', 'rejected' => 'All Rejected', 'completed' => 'All Completed', 'revoked' => 'Revoked'];
+                                                    $statuses = ['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'];
                                                 @endphp
 
                                                 @foreach($statuses as $status => $label)
-                                                    <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->index == 1 ? 'active' : '' }}"
+                                                    <button class="btn btn-outline-primary mx-1 company-btn {{ $loop->first ? 'active' : '' }}"
                                                         style="width:138px; margin-bottom: 10px;" data-status="{{ $status }}"
                                                         onclick="filterByStatus('{{ $status }}')">
                                                         {{ $label }}
@@ -117,15 +125,7 @@
             </div>
         </div>
     </div>
-    <!-- NATIONALITY FILTER -->
-    <div class="nationality col-sm-2">
-        <select class="form-select nationality-select" aria-label="Default select example" id="nationalitySelect">
-            <option value="" selected>All Nationalities</option>
-            @foreach($nationalities as $nationality)
-                <option value="{{ $nationality->nationality }}">{{ $nationality->nationality }}</option>
-            @endforeach
-        </select>
-    </div>
+
     <div class="row">
         <div class="col-md-12">
             <div class="table-responsive">
@@ -133,16 +133,15 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Employee ID</th>
-                            <th>Username</th>
-                            <th>Title</th>
-                            <th>Description</th>
-                            <th>Balance Leave</th>
-                            <th>Day</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Off Days</th>
-                            <th>Action</th>
+                            <th><span data-translate="employee_id">Employee ID</span></th>
+                            <th><span data-translate="username">Username</span></th>
+                            <th><span data-translate="title">Title</span></th>
+                            <th><span data-translate="description">Description</span></th>
+                            <th><span data-translate="balance">Leave Balance</span></th>
+                            <th><span data-translate="day">Day</span></th>
+                            <th><span data-translate="from">From</span></th>
+                            <th><span data-translate="to">To</span></th>
+                            <th><span data-translate="action">Action</span></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -156,9 +155,10 @@
         <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header p-2 align-items-center shadow-sm">
-                    <h5 class="modal-title">Leave Application Details</h5>
+                    <h5 class="modal-title"><span data-translate="leave_application_details">Leave Application
+                            Details</span></h5>
                     <button type="button" class="closed_btn" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">x</span>
+                        <span aria-hidden="true"></span>
                     </button>
                 </div>
                 <div class="modal-body p-2">
@@ -170,15 +170,18 @@
                                     <div
                                         class="d-flex flex-column align-items-start align-md-items-center flex-md-row justify-content-between flex-wrap">
                                         <div class="py-2  ">
-                                            <span class="fw-semibold">Employee ID:</span>
+                                            <span class="fw-semibold"><span data-translate="modal_employee_id">Employee
+                                                    ID:</span></span>
                                             <span id="modal-employee-id" class="text-dark fs-6 ms-2">AV12345</span>
                                         </div>
                                         <div class="py-2 ms-2 text-center  ">
-                                            <span class="fw-semibold">Username:</span>
+                                            <span class="fw-semibold"><span
+                                                    data-translate="modal_username">Username:</span></span>
                                             <span id="modal-username" class="text-dark fs-6 ms-2">Remy</span>
                                         </div>
                                         <div class="py-2 greenText text-center  ">
-                                            <span class="fw-semibold">AL Balance:</span>
+                                            <span class="fw-semibold"><span data-translate="al_balance">AL
+                                                    Balance:</span></span>
                                             <span id="modal-alblance" class="fs-6 ms-2">31</span>
                                         </div>
                                     </div>
@@ -191,7 +194,8 @@
                                     <hr class="my-2">
                                     <div
                                         class="py-2 d-flex flex-column flex-md-row justify-content-between align-items-start p-0 p-md-1">
-                                        <span class="fw-semibold">Description:</span>
+                                        <span class="fw-semibold"><span data-translate="modal_description">Description:
+                                            </span></span>
                                         <span id="modal-description" class="text-dark fs-6 ms-3">Responsible for designing,
                                             developing, and maintaining software applications.</span>
                                     </div>
@@ -199,19 +203,25 @@
                                     <!-- Placeholder for Dynamic Leave Sections -->
                                     <hr class="my-2">
                                     <div class="py-2 d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Total Leave Days:</span>
+                                        <span class="fw-semibold"><span data-translate="total_leave_days">Total Leave Days:
+                                            </span></span>
                                         <span class="text-dark fs-6" id="total_leave_days">34 days</span>
                                     </div>
                                     <div class="py-2 d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Total AL Days:</span>
+                                        <span class="fw-semibold"><span data-translate="total_al_days">Total AL Days:
+                                            </span></span>
                                         <span class="text-dark fs-6" id="total_al_days">28 days</span>
                                     </div>
                                     <div class="py-2 d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Total Off Days:</span>
+                                        <span class="fw-semibold"><span data-translate="total_off_days">Total Off Days:
+                                            </span></span>
                                         <span class="text-dark fs-6" id="total_off_days">6 days</span>
                                     </div>
                                     <hr class="my-2">
                                     <div class="leave-sections"></div>
+
+                                    <hr class="my-2">
+                                    <div id="images-sections"></div>
 
                                     <!-- Total Days Information -->
                                     <hr class="my-2">
@@ -219,41 +229,12 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="d-flex justify-content-between align-items-center py-2">
-                                                    <span class="fw-semibold">First Status: <span
-                                                            id="first_status">Approved</span></span>
-                                                    <span class="fw-semibold">Approval Name: <span
-                                                            id="first_approval_name">Test</span></span>
-                                                    <span class="fw-semibold">Date & Time: <span
-                                                            id="first_created_time">12/02/2024
-                                                            08:00:00</span></span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center py-2">
-                                                    <span class="fw-semibold">Second Status: <span
-                                                            id="second_status">Approved</span></span>
-                                                    <span class="fw-semibold">Approval Name: <span
-                                                            id="second_approval_name">Test</span></span>
-                                                    <span class="fw-semibold">Date & Time: <span
-                                                            id="second_created_time">12/02/2024
-                                                            08:00:00</span></span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center py-2">
-                                                    <span class="fw-semibold">HR Status: <span
-                                                            id="hr_status">Pending</span></span>
-                                                    <span class="fw-semibold">Approval Name: <span
-                                                            id="hr_approval_name">Test</span></span>
-                                                    <span class="fw-semibold">Date & Time: <span
-                                                            id="hr_created_time">12/02/2024
-                                                            08:00:00</span></span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center py-2"
-                                                    id="revoked_container">
-                                                    <span class="fw-semibold">Status: <span
-                                                            id="revoked_status">Revoked</span></span>
-                                                    <span class="fw-semibold">Approval Name: <span
-                                                            id="revoked_approval_name">Test</span></span>
-                                                    <span class="fw-semibold">Date & Time: <span
-                                                            id="revoked_created_time">12/02/2024
-                                                            08:00:00</span></span>
+                                                    <span class="fw-semibold"><span>Status : </span><span id="first_status">
+                                                            Approved</span></span>
+                                                    <span class="fw-semibold"><span>Approval Name : </span><span
+                                                            id="first_approval_name"> Test</span></span>
+                                                    <span class="fw-semibold"><span>Date & Time : </span><span
+                                                            id="superadmin_created_at"> 12/02/2024 08:00:00</span></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -265,7 +246,10 @@
                 </div>
                 <!-- Action Buttons -->
                 <div class="d-flex flex-column flex-sm-row justify-content-center mt-4 mb-4 p-2" id="action_buttons">
-                    <button class="btn btn-success mb-2 mb-sm-0" id="hr_task_done">HR Task Done</button>
+                    <button class="btn btn-success mb-2 mb-sm-0" id="approval_btn"><span
+                            data-translate="approve">Approve</span></button>
+                    <button class="btn btn-danger ms-0 ms-sm-2" id="rejection_btn"><span
+                            data-translate="decline">Decline</span></button>
                 </div>
             </div>
         </div>
@@ -290,10 +274,9 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{{ route('leave_application.hr_data') }}", // Backend URL
+                    url: "{{ route('data.leaveApplication') }}", // Backend URL
                     data: function (d) {
                         d.status = status;  // Send the selected status as a query parameter
-                        d.nationality = $('#nationalitySelect').val() || ""; //NATIONALITY 
                     }
                 },
                 columns: [
@@ -337,7 +320,6 @@
                     { data: 'day', name: 'day', orderable: false, searchable: false },
                     { data: 'from', name: 'from', orderable: false, searchable: false },
                     { data: 'to', name: 'to', orderable: false, searchable: false },
-                    { data: 'off_days', name: 'off_days', orderable: false, searchable: false },
                     {
                         data: 'id',
                         render: function (data) {
@@ -353,10 +335,6 @@
                 order: [[0, 'desc']]
             });
         }
-
-        $('#nationalitySelect').on('change', function () {
-            table.ajax.reload();
-        });
 
         // Function to filter data by company
         function filterByStatus(status) {
@@ -376,34 +354,65 @@
         }
 
         $(document).ready(function () {
+
             /// Initialize DataTable with the default status (Pending)
-            const defaultStatus = 'approved';  // You can adjust this based on which status you want to load by default
+            const defaultStatus = 'pending';  // You can adjust this based on which status you want to load by default
             initializeDataTable(defaultStatus);
 
             // Handle the status buttons click event to filter data
             $('.company-btn').on('click', function () {
                 const status = $(this).data('status');  // Get the status from the button's data-status attribute
                 filterByStatus(status);
+                console.log(status);
             });
 
-            $('#hr_task_done').click(function () {
+            $('#approval_btn').click(function () {
                 const id = $(this).data('id');
+
                 showLoader(); // Start loader
 
-                // Fetch leave details using AJAX
                 $.ajax({
-                    url: `/leave_action/hr_work_done`, // Route for fetching leave application by ID
-                    method: 'POST',
+                    url: "{{route('action.leaveApplication')}}",
+                    method: "POST",
                     data: {
                         leave_id: id,
-                        leave_action: 'hr_done_request',
-                        _token: $('meta[name="csrf-token"]').attr('content'), // CSRF token for security
+                        leave_action: 'approve_request',
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+
                     },
                     success: function (response) {
                         console.log(response);
                         hideLoader(); // Hide loader
                         $('#leaveDetailsModal').modal('hide');
-                        $('#leave_table').DataTable().ajax.reload(null, false);
+                        $('#leave_table').DataTable().ajax.reload();
+                    },
+                    error: function (xhr) {
+                        console.error('Error fetching leave application:', xhr);
+                        hideLoader(); // Hide loader even if there's an error
+                    }
+                })
+
+            });
+
+            $('#rejection_btn').click(function () {
+                const id = $(this).data('id');
+
+                showLoader(); // Start loader
+
+                // Fetch leave details using AJAX
+                $.ajax({
+                    url: "{{route('action.leaveApplication')}}", // Route for fetching leave application by ID
+                    method: "POST",
+                    data: {
+                        leave_id: id,
+                        leave_action: 'reject_request',
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        hideLoader(); // Hide loader
+                        $('#leaveDetailsModal').modal('hide');
+                        $('#leave_table').DataTable().ajax.reload();
                     },
                     error: function (xhr) {
                         console.error('Error fetching leave application:', xhr);
@@ -416,11 +425,12 @@
             $(document).on('click', '.toggle-modal', function () {
                 const id = $(this).data('id');
                 const modal = $('#leaveDetailsModal');
+                var auth_id = {{ auth()->user()->id }};
                 showLoader(); // Start loader
 
                 // Fetch leave details using AJAX
                 $.ajax({
-                    url: `/leave_application/${id}`, // Route for fetching leave application by ID
+                    url: `/view-unlock-leave-details/${id}`, // Route for fetching leave application by ID
                     method: 'GET',
                     success: function (data) {
                         // Populate modal fields with dynamic data
@@ -429,36 +439,45 @@
                         $('#modal-title').text(data.title);
                         $('#modal-description').text(data.description);
                         $('#modal-alblance').text(data.leave_balance)
+                        $("#images-section").empty();
+
+                        if (data.images && data.images.length > 0) {
+
+                            $('#images-sections').empty();  // This removes any previous images
+
+                            // Loop through and append the images
+                            data.images.forEach(function (image) {
+                                const imgElement = $('<img>', {
+                                    src: image,   // Use the image URL from the server response
+                                    alt: 'Leave Image', // Adjust the alt text as needed
+                                    class: 'img-fluid', // Optional class for styling
+                                    // style: 'max-width: 100%; height: auto; margin-bottom: 10px;' // Optional styling
+                                });
+                                imgElement.on('click', function () {
+                                    window.open(image, '_blank'); // Open the image in a new tab
+                                });
+                                $('#images-sections').append(imgElement); // Append each image
+                            });
+                        } else {
+                            // If no images are available, show a message or leave the section empty
+                            $('#images-sections').empty();  // Clear any previous content
+                            $('#images-sections').append('<p>No images available</p>');
+                        }
+
 
                         // Update 1st Step Information
-                        updateApprovalStatus('#first_status', '#first_approval_name', '#first_created_time', data.status_1, data.first_approval_id, data.first_approval_created_time);
-                        // Update 2nd Step Information
-                        updateApprovalStatus('#second_status', '#second_approval_name', '#second_created_time', data.status_2, data.second_approval_id, data.second_approval_created_time);
-                        // Update HR Step Information
-                        updateApprovalStatus('#hr_status', '#hr_approval_name', '#hr_created_time', data.hr_approval_id, data.hr_approval_id, data.hr_approval_created_time);
-
-                        updateApprovalStatus('#revoked_status', '#revoked_approval_name', '#revoked_created_time', data.revoked, data.revoked_by, data.revoked_created_time);
-
+                        updateApprovalStatus('#first_status', '#first_approval_name', '#superadmin_created_at', data.status, data.superadmin_id, data.superadmin_created_at);
 
                         // Show or hide action buttons based on status
                         const actionButtons = $('#action_buttons');
 
-                        // Check if 2nd step needs action
-                        if (data.status_1 === "approved" && data.status_2 === "approved" && (data.hr_approval_id === "" || data.hr_approval_id === null || data.hr_approval_id === "Null")) {
-                            $('#hr_task_done').prop('disabled', false); // Enable buttons
+                        if (data.status === "pending") {
+                            $('#approval_btn, #rejection_btn').prop('disabled', false); // Enable buttons
                             actionButtons.removeClass("hideBlock");
-                            $('#hr_task_done').data('id', id);
-                        }
-                        // If both steps are completed, hide buttons
-                        else {
-                            $('#hr_task_done').prop('disabled', true); // Disable buttons
-                            actionButtons.addClass("hideBlock");
-                        }
-
-                        if (data.revoked === "0") {
-                            $('#revoked_container').addClass('hideBlock');
-                        } else if (data.revoked === "1") {
-                            $('#revoked_container').removeClass('hideBlock');
+                            $('#approval_btn').data('id', id);
+                            $('#rejection_btn').data('id', id);
+                        } else {
+                            $('#approval_btn, #rejection_btn').prop('disabled', true); // Enable buttons
                             actionButtons.addClass("hideBlock");
                         }
 
@@ -514,6 +533,7 @@
             }
 
             function populateLeaveSection(leaveDetails, offDays) {
+                const storedLang = localStorage.getItem('language');
                 const leaveSections = document.querySelector('.leave-sections');
                 leaveSections.innerHTML = ''; // Clear previous content
 
@@ -534,61 +554,96 @@
                     let leaveType = '';
                     let bgColorClass = '';
 
-                    switch (leaveTypeId) {
-                        case 1:
-                            leaveType = leave.type === 'full_day' ? 'Annual Leave (Full Day)' : 'Annual Leave (Half Day)';
-                            bgColorClass = 'bg-light-blue';
-                            break;
-                        case 2:
-                            leaveType = 'Birthday Leave';
-                            bgColorClass = 'bg-light-green';
-                            break;
-                        case 3:
-                            leaveType = 'Marriage Leave';
-                            bgColorClass = 'bg-light-pink';
-                            break;
-                        case 4:
-                            leaveType = 'Unpaid Leave';
-                            bgColorClass = 'bg-light-red';
-                            break;
-                        case 5:
-                            leaveType = 'Hospitalisation Leave';
-                            bgColorClass = 'bg-light-yellow';
-                            break;
-                        case 6:
-                            leaveType = 'Compassionate Leave';
-                            bgColorClass = 'bg-light-yellow';
-                            break;
-                        case 7:
-                            leaveType = 'Maternity Leave';
-                            bgColorClass = 'bg-light-yellow';
-                            break;
-                        case 8:
-                            leaveType = 'Paternity Leave';
-                            bgColorClass = 'bg-light-yellow';
-                            break;
-                        case 9:
-                            leaveType = 'Medical Leave(Malaysian Special)';
-                            bgColorClass = 'bg-info';
-                            break;
-                        default:
-                            bgColorClass = 'bg-light-gray';
-                            leaveType = 'Other Leave';
+                    if (storedLang == "vi") {
+                        switch (leaveTypeId) {
+                            case 1:
+                                leaveType = leave.type === 'full_day' ? 'Hàng năm Nghĩ phép (Full Day)' : 'Nửa ngày (Giờ làm việc) (Half Day)';
+                                bgColorClass = 'bg-light-blue';
+                                break;
+                            case 2:
+                                leaveType = 'Ngày sinh Nghĩ phép';
+                                bgColorClass = 'bg-light-green';
+                                break;
+                            case 3:
+                                leaveType = 'Kết hôn Nghĩ phép';
+                                bgColorClass = 'bg-light-pink';
+                                break;
+                            case 4:
+                                leaveType = 'Nghĩ phép không lương';
+                                bgColorClass = 'bg-light-red';
+                                break;
+                            case 5:
+                                leaveType = 'Hospitalisation Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 6:
+                                leaveType = 'Compassionate Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 7:
+                                leaveType = 'Maternity Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 8:
+                                leaveType = 'Paternity Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 9:
+                                leaveType = 'Medical Leave(Malaysian Special)';
+                                bgColorClass = 'bg-info';
+                                break;
+                            default:
+                                bgColorClass = 'bg-light-gray';
+                                leaveType = 'Other Leave';
+                        }
+                    }
+                    else {
+                        switch (leaveTypeId) {
+                            case 1:
+                                leaveType = leave.type === 'full_day' ? 'Annual Leave (Full Day)' : 'Annual Leave (Half Day)';
+                                bgColorClass = 'bg-light-blue';
+                                break;
+                            case 2:
+                                leaveType = 'Birthday Leave';
+                                bgColorClass = 'bg-light-green';
+                                break;
+                            case 3:
+                                leaveType = 'Marriage Leave';
+                                bgColorClass = 'bg-light-pink';
+                                break;
+                            case 4:
+                                leaveType = 'Unpaid Leave';
+                                bgColorClass = 'bg-light-red';
+                                break;
+                            case 5:
+                                leaveType = 'Hospitalisation Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 6:
+                                leaveType = 'Compassionate Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 7:
+                                leaveType = 'Maternity Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 8:
+                                leaveType = 'Paternity Leave';
+                                bgColorClass = 'bg-light-yellow';
+                                break;
+                            case 9:
+                                leaveType = 'Medical Leave(Malaysian Special)';
+                                bgColorClass = 'bg-info';
+                                break;
+                            default:
+                                bgColorClass = 'bg-light-gray';
+                                leaveType = 'Other Leave';
+                        }
                     }
 
-                    function toBangkokDate(dateString) {
-                        const date = new Date(dateString); // Parse the given date
-                        const bangkokOffset = 7 * 60; // Bangkok is UTC+7
-                        const utcOffset = date.getTimezoneOffset(); // System's local time offset
 
-                        // Adjust the time to Bangkok timezone (UTC +7)
-                        date.setMinutes(date.getMinutes() + (utcOffset + bangkokOffset));
-                        return date;
-                    }
-
-                    const startDate = toBangkokDate(leave.start_date);
-                    const endDate = toBangkokDate(leave.end_date);
-
+                    const startDate = new Date(leave.start_date);
+                    const endDate = new Date(leave.end_date);
                     let leaveDaysCount = (endDate - startDate) / (1000 * 3600 * 24) + 1;
 
                     if (leave.type === 'half_day') {
@@ -642,9 +697,6 @@
                     }
                 });
 
-                // Round totalLeaveDays to the nearest 0.5 (half day)
-                totalLeaveDays = Math.round(totalLeaveDays * 2) / 2;
-
                 // Render leave details without off-days
                 for (let leaveType in groupedLeaves) {
                     for (let month in groupedLeaves[leaveType]) {
@@ -655,17 +707,17 @@
                         const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
 
                         section.innerHTML = `
-                                                                                                                                                                                                                    <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span>
-                                                                                                                                                                                                                    <div>
-                                                                                                                                                                                                                        <span class="text-muted">From:</span>
-                                                                                                                                                                                                                        <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
-                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                    <div>
-                                                                                                                                                                                                                        <span class="text-muted">To:</span>
-                                                                                                                                                                                                                        <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
-                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                    <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-                                                                                                                                                                                                                `;
+                                    <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span>
+                                    <div>
+                                        <span class="text-muted">From:</span>
+                                        <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted">To:</span>
+                                        <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
+                                `;
 
                         const dateRow = section.querySelector('.d-flex.flex-wrap');
 
@@ -681,144 +733,14 @@
                     }
                 }
 
-                // Display off-days in a separate section with month info
-                displayOffDays(offDays);
-                // Handle half-day leaves separately after full-day processing
-                leaveDetails.forEach(leave => {
-                    if (leave.type === 'half_day') {
-                        displayHalfDayLeave(leave);
-                    }
-                });
-
                 document.getElementById('total_leave_days').textContent = `${totalLeaveDays} days`;
                 document.getElementById('total_al_days').textContent = `${totalAnnualLeaveDays + halfDayCounter} days`;
-                document.getElementById('total_off_days').textContent = `${totalOffDays} days`;
             }
 
-
-            function displayOffDays(offDays) {
-                const leaveSections = document.querySelector('.leave-sections');
-
-                if (offDays.length > 0) {
-                    // Group off-days by month
-                    const offDaysByMonth = {};
-
-                    offDays.forEach(date => {
-                        // Convert the date to a Date object and set to Bangkok time zone
-                        const parsedDate = new Date(date);
-
-                        // Format the date in Bangkok timezone using Intl.DateTimeFormat
-                        const options = {
-                            timeZone: 'Asia/Bangkok',
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                        };
-
-                        const formatter = new Intl.DateTimeFormat('en-US', options);
-                        const formattedDate = formatter.format(parsedDate);  // This gives the formatted date in Bangkok timezone
-
-                        // Extract the month name and day from the formatted date
-                        const monthName = formattedDate.split(' ')[0]; // Get month from formatted date
-                        const day = parseInt(formattedDate.split(' ')[1]); // Get the day from formatted date
-
-                        if (!offDaysByMonth[monthName]) {
-                            offDaysByMonth[monthName] = [];
-                        }
-                        offDaysByMonth[monthName].push(day); // Store the day of the month
-                    });
-
-                    // Loop through each month and display off-days in a structured format
-                    for (let month in offDaysByMonth) {
-                        const section = document.createElement('div');
-                        section.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
-
-                        // Structure similar to other leave types
-                        section.innerHTML = `
-                                                                                                                                        <span class="fw-semibold">Off Days (${month}):</span>
-                                                                                                                                        <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-                                                                                                                                    `;
-
-                        const dateRow = section.querySelector('.d-flex.flex-wrap');
-
-                        // Add each off-day as a date circle with a gray background
-                        offDaysByMonth[month].forEach(day => {
-                            const dateCircle = document.createElement('div');
-                            dateCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1', 'bg-light-gray');
-                            dateCircle.innerText = day;  // Display the day of the month
-                            dateRow.appendChild(dateCircle);
-                        });
-
-                        // Append the section to the leave sections container
-                        leaveSections.appendChild(section);
-                    }
-                }
-            }
-
-            function displayHalfDayLeave(leave) {
-                const leaveSections = document.querySelector('.leave-sections');
-
-                // Add the <hr> before half-day leave section
-                const hrElement = document.createElement('hr');
-                hrElement.classList.add('my-2');
-                leaveSections.appendChild(hrElement);
-
-                const halfDaySection = document.createElement('div');
-                halfDaySection.classList.add('personal-info', 'px-1', 'py-2', 'd-flex', 'justify-content-between', 'flex-wrap');
-
-                // Format date using Bangkok timezone
-                const formattedDate = formatDate(leave.date);
-
-                halfDaySection.innerHTML = `
-                                                                                                        <span class="fw-semibold">Annual Leave (Half Day):</span>
-                                                                                                        <div class="d-flex gap-3 ms-2">
-                                                                                                            <div class="d-flex justify-content-between">
-                                                                                                                <span class="text-muted">Date:</span>
-                                                                                                                <span class="text-dark fs-6 ms-2">${formattedDate}</span>
-                                                                                                            </div>
-                                                                                                            <div class="d-flex justify-content-between">
-                                                                                                                <span class="text-muted">Start Time:</span>
-                                                                                                                <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
-                                                                                                            </div>
-                                                                                                            <div class="d-flex justify-content-between">
-                                                                                                                <span class="text-muted">End Time:</span>
-                                                                                                                <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
-                                                                                                            </div>
-                                                                                                        </div>`;
-
-                // Append the half-day leave section
-                leaveSections.appendChild(halfDaySection);
-
-                // Get the day of the month for the date in Bangkok timezone
-                const dayOfMonth = new Date(leave.date).toLocaleString('en-US', {
-                    timeZone: 'Asia/Bangkok',
-                    day: 'numeric',
-                });
-
-                // Display the half-day leave date as a circle
-                const halfDayCircle = document.createElement('div');
-                halfDayCircle.classList.add('date', 'col-3', 'col-sm-1', 'col-md-1', 'p-0', 'p-md-1', 'ms-3', 'bg-light-blue');
-                halfDayCircle.innerText = dayOfMonth;  // Display the day of the month
-                leaveSections.appendChild(halfDayCircle);
-            }
-
+            // Helper function to format date in a readable way
             function formatDate(date) {
-                const options = {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    timeZone: 'Asia/Bangkok'
-                };
-
-                // Convert the input date to a Date object and format it in the Asia/Bangkok timezone
-                const dateObj = new Date(date);
-                return new Intl.DateTimeFormat('en-US', options).format(dateObj);
-            }
-
-
-            // Helper function to check if a date is an off-day
-            function isOffDay(date, offDays) {
-                return offDays.includes(date);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(date).toLocaleDateString(undefined, options);
             }
 
             // Hide modal when close button is clicked

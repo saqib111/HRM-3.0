@@ -10,7 +10,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="keywords" content="Affan Ahmed">
     <meta name="author" content="Created By Affan Ahmed">
-    <title>Login - HRMS admin template</title>
+    <title>Login - HRM</title>
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('/assets/img/logo5.png') }}">
 
@@ -402,7 +402,7 @@
                                     <label class="col-form-label" for="employee_id">Employee ID</label>
                                     <input type="text" name="employee_id" id="employee_id"
                                         placeholder="Please enter your employee ID" autocomplete="off"
-                                        class="form-control" value="AHNV00315" />
+                                        class="form-control" value="EZGB000001" />
                                     <span id="employee_id-error" class="text-danger"></span>
                                 </div>
 
@@ -410,7 +410,7 @@
                                     <label class="col-form-label" for="password">Password</label>
                                     <input type="password" name="password" id="password"
                                         placeholder="Please enter your password" autocomplete="off" class="form-control"
-                                        value="12345678" />
+                                        value="123mmmss123" />
                                     <span id="password-error" class="text-danger"></span>
                                 </div>
 

@@ -481,8 +481,8 @@
                             </thead>
                             <tbody>
                                 <!-- <tr>
-                                   DYNAMIC DATA FROM THE AJAX
-                                </tr> -->
+                                       DYNAMIC DATA FROM THE AJAX
+                                    </tr> -->
                             </tbody>
                         </table>
                     </div>
@@ -502,7 +502,7 @@
     </div>
 
 @endsection
-@section('script-z')  
+@section('script-z')
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         let uid = 0;
@@ -593,7 +593,7 @@
                             },
                             {
                                 data: 'verify2',
-                                title: '<span data-translate="verify">Verify</span>',
+                                title: '<span data-translate="verify_two">Verify</span>',
                                 render: function (data, type, row) {
                                     let result = '';
 
@@ -1320,49 +1320,49 @@
                         let checkOutTime = record.check_out ? moment(record.check_out).format('HH:mm:ss') : '';
 
                         let row = `
-                                <tr>
-                                    <td>${startDate}</td>
-                                    <td>${shiftIn}</td>
-                                    <td>${endDate}</td>
-                                    <td>${shiftOut}</td>
-                                    <td>${checkInDate}</td>
-                                    <td>${checkInTime}</td>
-                                    <td>${checkOutDate}</td>
-                                    <td>${checkOutTime}</td>
-                                    <td>${record.duty_hours}</td> <!-- Correct placement of duty hours -->
-                                    <td>${record.status}</td> <!-- Correct placement of status -->
-                                </tr>
-                                `;
+                                    <tr>
+                                        <td>${startDate}</td>
+                                        <td>${shiftIn}</td>
+                                        <td>${endDate}</td>
+                                        <td>${shiftOut}</td>
+                                        <td>${checkInDate}</td>
+                                        <td>${checkInTime}</td>
+                                        <td>${checkOutDate}</td>
+                                        <td>${checkOutTime}</td>
+                                        <td>${record.duty_hours}</td> <!-- Correct placement of duty hours -->
+                                        <td>${record.status}</td> <!-- Correct placement of status -->
+                                    </tr>
+                                    `;
                         if (record.status === "Absent") {
                             row = `
-                                        <tr style="background-color: #870501; color: white;">
-                                        <td style="background-color: #870501; color: white;">${startDate}</td>
-                                        <td style="background-color: #870501; color: white;">${shiftIn}</td>
-                                        <td style="background-color: #870501; color: white;">${endDate}</td>
-                                        <td style="background-color: #870501; color: white;">${shiftOut}</td>
-                                        <td style="background-color: #870501; color: white;">${checkInDate}</td>
-                                        <td style="background-color: #870501; color: white;">${checkInTime}</td>
-                                        <td style="background-color: #870501; color: white;">${checkOutDate}</td>
-                                        <td style="background-color: #870501; color: white;">${checkOutTime}</td>
-                                        <td style="background-color: #870501; color: white;">${record.duty_hours}</td> <!-- duty_hours for Absent -->
-                                        <td style="background-color: #870501; color: white;">${record.status}</td> <!-- status for Absent -->
-                                    </tr>
-                                    `;
+                                            <tr style="background-color: #870501; color: white;">
+                                            <td style="background-color: #870501; color: white;">${startDate}</td>
+                                            <td style="background-color: #870501; color: white;">${shiftIn}</td>
+                                            <td style="background-color: #870501; color: white;">${endDate}</td>
+                                            <td style="background-color: #870501; color: white;">${shiftOut}</td>
+                                            <td style="background-color: #870501; color: white;">${checkInDate}</td>
+                                            <td style="background-color: #870501; color: white;">${checkInTime}</td>
+                                            <td style="background-color: #870501; color: white;">${checkOutDate}</td>
+                                            <td style="background-color: #870501; color: white;">${checkOutTime}</td>
+                                            <td style="background-color: #870501; color: white;">${record.duty_hours}</td> <!-- duty_hours for Absent -->
+                                            <td style="background-color: #870501; color: white;">${record.status}</td> <!-- status for Absent -->
+                                        </tr>
+                                        `;
                         } else {
                             row = `
-                                        <tr style="background-color: #A90500; color: white;">
-                                        <td style="background-color: #A90500; color: white;">${startDate}</td>
-                                        <td style="background-color: #A90500; color: white;">${shiftIn}</td>
-                                        <td style="background-color: #A90500; color: white;">${endDate}</td>
-                                        <td style="background-color: #A90500; color: white;">${shiftOut}</td>
-                                        <td style="background-color: #A90500; color: white;">${checkInDate}</td>
-                                        <td style="background-color: #A90500; color: white;">${checkInTime}</td>
-                                        <td style="background-color: #A90500; color: white;">${checkOutDate}</td>
-                                        <td style="background-color: #A90500; color: white;">${checkOutTime}</td>
-                                        <td style="background-color: #A90500; color: white;">${record.duty_hours}</td> <!-- duty_hours in proper column -->
-                                        <td style="background-color: #A90500; color: white;">${record.status}</td> <!-- status in proper column -->
-                                    </tr>
-                                    `;
+                                            <tr style="background-color: #A90500; color: white;">
+                                            <td style="background-color: #A90500; color: white;">${startDate}</td>
+                                            <td style="background-color: #A90500; color: white;">${shiftIn}</td>
+                                            <td style="background-color: #A90500; color: white;">${endDate}</td>
+                                            <td style="background-color: #A90500; color: white;">${shiftOut}</td>
+                                            <td style="background-color: #A90500; color: white;">${checkInDate}</td>
+                                            <td style="background-color: #A90500; color: white;">${checkInTime}</td>
+                                            <td style="background-color: #A90500; color: white;">${checkOutDate}</td>
+                                            <td style="background-color: #A90500; color: white;">${checkOutTime}</td>
+                                            <td style="background-color: #A90500; color: white;">${record.duty_hours}</td> <!-- duty_hours in proper column -->
+                                            <td style="background-color: #A90500; color: white;">${record.status}</td> <!-- status in proper column -->
+                                        </tr>
+                                        `;
                         }
 
                         // Append the row to the table

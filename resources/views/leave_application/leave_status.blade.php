@@ -659,16 +659,16 @@
                     const lastLeaveDay = groupedLeaves[leaveType][month][groupedLeaves[leaveType][month].length - 1].fullDate;
 
                     section.innerHTML = `
-                                        <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span><div>
-                                            <span class="text-muted">From:</span>
-                                                <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
-                                                   </div>
-                                                    <div>
-                                         <span class="text-muted">To:</span>
-                                             <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
-                                             </div>
-                                            <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-                                                        `;
+                                            <span class="fw-semibold">${groupedLeaves[leaveType][month][0].leaveType} (${month}):</span><div>
+                                                <span class="text-muted">From:</span>
+                                                    <span class="text-dark fs-6 ms-1">${formatDate(firstLeaveDay)}</span>
+                                                       </div>
+                                                        <div>
+                                             <span class="text-muted">To:</span>
+                                                 <span class="text-dark fs-6 ms-1">${formatDate(lastLeaveDay)}</span>
+                                                 </div>
+                                                <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
+                                                            `;
 
                     const dateRow = section.querySelector('.d-flex.flex-wrap');
 
@@ -737,9 +737,9 @@
 
                     // Structure similar to other leave types
                     section.innerHTML = `
-                                      <span class="fw-semibold">Off Days (${month}):</span>
-                                      <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
-                                        `;
+                                          <span class="fw-semibold">Off Days (${month}):</span>
+                                          <div class="d-flex flex-wrap ms-2 customFullWidth"></div>
+                                            `;
 
                     const dateRow = section.querySelector('.d-flex.flex-wrap');
 
@@ -773,21 +773,21 @@
             const formattedDate = formatDate(leave.date);
 
             halfDaySection.innerHTML = `
-                              <span class="fw-semibold">Annual Leave (Half Day):</span>
-                               <div class="d-flex gap-3 ms-2">
-                               <div class="d-flex justify-content-between">
-                                <span class="text-muted">Date:</span>
-                                 <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
-                                    </div>
+                                  <span class="fw-semibold">Annual Leave (Half Day):</span>
+                                   <div class="d-flex gap-3 ms-2">
                                    <div class="d-flex justify-content-between">
-                                     <span class="text-muted">Start Time:</span>
-                                     <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
-                                            </div>
-                                        <div class="d-flex justify-content-between">
-                                          <span class="text-muted">End Time:</span>
-                                         <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
-                                           </div>
-                                              </div>`;
+                                    <span class="text-muted">Date:</span>
+                                     <span class="text-dark fs-6 ms-2">${formatDate(leave.date)}</span>
+                                        </div>
+                                       <div class="d-flex justify-content-between">
+                                         <span class="text-muted">Start Time:</span>
+                                         <span class="text-dark fs-6 ms-2">${leave.start_time || 'N/A'}</span>
+                                                </div>
+                                            <div class="d-flex justify-content-between">
+                                              <span class="text-muted">End Time:</span>
+                                             <span class="text-dark fs-6 ms-2">${leave.end_time || 'N/A'}</span>
+                                               </div>
+                                                  </div>`;
 
             // Append the half-day leave section
             leaveSections.appendChild(halfDaySection);

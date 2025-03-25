@@ -100,6 +100,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(ApprovedLeave::class);
     }
+
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class, 'user_id', 'id');
+    }
     /**
      * Get the attributes that should be cast.
      *

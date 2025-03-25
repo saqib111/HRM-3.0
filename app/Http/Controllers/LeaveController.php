@@ -171,7 +171,7 @@ class LeaveController extends Controller
 
                         // Remaining days after paid leave are converted to unpaid leave
                         $unpaid_start_date = (new \DateTime($paid_end_date))->modify('+1 day')->format('Y-m-d');
-                        if ($annual_leave_balance === 0.0) {
+                        if ($annual_leave_balance === 0.0 || $annual_leave_balance === 0.5) {
                             $leave_details[] = [
                                 'type' => 'full_day',
                                 'leave_type_id' => 4, // Unpaid Leave
@@ -1018,6 +1018,7 @@ class LeaveController extends Controller
             // Get the selected status from the request (if any)
             $status = $request->input('status', 'pending');  // default to 'pending' if no status is passed
 
+            $nationality = $request->input('nationality', '');
             // Build the query based on the status and user role
             $leaves = LeaveManagement::with('user')
                 ->select(['id', 'user_id', 'title', 'description', 'leave_details', 'leave_balance', 'status_1', 'status_2', 'hr_approval_id'])
@@ -1060,6 +1061,11 @@ class LeaveController extends Controller
                         ->where('status_2', 'approved')
                         ->where('revoked', '=', '1')
                         ->orderBy('revoked_created_time', 'desc'); // Order by latest created_at
+                })
+                ->when($nationality, function ($query) use ($nationality) {
+                    $query->whereHas('user.profile', function ($profileQuery) use ($nationality) {
+                        $profileQuery->where('nationality', $nationality);
+                    }); //RESUKLT WITH NATIONALITY FILTER 
                 })
                 ->get();
 

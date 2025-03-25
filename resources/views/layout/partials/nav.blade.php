@@ -201,16 +201,26 @@
             @endif
             <!-- Leave Application -->
             <li class="menu-title">
-                <span data-translate="leave_application">Leave Application</span>
+                <span data-translate="leave_application_nav_head">Leave Application</span>
             </li>
             <li class="{{ request()->routeIs('leave.form.show') ? 'active' : '' }}">
                 <a href="{{route('leave.form.show')}}"><i class="fa fa-person-walking-luggage"></i><span
-                        data-translate="leave_application">Leave Apply</span></a>
+                        data-translate="leave_application">Leave Application</span></a>
             </li>
             <li class="{{ request()->routeIs('leave.status') ? 'active' : '' }}">
                 <a href="{{route('leave.status')}}"><i class="fa fa-person-walking-luggage"></i><span span
                         data-translate="leave_status">Leave Status</span></a>
             </li>
+            <!-- UNLOCK LEAVE CATEGORIES -->
+            @if($user->role == 1)
+                <li class="menu-title">
+                    <span>Unlock Leaves</span>
+                </li>
+                <li class="{{ request()->routeIs('view.leaveApplication') ? 'active' : '' }}">
+                    <a href="{{route('view.leaveApplication')}}"><i class="fa fa-user-plus"></i><span>Unlock Leave
+                            Requests</span></a>
+                </li>
+            @endif
             @if(
                 $user->role == 1 || in_array('unassigned_leaves', $permissions) ||
                 in_array('pending_leaves', $permissions) ||
@@ -264,7 +274,7 @@
             @if ($user->role == 1 || in_array('search_leaves', $permissions))
                 <li>
                     <a href="{{route('show.searchleaves')}}"><i class="fa-brands fa-searchengin"></i> <span
-                            data-translate="search_leaves">Customize Search Leaves</span>
+                            data-translate="custom_search_leaves">Customize Search Leaves</span>
                     </a>
                 </li>
             @endif

@@ -110,6 +110,9 @@ class AssignedLeaveApprovalsController extends Controller
             $leaveApproval->leaveApprovalId = $validated['leaveApprovalId'];
         }
 
+        // Get the user_id from the leave approval record
+        $user_id = $leaveApproval->user_id;
+
         // Handle first assigned user
         if (empty($validated['first_assigned_user'])) {
             $leaveApproval->first_assign_user_id = null;
@@ -129,6 +132,21 @@ class AssignedLeaveApprovalsController extends Controller
         // Save the changes
         $leaveApproval->save();
 
+        // Get all related LeaveManagement records for the user
+        $updateLeaves = LeaveManagement::where('user_id', $user_id)->get();
+
+        // Loop through each record
+        foreach ($updateLeaves as $updateLeave) {
+            // Check if both status_1 and status_2 are 'pending'
+            if ($updateLeave->status_1 === 'pending' && $updateLeave->status_2 === 'pending') {
+                // Perform the update to team_leader_ids and manager_ids
+                $updateLeave->team_leader_ids = $leaveApproval->first_assign_user_id;
+                $updateLeave->manager_ids = $leaveApproval->second_assign_user_id;
+
+                // Save the changes to LeaveManagement
+                $updateLeave->save();
+            }
+        }
         // Return a success response
         return response()->json(['success' => true]);
     }

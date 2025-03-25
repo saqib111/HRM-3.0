@@ -193,3 +193,42 @@ userpass = Password Already Changed
 created_at = 2024-12-24 08:22:35
 updated_at = 2025-03-11 23:44:58
 
+Record Updated By:: ID = 1 | UserName: Boss | Employee ID: EZGB000001
+Old record:
+employee_id = EZGB200001
+username = Jax Lee
+email = jax.lee@ezglobal.com
+email_verified_at = 
+joining_date = 2024-09-01
+confirmation_status = Under Probation
+image = images/default_profile_picture.png
+company_id = EZGB C
+department_id = Boss
+designation_id = Boss
+brand = BJ88 (All Brands)
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Change Password
+created_at = 2025-03-13 19:36:27
+updated_at = 2025-03-13 19:36:27
+
+Updated record:
+employee_id = EZGB200001
+username = Jax Lee
+email = jax.lee@ezglobal.com
+email_verified_at = 
+joining_date = 2024-09-01
+confirmation_status = Under Probation
+image = images/default_profile_picture.png
+company = EZGB C
+department = Sale
+designation = Sales Team Leader
+brand = E28 VND
+week_days = 6 Days
+status = Active
+role = Employee
+userpass = Change Password
+created_at = 2025-03-13 19:36:27
+updated_at = 2025-03-13 19:39:58
+

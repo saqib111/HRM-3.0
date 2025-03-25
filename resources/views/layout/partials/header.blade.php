@@ -205,11 +205,14 @@
                 <span>{{auth()->user()->username}}</span>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item" href="{{ route('user-profile.customDetails', Auth::id()) }}">My Profile</a>
-                <a class="dropdown-item" href="{{ url('settings') }}">Settings</a>
+                <a class="dropdown-item" href="{{ route('user-profile.customDetails', Auth::id()) }}"><span
+                        data-translate="my_profile">My Profile</span></a>
+                <a class="dropdown-item" href="{{ url('settings') }}"><span
+                        data-translate="settings">Settings</span></a>
                 <form method="post" action="{{url('logout')}}">
                     @csrf
-                    <button class="dropdown-item" style="color:#00c5fb;" type="submit">Logout</button>
+                    <button class="dropdown-item" style="color:#00c5fb;" type="submit"><span
+                            data-translate="logout">Logout</span></button>
                 </form>
             </div>
         </li>

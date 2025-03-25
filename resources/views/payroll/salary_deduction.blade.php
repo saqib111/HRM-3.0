@@ -30,6 +30,7 @@
         .form-control[readonly] {
             background-color: #FFFF;
             opacity: 1;
+
         }
     </style>
 @endsection
@@ -38,6 +39,15 @@
         $user = auth()->user();
         $permissions = getUserPermissions($user);
         $companies = DB::table('companies')->where('status', '1')->pluck('id', 'name')->toArray();
+
+        $allowed_offices = ['Sihanoukville', 'Malaysia', 'Bavet', 'Poipet', 'TWFM'];
+        $matching_offices = array_intersect($allowed_offices, $permissions);
+
+        if (!empty($matching_offices)) {
+            $office_based_permission = array_values($matching_offices);
+        } else {
+            $office_based_permission = [];
+        }
     @endphp
 
     <div class="page-header">
@@ -46,7 +56,7 @@
                 <h3 class="page-title"><span data-translate="salary_deduction">Salary Deduction</span></h3>
                 <ul class="breadcrumb">
                     <li class="breadcrumb-item"><a href="admin-dashboard.html">Dashboard</a></li>
-                    <li class="breadcrumb-item active"><span data-translate="salary_deduction">Salary Deduction</span< /li>
+                    <li class="breadcrumb-item active"><span data-translate="salary_deduction">Salary Deduction</span></li>
                 </ul>
             </div>
 
@@ -96,12 +106,29 @@
                     <div class="input-block mb-3 text-dark">
                         <label for="office">Office:</label>
                         <select class="form-select" id="office" name="office" @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2) disabled @endif>
-                            <option value="AllOffices" selected>All Offices</option>
-                            <option value="Sihanoukville">Sihanoukville</option>
-                            <option value="Bataan">Bataan</option>
-                            <option value="Bavet">Bavet</option>
-                            <option value="Malaysia">Malaysia</option>
-                            <option value="Srilanka">Sri Lanka</option>
+
+                            @if(auth()->user()->role == 1)
+                                <option value="AllOffices">All Offices</option>
+                            @endif
+
+                            @if(auth()->user()->role == 1 || (auth()->user()->role == 3 && in_array('Sihanoukville', $office_based_permission)))
+                                <option value="Sihanoukville">Sihanoukville</option>
+                            @endif
+                            @if(auth()->user()->role == 1 || (auth()->user()->role == 3 && in_array('Malaysia', $office_based_permission)))
+                                <option value="Malaysia">Malaysia</option>
+                            @endif
+
+                            @if(auth()->user()->role == 1 || (auth()->user()->role == 3 && in_array('Bavet', $office_based_permission)))
+                                <option value="Bavet">Bavet</option>
+                            @endif
+
+                            @if(auth()->user()->role == 1 || (auth()->user()->role == 3 && in_array('TWFM', $office_based_permission)))
+                                <option value="TWFM">TWFM</option>
+                            @endif
+                            @if(auth()->user()->role == 1 || (auth()->user()->role == 3 && in_array('Poipet', $office_based_permission)))
+                                <option value="Poipet">Poipet</option>
+                            @endif
+
                             @if(auth()->user()->role == 5 || auth()->user()->role == 4 || auth()->user()->role == 2)
                                 <option value="{{ $user_office->office }}" selected>{{ $user_office->office }}</option>
                             @endif
@@ -109,12 +136,12 @@
                     </div>
                 </div>
             @endif
-            @if(auth()->user()->role == 1)
+            @if(auth()->user()->role == 1 || auth()->user()->role == 3)
                 <div class="col-md-2 text-dark ms-md-3">
                     <div class="input-block mb-3 text-dark">
                         <label for="group">Group:</label>
                         <select class="form-select" id="group" name="group">
-                            @foreach($companies as $name => $id)  
+                            @foreach($companies as $name => $id)
                                 <option value="{{ $name }}">{{ $name }}</option>
                             @endforeach
                         </select>
