@@ -3,7 +3,7 @@
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="320" alt="Laravel">
 </p>
 
-<h1 align="center">HRM (HRM 3.0)</h1>
+<h1 align="center">HUMAN RESOURCE MANAGEMENT SYSTEM (HRM 3.0)</h1>
 <p align="center">
   A production-grade Human Resource Management system built with <strong>Laravel</strong> for multi-company, multi-office environments.
 </p>
